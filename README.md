@@ -7,8 +7,8 @@
 
 ## ✨ 特性
 
-- **统一 API**: 使用 `UnifiedPopupManager.show()` 和 `UnifiedPopupManager.hide()` 管理所有弹出层。
-- **完全解耦**: 无需关心 `BuildContext`，在应用的任何地方（ViewModel, BLoC, Service...）都能调用。
+- **统一 API**: 使用 `PopupManager.show()` 并用 `hide(id)`、`hideLast()`、`hideAll()` 精确控制关闭弹出层。
+- **完全解耦**: 无需关心 `BuildContext`，在应用的任何地方（`ViewModel`, `BLoC`, `Service`...）都能调用。
 - **高度自定义**:
     - **内容**: `child` 参数允许你传入任何 Widget。
     - **位置**: 支持顶部、中部、底部，或依附于任意 Widget 进行定位。
@@ -25,11 +25,11 @@
 `unified_popup` 的核心是利用 Flutter 的 `Overlay` 和 `OverlayEntry`。`Overlay` 是一个可以在 `MaterialApp` 之上绘制 Widget 的堆栈。
 
 1.  **全局访问**: 我们通过在 `MaterialApp` 上设置一个 `GlobalKey<NavigatorState>`，SDK 就可以获取到顶层的 `Overlay` 上下文。这使得我们可以在应用的任何地方，无需传递 `context`，就能显示弹出层。
-2.  **单例管理**: `UnifiedPopupManager` 采用单例模式，确保整个应用中只有一个弹出层管理器在工作。这可以防止多个弹出层意外重叠（当前设计为一次只显示一个）。
+2.  **单例与多实例管理**: `PopupManager` 采用单例模式，但其内部通过一个 `Map` 来管理所有当前活跃的弹窗实例。每次调用 `show()` 都会创建一个唯一的 ID 和一个独立的弹窗控制器。这确保了即使同时显示多个弹窗，它们的状态（动画、计时器等）也是完全隔离的，解决了旧版单实例管理的冲突问题。。
 3.  **配置驱动**: 所有的弹出层样式和行为都通过一个 `PopupConfig` 对象进行配置。这种方式使得 API 调用非常清晰，并且易于扩展新功能。
 4.  **解耦**:
     - **SDK 本身**: SDK 是一个独立的包，不依赖任何第三方库，具有良好的兼容性。
-    - **业务与UI**: 在你的项目中，业务逻辑层（如 ViewModel）可以直接调用 `UnifiedPopupManager.show()` 来显示一个加载中或错误提示，而无需与任何具体的页面 Widget 耦合。
+    - **业务与UI**: 在你的项目中，业务逻辑层（如 ViewModel）可以直接调用 `PopupManager.show()` 来显示一个加载中或错误提示，而无需与任何具体的页面 Widget 耦合。
 
 ## 🔧 安装
 
@@ -48,7 +48,7 @@ dependencies:
 
 1.  在你的 `main.dart` 中，创建一个 `GlobalKey<NavigatorState>`。
 2.  将它赋值给 `MaterialApp` 的 `navigatorKey` 属性。
-3.  调用 `UnifiedPopupManager.initialize()`。
+3.  调用 `PopupManager.initialize()`。
 
 ```dart
 // main.dart
@@ -61,7 +61,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() {
   runApp(const MyApp());
   // 3. 初始化 SDK
-  UnifiedPopupManager.initialize(navigatorKey: navigatorKey);
+  PopupManager.initialize(navigatorKey: navigatorKey);
 }
 
 class MyApp extends StatelessWidget {
@@ -89,7 +89,7 @@ class MyApp extends StatelessWidget {
 
 ```dart
 void showMyToast() {
-  UnifiedPopupManager.show(
+  PopupManager.show(
     PopupConfig(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -115,7 +115,7 @@ void showMyToast() {
 
 ```dart
 void showConfirmDialog() {
-  UnifiedPopupManager.show(
+  PopupManager.show(
     PopupConfig(
       child: Card(
         margin: const EdgeInsets.all(20),
@@ -132,14 +132,14 @@ void showConfirmDialog() {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => UnifiedPopupManager.hide(), // 点击按钮关闭
+                    onPressed: () => PopupManager.hide(), // 点击按钮关闭
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: () {
                       print('Action Confirmed!');
-                      UnifiedPopupManager.hide(); // 关闭后执行操作
+                      PopupManager.hide(); // 关闭后执行操作
                     },
                     child: const Text('Confirm'),
                   ),
@@ -161,7 +161,7 @@ void showConfirmDialog() {
 
 ```dart
 void showBottomSheet() {
-  UnifiedPopupManager.show(
+  PopupManager.show(
     PopupConfig(
       child: Container(
         width: double.infinity,
@@ -198,7 +198,7 @@ final GlobalKey _buttonKey = GlobalKey();
 ElevatedButton(
   key: _buttonKey, // 给按钮设置 key
   onPressed: () {
-    UnifiedPopupManager.show(
+    PopupManager.show(
       PopupConfig(
         child: Container(
           padding: const EdgeInsets.all(10),
@@ -218,7 +218,7 @@ ElevatedButton(
 
 ## API 参考
 
-### `UnifiedPopupManager`
+### `PopupManager`
 
 | 方法                                 | 描述                                     |
 | ------------------------------------ | ---------------------------------------- |
