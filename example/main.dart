@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// 假设你的包名是 unified_popup
 import 'package:unified_popups/unified_popups.dart';
 
 // 1. 创建 GlobalKey
@@ -62,6 +61,33 @@ class ExampleHomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
+                // 使用 Toast
+                ElevatedButton(
+                  onPressed: () => UnifiedPopups.showToast('This is a toast!'),
+                  child: Text('Show Toast'),
+                ),
+
+                // 使用 Loading
+                ElevatedButton(
+                  onPressed: () async {
+                    final loadingId = UnifiedPopups.showLoading(message: 'Loading...');
+                    await Future.delayed(Duration(seconds: 3));
+                    UnifiedPopups.hideLoading(loadingId);
+                  },
+                  child: Text('Show Loading'),
+                ),
+
+                // 使用 Confirm Dialog
+                ElevatedButton(
+                  onPressed: () async {
+                    final result = await UnifiedPopups.showConfirm(
+                      title: 'Confirm Deletion',
+                      content: 'Are you sure you want to delete this item?',
+                    );
+                    print('Confirm result: $result'); // true, false, or null
+                  },
+                  child: Text('Show Confirm Dialog'),
+                ),
                 ElevatedButton(
                   onPressed: _showToast,
                   child: const Text('Show Bottom Toast'),
