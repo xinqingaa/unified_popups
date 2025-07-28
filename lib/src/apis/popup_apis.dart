@@ -1,5 +1,4 @@
 // lib/src/apis/popup_apis.dart
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
@@ -14,24 +13,42 @@ class UnifiedPopups {
   /// [message] 消息内容
   /// [position] 显示位置，默认底部
   /// [duration] 显示时长，默认 2 秒
+  /// [padding], [margin], [decoration], [style], [textAlign] 用于自定义 Toast 样式
   static void showToast(
       String message, {
+        // Popup 级别的配置
         PopupPosition position = PopupPosition.bottom,
         Duration duration = const Duration(seconds: 2),
+        // Widget 级别的样式配置
+        EdgeInsetsGeometry? padding,
+        EdgeInsetsGeometry? margin,
+        Decoration? decoration,
+        TextStyle? style,
+        TextAlign? textAlign,
       }) {
+    // 根据位置决定一个更合适的默认动画
+    final animation = (position == PopupPosition.top)
+        ? PopupAnimation.slideDown
+        : (position == PopupPosition.bottom)
+        ? PopupAnimation.slideUp
+        : PopupAnimation.fade;
+
     PopupManager.show(
       PopupConfig(
-        // 使用预设的 Toast Widget
-        child: ToastWidget(message: message),
+        child: ToastWidget(
+          message: message,
+          // 将所有样式参数原封不动地传递给 Widget
+          padding: padding,
+          margin: margin,
+          decoration: decoration,
+          style: style,
+          textAlign: textAlign,
+        ),
         position: position,
-        // Toast 通常不需要遮盖层
-        showBarrier: false,
-        // Toast 动画可以根据位置调整
-        animation: position == PopupPosition.top
-            ? PopupAnimation.slideDown
-            : PopupAnimation.slideUp,
         duration: duration,
-        // Toast 不需要手动关闭，所以 barrierDismissible 无所谓
+        animation: animation,
+        // Toast 的合理默认行为
+        showBarrier: false,
         barrierDismissible: false,
       ),
     );
@@ -41,15 +58,32 @@ class UnifiedPopups {
   ///
   /// [message] 加载时显示的文本，可选
   /// returns [String] 弹窗的唯一 ID，用于手动关闭
-  static String showLoading({String? message}) {
+  static String showLoading({
+    String? message,
+    // 样式参数
+    Color? backgroundColor,
+    double? borderRadius,
+    Color? indicatorColor,
+    double? indicatorStrokeWidth,
+    TextStyle? textStyle,
+    // 遮罩层参数
+    bool barrierDismissible = false,
+    Color barrierColor = Colors.black54,
+  }) {
     return PopupManager.show(
       PopupConfig(
-        child: LoadingWidget(message: message),
+        child: LoadingWidget(
+          message: message,
+          backgroundColor: backgroundColor,
+          borderRadius: borderRadius,
+          indicatorColor: indicatorColor,
+          indicatorStrokeWidth: indicatorStrokeWidth,
+          textStyle: textStyle,
+        ),
         position: PopupPosition.center,
-        // Loading 时通常需要遮盖层且不能点击关闭
         showBarrier: true,
-        barrierDismissible: false,
-        // Loading 通常需要手动关闭，所以 duration 为 null
+        barrierDismissible: barrierDismissible,
+        barrierColor: barrierColor,
         duration: null,
       ),
     );

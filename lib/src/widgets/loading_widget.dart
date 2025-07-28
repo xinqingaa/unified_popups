@@ -3,24 +3,43 @@ import 'package:flutter/material.dart';
 
 class LoadingWidget extends StatelessWidget {
   final String? message;
+  final Color? backgroundColor;
+  final double? borderRadius;
+  final Color? indicatorColor;
+  final double? indicatorStrokeWidth;
+  final TextStyle? textStyle;
 
-  const LoadingWidget({super.key, this.message});
+  const LoadingWidget({
+    super.key,
+    this.message,
+    this.backgroundColor,
+    this.borderRadius,
+    this.indicatorColor,
+    this.indicatorStrokeWidth,
+    this.textStyle,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.0),
+        color: backgroundColor ?? Colors.white,
+        borderRadius: BorderRadius.circular(borderRadius ?? 12.0),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(),
+          CircularProgressIndicator(
+            color: indicatorColor ?? Colors.black ,
+            strokeWidth: indicatorStrokeWidth ?? 2.0,
+          ),
           if (message != null) ...[
             const SizedBox(height: 16),
-            Text(message!),
+            Text(
+              message!,
+              style: textStyle,
+            ),
           ],
         ],
       ),

@@ -63,15 +63,15 @@ class ExampleHomePage extends StatelessWidget {
               children: <Widget>[
                 // 使用 Toast
                 ElevatedButton(
-                  onPressed: () => UnifiedPopups.showToast('This is a toast!'),
+                  onPressed: () => UnifiedPopups.showToast('This is a toast!', position: PopupPosition.top),
                   child: Text('Show Toast'),
                 ),
 
                 // 使用 Loading
                 ElevatedButton(
                   onPressed: () async {
-                    final loadingId = UnifiedPopups.showLoading(message: 'Loading...');
-                    await Future.delayed(Duration(seconds: 3));
+                    final loadingId = UnifiedPopups.showLoading();
+                    await Future.delayed(Duration(seconds: 2));
                     UnifiedPopups.hideLoading(loadingId);
                   },
                   child: Text('Show Loading'),
