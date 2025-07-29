@@ -8,6 +8,10 @@ enum PopupPosition {
   center,
   /// 底部，位于安全区域上方
   bottom,
+  /// 左侧，位于安全区域内
+  left,
+  /// 右侧，位于安全区域内
+  right,
 }
 
 /// 定义弹出层的进入和退出动画类型

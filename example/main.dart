@@ -135,9 +135,67 @@ class ExampleHomePage extends StatelessWidget {
                   child: Text("完全自定义样式"),
                 ),
                 const SizedBox(height: 12),
+                // 1. 经典的底部 Sheet
                 ElevatedButton(
-                  onPressed: _showBottomSheet,
-                  child: const Text('Show Bottom Sheet Menu'),
+                  child: const Text('Show Bottom Sheet'),
+                  onPressed: () async {
+                    final result = await UnifiedPopups.showSheet<String>(
+                      context,
+                      title: '选择操作',
+                      childBuilder: (dismiss) {
+                        return ListView(
+                          shrinkWrap: true, // 重要：让 ListView 自适应内容高度
+                          children: [
+                            ListTile(title: const Text('分享'), onTap: () => dismiss('share')),
+                            ListTile(title: const Text('编辑'), onTap: () => dismiss('edit')),
+                            ListTile(title: const Text('删除'), onTap: () => dismiss('delete'),),
+                            ListTile(title: const Text('取消'), onTap: () => dismiss()), // 不带参数关闭
+                          ],
+                        );
+                      },
+                    );
+                    if (result != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('你选择了: $result')));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('你关闭了 Sheet')));
+                    }
+                  },
+                ),
+
+                // 2. 左侧抽屉
+                ElevatedButton(
+                  child: const Text('Show Left Drawer'),
+                  onPressed: () {
+                    UnifiedPopups.showSheet(
+                      context,
+                      direction: SheetDirection.left,
+                      title: '菜单',
+                      childBuilder: (dismiss) => ListView(
+                        children: [
+                          ListTile(leading: const Icon(Icons.home), title: const Text('首页'), onTap: () => dismiss()),
+                          ListTile(leading: const Icon(Icons.settings), title: const Text('设置'), onTap: () => dismiss()),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
+                // 3. 顶部通知栏
+                ElevatedButton(
+                  child: const Text('Show Top Notification'),
+                  onPressed: () {
+                    UnifiedPopups.showSheet(
+                      context,
+                      direction: SheetDirection.top,
+                      title: '新消息',
+                      backgroundColor: Colors.amber.shade100,
+                      childBuilder: (dismiss) => ListTile(
+                        title: const Text('您的快递已到达'),
+                        subtitle: const Text('点击查看详情'),
+                        onTap: () => dismiss(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
@@ -162,51 +220,6 @@ class ExampleHomePage extends StatelessWidget {
   }
 
 
-  void _showBottomSheet() {
-    PopupManager.show(
-      PopupConfig(
-        child: Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-              boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black26)]),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text('Options', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.share),
-                title: const Text('Share'),
-                onTap: () => PopupManager.hideLast(),
-              ),
-              ListTile(
-                leading: const Icon(Icons.link),
-                title: const Text('Get link'),
-                onTap: () => PopupManager.hideLast(),
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete', style: TextStyle(color: Colors.red)),
-                onTap: () => PopupManager.hideLast(),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-        position: PopupPosition.bottom,
-        animation: PopupAnimation.slideUp,
-        barrierColor: Colors.black.withOpacity(0.3),
-      ),
-    );
-  }
 
   void _showAnchoredPopup(GlobalKey anchorKey) {
     PopupManager.show(

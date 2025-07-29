@@ -108,26 +108,22 @@ class _PopupLayoutState extends State<_PopupLayout> {
         return FadeTransition(opacity: widget.animation, child: child);
       case PopupAnimation.slideUp:
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-              .animate(widget.animation),
+          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(widget.animation),
           child: child,
         );
       case PopupAnimation.slideDown:
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero)
-              .animate(widget.animation),
+          position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(widget.animation),
           child: child,
         );
       case PopupAnimation.slideLeft:
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(-1, 0), end: Offset.zero)
-              .animate(widget.animation),
+          position: Tween<Offset>(begin: const Offset(-1, 0), end: Offset.zero).animate(widget.animation),
           child: child,
         );
       case PopupAnimation.slideRight:
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-              .animate(widget.animation),
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(widget.animation),
           child: child,
         );
       case PopupAnimation.none:
@@ -142,6 +138,10 @@ class _PopupLayoutState extends State<_PopupLayout> {
         return Alignment.topCenter;
       case PopupPosition.bottom:
         return Alignment.bottomCenter;
+      case PopupPosition.left:
+        return Alignment.centerLeft;
+      case PopupPosition.right:
+        return Alignment.centerRight;
       case PopupPosition.center:
       default:
         return Alignment.center;
