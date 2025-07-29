@@ -201,6 +201,7 @@ class UnifiedPopups {
       required Widget Function(void Function([T? result]) dismiss) childBuilder,
       String? title,
       SheetDirection direction = SheetDirection.bottom,
+      bool? useSafeArea,
       // Widget 级别的样式配置
       double? width,
       double? height,
@@ -240,8 +241,7 @@ class UnifiedPopups {
         animation = PopupAnimation.slideRight;
         break;
       case SheetDirection.bottom:
-      default:
-        position = PopupPosition.bottom;
+      position = PopupPosition.bottom;
         animation = PopupAnimation.slideUp;
         break;
     }
@@ -252,6 +252,7 @@ class UnifiedPopups {
       sheetWidth = MediaQuery.of(context).size.width * 0.7;
     }
 
+    final bool applySafeArea = useSafeArea ?? false;
     popupId = PopupManager.show(
       PopupConfig(
         child: SheetWidget(
@@ -272,6 +273,7 @@ class UnifiedPopups {
         ),
         position: position,
         animation: animation,
+        useSafeArea: applySafeArea,
         showBarrier: true,
         barrierDismissible: true,
         onDismiss: () {

@@ -49,8 +49,7 @@ class SheetWidget extends StatelessWidget {
       case SheetDirection.right:
         return const BorderRadius.only(topLeft: radius, bottomLeft: radius);
       case SheetDirection.bottom:
-      default:
-        return const BorderRadius.only(topLeft: radius, topRight: radius);
+      return const BorderRadius.only(topLeft: radius, topRight: radius);
     }
   }
 

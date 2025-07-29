@@ -12,7 +12,7 @@ dependencies:
   omni_date_picker:
     git:
       url: https://gitee.com/lin-ruiqiang/omni_date_picker
-      ref: v1.0.3
+      ref: v1.0.4
 
   omni_calendar_view: ^1.0.1
   unified_popups:

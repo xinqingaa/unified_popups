@@ -41,6 +41,9 @@ class PopupConfig {
   /// [可选] 弹出层关闭时的回调
   final VoidCallback? onDismiss;
 
+  /// [可选] 控制安全区域 默认在安全区域内
+  final bool useSafeArea;
+
   PopupConfig({
     required this.child,
     this.position = PopupPosition.center,
@@ -51,6 +54,7 @@ class PopupConfig {
     this.showBarrier = true,
     this.barrierColor = Colors.black54,
     this.barrierDismissible = true,
+    this.useSafeArea = true,
     this.duration,
     this.onShow,
     this.onDismiss,

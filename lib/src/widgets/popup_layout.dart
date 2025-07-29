@@ -93,12 +93,16 @@ class _PopupLayoutState extends State<_PopupLayout> {
         child: content,
       );
     } else {
-      return SafeArea(
-        child: Align(
-          alignment: _getAlignmentFromPosition(widget.config.position),
-          child: content,
-        ),
+      // 先创建对齐后的内容
+      Widget alignedContent = Align(
+        alignment: _getAlignmentFromPosition(widget.config.position),
+        child: content,
       );
+
+      // 根据配置决定是否包裹 SafeArea
+      return widget.config.useSafeArea
+          ? SafeArea(child: alignedContent)
+          : alignedContent;
     }
   }
 

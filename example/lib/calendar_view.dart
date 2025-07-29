@@ -43,7 +43,7 @@ class CalendarView extends StatelessWidget {
               context: context,
               mode: PickerMode.filterDate,
               filterType: FilterType.month,
-              isEn:locale == Locale("en" , "EN") ,
+              locale: locale ,
               initialDateTime: DateTime.now(),
               onConfirm: (dateTime) {
                 int year = dateTime["year"];

@@ -1,8 +1,6 @@
-import 'package:example/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
-import 'calendar_view.dart';
 
 //  创建 GlobalKey
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -30,9 +28,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const ExampleHomePage(),
-      routes: {
-        "/home": (context) => const HomePage()
-      },
     );
   }
 }

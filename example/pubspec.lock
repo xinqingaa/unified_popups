@@ -159,8 +159,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "v1.0.3"
-      resolved-ref: "049756c816439e69dc85d93e07a84a2307c5287e"
+      ref: "v1.0.4"
+      resolved-ref: "57bf727d3bab83b7f50625a07d4605ff79c83cd9"
       url: "https://gitee.com/lin-ruiqiang/omni_date_picker"
     source: git
     version: "1.0.0"
