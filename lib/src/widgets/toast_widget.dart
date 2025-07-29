@@ -24,7 +24,7 @@ class ToastWidget extends StatelessWidget {
     // 1. 在这里定义好默认样式
     final defaultDecoration = BoxDecoration(
       color: Colors.black.withValues(alpha: 0.75),
-      borderRadius: BorderRadius.circular(20.0),
+      borderRadius: BorderRadius.circular(12.0),
     );
     const defaultStyle = TextStyle(color: Colors.white, fontSize: 16);
     const defaultPadding = EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0);

@@ -1,15 +1,16 @@
+import 'package:example/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
-// 1. 创建 GlobalKey
+import 'calendar_view.dart';
+
+//  创建 GlobalKey
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runApp(const MyApp());
-  // 3. 初始化 SDK
-  // 注意：在实际应用中，你可能希望在 runApp 之后立即调用，
-  // 或者使用 WidgetsBinding.instance.addPostFrameCallback 来确保 MaterialApp 已构建。
-  // 为了简单起见，我们在这里直接调用。
+  // 注意：在实际应用中，希望在 runApp 之后立即调用，
+  // 使用 WidgetsBinding.instance.addPostFrameCallback 来确保 MaterialApp 已构建。
   WidgetsBinding.instance.addPostFrameCallback((_) {
     PopupManager.initialize(navigatorKey: navigatorKey);
   });
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // 2. 赋值给 navigatorKey
+      // 赋值给 navigatorKey
       navigatorKey: navigatorKey,
       title: 'Unified Popup Example',
       theme: ThemeData(
@@ -29,6 +30,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const ExampleHomePage(),
+      routes: {
+        "/home": (context) => const HomePage()
+      },
     );
   }
 }
@@ -135,7 +139,7 @@ class ExampleHomePage extends StatelessWidget {
                   child: Text("完全自定义样式"),
                 ),
                 const SizedBox(height: 12),
-                // 1. 经典的底部 Sheet
+                // 经典的底部 Sheet
                 ElevatedButton(
                   child: const Text('Show Bottom Sheet'),
                   onPressed: () async {
@@ -155,32 +159,37 @@ class ExampleHomePage extends StatelessWidget {
                       },
                     );
                     if (result != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('你选择了: $result')));
+                      UnifiedPopups.showToast('你选择了: $result');
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('你关闭了 Sheet')));
+                      UnifiedPopups.showToast('关闭了sheet');
                     }
                   },
                 ),
-
-                // 2. 左侧抽屉
+                const SizedBox(height: 12),
+                // 左侧抽屉
                 ElevatedButton(
                   child: const Text('Show Left Drawer'),
-                  onPressed: () {
-                    UnifiedPopups.showSheet(
+                  onPressed: () async {
+                    final result = await UnifiedPopups.showSheet<String>(
                       context,
                       direction: SheetDirection.left,
                       title: '菜单',
                       childBuilder: (dismiss) => ListView(
                         children: [
-                          ListTile(leading: const Icon(Icons.home), title: const Text('首页'), onTap: () => dismiss()),
-                          ListTile(leading: const Icon(Icons.settings), title: const Text('设置'), onTap: () => dismiss()),
+                          ListTile(leading: const Icon(Icons.home), title: const Text('首页'), onTap: () => dismiss('home')),
+                          ListTile(leading: const Icon(Icons.settings), title: const Text('设置'), onTap: () => dismiss('setting')),
                         ],
                       ),
                     );
+                    if (result != null) {
+                      UnifiedPopups.showToast('你选择了: $result');
+                    } else {
+                      UnifiedPopups.showToast('关闭了sheet');
+                    }
                   },
                 ),
-
-                // 3. 顶部通知栏
+                const SizedBox(height: 12),
+                //  顶部通知栏
                 ElevatedButton(
                   child: const Text('Show Top Notification'),
                   onPressed: () {
@@ -203,13 +212,14 @@ class ExampleHomePage extends StatelessWidget {
                   onPressed: () => _showAnchoredPopup(anchorButtonKey),
                   child: const Text('Show Anchored Popup'),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 const Divider(),
-                const Center(child: Text("Multi-Popup Scenarios", style: TextStyle(fontWeight: FontWeight.bold))),
                 const SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: _showDialogWithToastOnTop,
-                  child: const Text('Dialog then Toast on top'),
+                  onPressed:() {
+                    Navigator.of(context).pushNamed("/home");
+                  },
+                  child: const Text('进入日历测试页面'),
                 ),
               ],
             ),
@@ -233,58 +243,11 @@ class ExampleHomePage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.blueGrey.shade700,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(4),
           ),
           child: const Text(
             'Anchored Popup!',
             style: TextStyle(color: Colors.white),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// **【新功能演示】**
-  /// 先显示一个对话框，然后在这个对话框的按钮上触发一个 Toast。
-  /// Toast 会正常显示和消失，而不会影响下方的对话框。
-  /// 【新功能演示 - 已优化】
-  /// 先显示一个对话框，然后在这个对话框的按钮上触发一个 Toast。
-  /// Toast 会正常显示和消失，而不会影响下方的对话框。
-  void _showDialogWithToastOnTop() {
-    // 1. 直接显示对话框，无需保存ID。
-    PopupManager.show(
-      PopupConfig(
-        barrierDismissible: false, // 禁止点击遮罩关闭
-        child: Card(
-          margin: const EdgeInsets.all(30),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Multi-Popup Test', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                const Text('Click the button below to show a Toast on top of this dialog.'),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    // 2. 在对话框内部，显示一个 Toast。
-                    // 这个操作不会关闭当前对话框。
-                    UnifiedPopups.showToast('This is a toast!' , position: PopupPosition.top);
-                  },
-                  child: const Text('Show Toast'),
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {
-                    // 3. 使用 hideLast() 来关闭当前最上层的弹窗，也就是这个对话框本身。
-                    // 这种方式更简单，也避免了变量作用域问题。
-                    PopupManager.hideAll();
-                  },
-                  child: const Text('Close Dialog'),
-                ),
-              ],
-            ),
           ),
         ),
       ),
