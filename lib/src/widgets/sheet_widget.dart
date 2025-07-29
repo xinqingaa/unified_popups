@@ -77,32 +77,34 @@ class SheetWidget extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        child: Padding(
-          padding: padding ?? defaultPadding,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (title != null) ...[
-                Padding(
-                  padding: titlePadding ?? defaultTitlePadding,
-                  child: Text(
-                    title!,
-                    style: titleStyle ?? defaultTitleStyle,
-                    textAlign: titleAlign ?? defaultTitleAlign,
+        child: SafeArea(
+          child: Padding(
+            padding: padding ?? defaultPadding,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (title != null) ...[
+                  Padding(
+                    padding: titlePadding ?? defaultTitlePadding,
+                    child: Text(
+                      title!,
+                      style: titleStyle ?? defaultTitleStyle,
+                      textAlign: titleAlign ?? defaultTitleAlign,
+                    ),
                   ),
-                ),
-                SizedBox(height: titleSpacing ?? defaultTitleSpacing),
+                  SizedBox(height: titleSpacing ?? defaultTitleSpacing),
+                ],
+                // 对于垂直方向的 Sheet，让 child 可以滚动
+                // 对于水平方向的 Sheet，让 child 占据剩余空间
+                if (isHorizontal)
+                  Expanded(child: child)
+                else
+                  Flexible(child: child),
               ],
-              // 对于垂直方向的 Sheet，让 child 可以滚动
-              // 对于水平方向的 Sheet，让 child 占据剩余空间
-              if (isHorizontal)
-                Expanded(child: child)
-              else
-                Flexible(child: child),
-            ],
+            ),
           ),
-        ),
+        )
       ),
     );
   }
