@@ -13,12 +13,16 @@ class UnifiedPopups {
   /// [message] 消息内容
   /// [position] 显示位置，默认底部
   /// [duration] 显示时长，默认 2 秒
+  /// [showBarrier] 是否展示蒙层，默认不显示
+  /// [barrierDismissible] 点击蒙层是否关闭，默认关闭
   /// [padding], [margin], [decoration], [style], [textAlign] 用于自定义 Toast 样式
   static void showToast(
       String message, {
         // Popup 级别的配置
         PopupPosition position = PopupPosition.bottom,
         Duration duration = const Duration(seconds: 2),
+        bool showBarrier = false,
+        bool barrierDismissible = false,
         // Widget 级别的样式配置
         EdgeInsetsGeometry? padding,
         EdgeInsetsGeometry? margin,
@@ -37,7 +41,6 @@ class UnifiedPopups {
       PopupConfig(
         child: ToastWidget(
           message: message,
-          // 将所有样式参数原封不动地传递给 Widget
           padding: padding,
           margin: margin,
           decoration: decoration,
@@ -47,9 +50,8 @@ class UnifiedPopups {
         position: position,
         duration: duration,
         animation: animation,
-        // Toast 的合理默认行为
-        showBarrier: false,
-        barrierDismissible: false,
+        showBarrier: showBarrier,
+        barrierDismissible: barrierDismissible,
       ),
     );
   }
@@ -96,18 +98,40 @@ class UnifiedPopups {
     PopupManager.hide(id);
   }
 
+
   /// 显示一个确认对话框
   ///
   /// [title] 标题
   /// [content] 内容
   /// [confirmText] 确认按钮文本
-  /// [cancelText] 取消按钮文本
-  /// returns [Future<bool?>] 用户点击确认返回 true，点击取消返回 false，点击遮罩层关闭返回 null
+  /// [cancelText] 取消按钮文本, 如果为 null，则只显示确认按钮
+  /// [showCloseButton] 是否显示右上角的关闭按钮, 默认为 true
+  /// [titleStyle] 标题样式
+  /// [contentStyle] 内容样式
+  /// [confirmStyle] 确认按钮文本样式
+  /// [cancelStyle] 取消按钮文本样式
+  /// [confirmBgColor] 确认按钮背景色
+  /// [cancelBgColor] 取消按钮背景色
+  /// [padding] 内部边距
+  /// [margin] 外部边距
+  /// [decoration] 容器的装饰（背景、圆角等）
+  /// returns [Future<bool?>] 用户点击确认返回 true，点击取消返回 false，点击遮罩层或关闭按钮返回 null
+
   static Future<bool?> showConfirm({
-    required String title,
-    String? content,
+    String? title,
+    required String content,
     String confirmText = '确认',
-    String cancelText = '取消',
+    String? cancelText = '取消',
+    bool showCloseButton = true,
+    TextStyle? titleStyle,
+    TextStyle? contentStyle,
+    TextStyle? confirmStyle,
+    TextStyle? cancelStyle,
+    Color? confirmBgColor,
+    Color? cancelBgColor,
+    EdgeInsetsGeometry? padding,
+    EdgeInsetsGeometry? margin,
+    Decoration? decoration,
   }) {
     final completer = Completer<bool?>();
     late String popupId;
@@ -126,8 +150,20 @@ class UnifiedPopups {
           content: content,
           confirmText: confirmText,
           cancelText: cancelText,
+          showCloseButton: showCloseButton,
           onConfirm: () => dismiss(true),
           onCancel: () => dismiss(false),
+          onClose: () => dismiss(null), // 关闭按钮的回调
+          // --- 传递样式参数 ---
+          titleStyle: titleStyle,
+          contentStyle: contentStyle,
+          confirmStyle: confirmStyle,
+          cancelStyle: cancelStyle,
+          confirmBgColor: confirmBgColor,
+          cancelBgColor: cancelBgColor,
+          padding: padding,
+          margin: margin,
+          decoration: decoration,
         ),
         position: PopupPosition.center,
         barrierDismissible: true,
@@ -144,4 +180,7 @@ class UnifiedPopups {
   }
 
 // 你还可以继续添加 showAlert, showBottomSheet 等...
+
+
+
 }

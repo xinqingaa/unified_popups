@@ -66,7 +66,7 @@ class ExampleHomePage extends StatelessWidget {
                   onPressed: () => UnifiedPopups.showToast('This is a toast!', position: PopupPosition.top),
                   child: Text('Show Toast'),
                 ),
-
+                const SizedBox(height: 12),
                 // 使用 Loading
                 ElevatedButton(
                   onPressed: () async {
@@ -76,7 +76,7 @@ class ExampleHomePage extends StatelessWidget {
                   },
                   child: Text('Show Loading'),
                 ),
-
+                const SizedBox(height: 12),
                 // 使用 Confirm Dialog
                 ElevatedButton(
                   onPressed: () async {
@@ -86,21 +86,53 @@ class ExampleHomePage extends StatelessWidget {
                     );
                     print('Confirm result: $result'); // true, false, or null
                   },
-                  child: Text('Show Confirm Dialog'),
+                  child: Text('双按钮 Confirm Dialog'),
                 ),
-                ElevatedButton(
-                  onPressed: _showToast,
-                  child: const Text('Show Bottom Toast'),
-                ),
+
                 const SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: _showConfirmDialog,
-                  child: const Text('Show Confirm Dialog'),
+                  onPressed: () async {
+                    final result = await UnifiedPopups.showConfirm(
+                      content: "test showConfirm",
+                      confirmText: 'i kown' ,
+                      cancelText: null,
+                    );
+                  },
+                  child: const Text('单按钮 Confirm Dialog'),
                 ),
-                const SizedBox(height: 12),
+
+                const SizedBox(height: 12,),
                 ElevatedButton(
-                  onPressed: _showLoading,
-                  child: const Text('Show Loading (2s)'),
+                  onPressed: () async {
+                    final result = await UnifiedPopups.showConfirm(
+                      title: '自定义样式',
+                      content: '这是一个完全自定义样式的对话框。',
+                      confirmText: '接受',
+                      cancelText: '拒绝',
+                      showCloseButton: true,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.black, Colors.grey.shade200],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          )
+                        ],
+                      ),
+                      titleStyle: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                      contentStyle: const TextStyle(color: Colors.white70, fontSize: 16),
+                      confirmBgColor: Colors.green,
+                      cancelBgColor: Colors.transparent,
+                      cancelStyle: const TextStyle(color: Colors.white),
+                    );
+                  },
+                  child: Text("完全自定义样式"),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
@@ -129,99 +161,6 @@ class ExampleHomePage extends StatelessWidget {
     );
   }
 
-  void _showToast({String text = 'This is a success toast!'}) {
-    PopupManager.show(
-      PopupConfig(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.black87,
-            borderRadius: BorderRadius.circular(25.0),
-          ),
-          child: Text(
-            text,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-          ),
-        ),
-        position: PopupPosition.bottom,
-        animation: PopupAnimation.slideUp,
-        duration: const Duration(seconds: 2),
-        showBarrier: false, // Toast 通常没有遮罩
-      ),
-    );
-  }
-
-  void _showConfirmDialog() {
-    // 使用 hideLast() 可以方便地关闭当前弹窗，无需管理ID
-    PopupManager.show(
-      PopupConfig(
-        animation: PopupAnimation.fade,
-        child: Card(
-          margin: const EdgeInsets.all(30),
-          elevation: 8,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Confirm Deletion', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                const Text('Are you sure you want to delete this item? This action cannot be undone.', textAlign: TextAlign.center),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        print("Dismissed by Cancel");
-                        PopupManager.hideLast(); // 关闭最新的弹窗
-                      },
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      onPressed: () {
-                        print("Item Deleted!");
-                        PopupManager.hideLast(); // 关闭最新的弹窗
-                      },
-                      child: const Text('Delete', style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ),
-        onDismiss: () => print('Confirm dialog dismissed.'),
-      ),
-    );
-  }
-
-  void _showLoading() {
-    PopupManager.show(
-      PopupConfig(
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Loading...'),
-            ],
-          ),
-        ),
-        barrierDismissible: false,
-        duration: const Duration(seconds: 2), // 2秒后自动隐藏
-      ),
-    );
-  }
 
   void _showBottomSheet() {
     PopupManager.show(
@@ -318,7 +257,7 @@ class ExampleHomePage extends StatelessWidget {
                   onPressed: () {
                     // 2. 在对话框内部，显示一个 Toast。
                     // 这个操作不会关闭当前对话框。
-                    _showToast(text: 'Toast on top!');
+                    UnifiedPopups.showToast('This is a toast!' , position: PopupPosition.top);
                   },
                   child: const Text('Show Toast'),
                 ),
