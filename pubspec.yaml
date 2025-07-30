@@ -1,7 +1,8 @@
 name: unified_popups
 description: A unified popups SDK for Flutter, providing a flexible way to show toasts, dialogs, and other custom popups.
-version: 1.0.0
-homepage: # TODO: Add your repository URL here
+version: 1.0.3
+homepage: https://gitee.com/lin-ruiqiang/unified_popups
+repository: https://gitee.com/lin-ruiqiang/unified_popups
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
