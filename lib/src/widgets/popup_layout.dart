@@ -131,8 +131,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
           child: child,
         );
       case PopupAnimation.none:
-      default:
-        return child;
+      return child;
     }
   }
 
@@ -147,8 +146,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
       case PopupPosition.right:
         return Alignment.centerRight;
       case PopupPosition.center:
-      default:
-        return Alignment.center;
+      return Alignment.center;
     }
   }
 }

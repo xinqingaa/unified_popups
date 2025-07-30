@@ -1,6 +1,5 @@
 // lib/src/core/popup_manager.dart
 import 'dart:async';
-import 'dart:collection';
 import 'package:flutter/material.dart';
 
 part '../models/popup_config.dart';
@@ -19,7 +18,6 @@ class _PopupInfo {
     required this.entry,
     required this.controller,
     this.onDismissCallback,
-    this.dismissTimer,
   });
 }
 
