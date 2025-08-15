@@ -220,26 +220,115 @@ ElevatedButton(
 
 ### `PopupManager`
 
-| 方法                                 | 描述                                     |
-| ------------------------------------ | ---------------------------------------- |
-| `initialize({navigatorKey})`         | **(必须)** 初始化管理器。                |
-| `show(PopupConfig config)`           | 显示一个弹出层，根据 `config` 进行配置。 |
-| `hide()`                             | 隐藏当前显示的弹出层。                   |
+核心弹窗管理器，负责所有弹窗的底层生命周期控制。
+
+| 方法 | 描述 |
+| :--- | :--- |
+| `initialize({required navigatorKey})` | **(必须)** 初始化管理器，在 `main()` 函数中调用。 |
+| `show(PopupConfig config)` | **(核心)** 显示一个弹出层，返回一个唯一的 `String` ID 用于手动控制。 |
+| `hide(String popupId)` | 根据提供的 `popupId` 隐藏指定的弹出层。 |
+| `hideLast()` | 隐藏最后显示的一个弹出层。 |
+| `hideAll()` | 隐藏当前所有正在显示的弹出层。 |
+| `isVisible(String popupId)` | 检查指定 `popupId` 的弹出层当前是否可见，返回 `bool`。 |
 
 ### `PopupConfig`
 
-| 参数                 | 类型                  | 默认值                          | 描述                                                         |
-| -------------------- | --------------------- | ------------------------------- | ------------------------------------------------------------ |
-| `child`              | `Widget`              | **(必填)**                      | 你想要显示的任何 Widget。                                    |
-| `position`           | `PopupPosition`       | `center`                        | `top`, `center`, `bottom`。                                  |
-| `anchorKey`          | `GlobalKey?`          | `null`                          | 如果提供，弹出层会依附于此 `key` 对应的 Widget。             |
-| `anchorOffset`       | `Offset`              | `Offset.zero`                   | 当使用 `anchorKey` 时的位置偏移量。                          |
-| `animation`          | `PopupAnimation`      | `fade`                          | `none`, `fade`, `slideUp`, `slideDown`, `slideLeft`, `slideRight`。 |
-| `animationDuration`  | `Duration`            | `250ms`                         | 动画的持续时间。                                             |
-| `showBarrier`        | `bool`                | `true`                          | 是否显示半透明的遮盖层。                                     |
-| `barrierColor`       | `Color`               | `Colors.black54`                | 遮盖层的颜色和透明度。                                       |
-| `barrierDismissible` | `bool`                | `true`                          | 点击遮盖层时是否关闭弹出层。                                 |
-| `duration`           | `Duration?`           | `null`                          | 弹出层自动关闭的时间。`null` 表示不自动关闭。                |
-| `onShow`             | `VoidCallback?`       | `null`                          | 弹出层完全显示后的回调。                                     |
-| `onDismiss`          | `VoidCallback?`       | `null`                          | 弹出层完全关闭后的回调。                                     |
+用于 `PopupManager.show()` 的配置对象，描述一个弹窗的所有属性。
 
+| 参数 | 类型 | 默认值 | 描述 |
+| :--- | :--- | :--- | :--- |
+| `child` | `Widget` | **(必填)** | 你想要显示的任何 Widget。 |
+| `position` | `PopupPosition` | `center` | `top`, `center`, `bottom`, `left`, `right`。 |
+| `anchorKey` | `GlobalKey?` | `null` | 如果提供，弹出层会依附于此 `key` 对应的 Widget。 |
+| `anchorOffset` | `Offset` | `Offset.zero` | 当使用 `anchorKey` 时的位置偏移量。 |
+| `animation` | `PopupAnimation` | `fade` | `none`, `fade`, `slideUp`, `slideDown`, `slideLeft`, `slideRight`。 |
+| `animationDuration` | `Duration` | `320ms` | 动画的持续时间。 |
+| `showBarrier` | `bool` | `true` | 是否显示半透明的遮盖层。 |
+| `barrierColor` | `Color` | `Colors.black54` | 遮盖层的颜色和透明度。 |
+| `barrierDismissible` | `bool` | `true` | 点击遮盖层时是否关闭弹出层。 |
+| `useSafeArea` | `bool` | `true` | 内容是否应避开系统的安全区域（如刘海、底部导航条）。 |
+| `duration` | `Duration?` | `null` | 弹出层自动关闭的时间。`null` 表示不自动关闭。 |
+| `onShow` | `VoidCallback?` | `null` | 弹出层完全显示后的回调。 |
+| `onDismiss` | `VoidCallback?` | `null` | 弹出层完全关闭后的回调。 |
+
+### `UnifiedPopups`
+
+封装好的高级 API，推荐日常使用。
+
+#### `showToast()`
+
+显示一个 Toast 消息。返回 `void`。
+
+| 参数 | 类型 | 默认值 | 描述 |
+| :--- | :--- | :--- | :--- |
+| `message` | `String` | **(必填)** | Toast 显示的文本内容。 |
+| `position` | `PopupPosition` | `bottom` | Toast 显示的位置。 |
+| `duration` | `Duration` | `2 seconds` | Toast 持续显示的时长。 |
+| `showBarrier` | `bool` | `false` | 是否为 Toast 显示蒙层。 |
+| `barrierDismissible` | `bool` | `false` | 点击蒙层时是否关闭 Toast。 |
+| `padding` | `EdgeInsetsGeometry?` | `EdgeInsets.symmetric(h: 24, v: 12)` | 内容的内边距。 |
+| `margin` | `EdgeInsetsGeometry?` | `EdgeInsets.symmetric(h: 20, v: 40)` | 容器的外边距。 |
+| `decoration` | `Decoration?` | `BoxDecoration(...)` | 自定义容器样式（背景色、圆角等）。 |
+| `style` | `TextStyle?` | `TextStyle(color: Colors.white, fontSize: 16)` | 文本样式。 |
+| `textAlign` | `TextAlign?` | `center` | 文本对齐方式。 |
+
+#### `showLoading()` & `hideLoading()`
+
+显示和隐藏一个加载指示器。
+
+| 方法/参数 | 类型 | 默认值 | 描述 |
+| :--- | :--- | :--- | :--- |
+| **`showLoading()`** | **`String`** | - | **(方法)** 显示加载框，**返回其唯一 ID**。 |
+| `message` | `String?` | `null` | 加载框下方显示的文本。 |
+| `backgroundColor` | `Color?` | `Colors.white` | 容器背景色。 |
+| `borderRadius` | `double?` | `12.0` | 容器圆角半径。 |
+| `indicatorColor` | `Color?` | `Colors.black` | 加载指示器的颜色。 |
+| `indicatorStrokeWidth` | `double?` | `2.0` | 加载指示器的线条宽度。 |
+| `textStyle` | `TextStyle?` | `null` | 文本样式。 |
+| `barrierDismissible` | `bool` | `false` | 点击蒙层是否可关闭。 |
+| `barrierColor` | `Color` | `Colors.black54` | 蒙层颜色。 |
+| **`hideLoading(id)`** | **`void`** | - | **(方法)** 根据 `showLoading` 返回的 ID 关闭加载框。 |
+| `id` | `String` | **(必填)** | `showLoading` 返回的唯一 ID。 |
+
+#### `showConfirm()`
+
+显示一个确认对话框。返回 `Future<bool?>` (`true`: 确认, `false`: 取消, `null`: 点击蒙层或关闭按钮)。
+
+| 参数 | 类型 | 默认值 | 描述 |
+| :--- | :--- | :--- | :--- |
+| `title` | `String?` | `null` | 对话框标题。 |
+| `content` | `String` | **(必填)** | 对话框的主要内容。 |
+| `confirmText` | `String` | `'确认'` | 确认按钮的文本。 |
+| `cancelText` | `String?` | `'取消'` | 取消按钮的文本。如果为 `null`，则只显示一个确认按钮。 |
+| `showCloseButton` | `bool` | `true` | 是否显示右上角的关闭图标按钮。 |
+| `titleStyle` | `TextStyle?` | `null` | 自定义标题样式。 |
+| `contentStyle` | `TextStyle?` | `null` | 自定义内容样式。 |
+| `confirmStyle` | `TextStyle?` | `null` | 自定义确认按钮文本样式。 |
+| `cancelStyle` | `TextStyle?` | `null` | 自定义取消按钮文本样式。 |
+| `confirmBgColor` | `Color?` | `null` | 自定义确认按钮背景色。 |
+| `cancelBgColor` | `Color?` | `null` | 自定义取消按钮背景色。 |
+| `padding` | `EdgeInsetsGeometry?` | `null` | 容器的内边距。 |
+| `margin` | `EdgeInsetsGeometry?` | `null` | 容器的外边距。 |
+| `decoration` | `Decoration?` | `null` | 自定义容器样式（背景、圆角等）。 |
+
+#### `showSheet<T>()`
+
+从指定方向滑出一个面板。返回 `Future<T?>`，其值由 `childBuilder` 中的 `dismiss` 函数决定。
+
+| 参数 | 类型 | 默认值 | 描述 |
+| :--- | :--- | :--- | :--- |
+| `context` | `BuildContext` | **(必填)** | 用于获取屏幕尺寸等上下文信息。 |
+| `childBuilder` | `Widget Function(Function)` | **(必填)** | 内容构建器。接收一个 `dismiss([T? result])` 函数用于关闭面板并返回值。 |
+| `title` | `String?` | `null` | 面板的标题。 |
+| `direction` | `SheetDirection` | `bottom` | 面板滑出的方向 (`top`, `bottom`, `left`, `right`)。 |
+| `useSafeArea` | `bool?` | `false` | 内容是否使用 `SafeArea`。 |
+| `width` | `double?` | `null` | 面板宽度。左右方向默认为屏幕宽度的 70%。 |
+| `height` | `double?` | `null` | 面板高度。上下方向默认由内容自适应。 |
+| `backgroundColor` | `Color?` | `Colors.white` | 面板背景色。 |
+| `borderRadius` | `BorderRadius?` | (智能默认) | 面板圆角。默认会根据 `direction` 自动设置。 |
+| `boxShadow` | `List<BoxShadow>?` | (默认阴影) | 面板的阴影效果。 |
+| `padding` | `EdgeInsetsGeometry?` | `EdgeInsets.all(16)` | 内容的内边距。 |
+| `titlePadding` | `EdgeInsetsGeometry?` | `EdgeInsets.only(bottom: 8)` | 标题的内边距。 |
+| `titleStyle` | `TextStyle?` | (主题默认) | 标题的文本样式。 |
+| `titleAlign` | `TextAlign?` | `center` | 标题的对齐方式。 |
+| `titleSpacing` | `double?` | `16.0` | 标题和内容之间的间距。 |
