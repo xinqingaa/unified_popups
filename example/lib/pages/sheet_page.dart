@@ -39,7 +39,8 @@ class SheetPage extends StatelessWidget {
   void _showBottomSheet(BuildContext context) async {
     final result = await UnifiedPopups.showSheet<String>(
       context,
-      // title: '选择操作',
+      title: '选择操作',
+      useSafeArea: true,
       childBuilder: (dismiss) => ListView(
         shrinkWrap: true,
         children: [
@@ -84,10 +85,10 @@ class SheetPage extends StatelessWidget {
   }
 
   void _handleSheetResult(String? result) {
-    if (result != null) {
-      UnifiedPopups.showToast('你选择了: $result');
-    } else {
-      UnifiedPopups.showToast('关闭了 Sheet');
-    }
+    // if (result != null) {
+    //   UnifiedPopups.showToast('你选择了: $result');
+    // } else {
+    //   UnifiedPopups.showToast('关闭了 Sheet');
+    // }
   }
 }

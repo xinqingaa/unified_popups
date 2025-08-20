@@ -99,10 +99,24 @@ class _PopupLayoutState extends State<_PopupLayout> {
         child: content,
       );
 
-      // 根据配置决定是否包裹 SafeArea
-      return widget.config.useSafeArea
-          ? SafeArea(child: alignedContent)
-          : alignedContent;
+
+      if (widget.config.useSafeArea) {
+        // 如果是底部弹窗，我们不希望 SafeArea 在底部产生间距，
+        // 因为弹窗内容本身就在底部。但我们仍然需要顶部的安全区来避开状态栏。
+        if (widget.config.position == PopupPosition.bottom) {
+          return SafeArea(
+            bottom: false,
+            right: false,
+            left: false,
+            child: alignedContent,
+          );
+        } else {
+          // 对于所有其他方向的弹窗，使用标准的 SafeArea
+          return SafeArea(child: alignedContent);
+        }
+      } else {
+        return alignedContent;
+      }
     }
   }
 

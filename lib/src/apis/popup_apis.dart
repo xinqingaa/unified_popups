@@ -188,7 +188,6 @@ class UnifiedPopups {
     return completer.future;
   }
 
-  // 你还可以继续添加 showAlert, showBottomSheet 等...
   /// 显示一个从指定方向滑出的 Sheet 面板
   ///
   /// [context] BuildContext，用于获取屏幕尺寸
@@ -217,7 +216,6 @@ class UnifiedPopups {
       EdgeInsetsGeometry? titlePadding,
       TextStyle? titleStyle,
       TextAlign? titleAlign,
-      double? titleSpacing,
     }) {
     final completer = Completer<T?>();
     late String popupId;
@@ -257,6 +255,8 @@ class UnifiedPopups {
       sheetWidth = MediaQuery.of(context).size.width * 0.7;
     }
 
+    // 如果用户没有指定 useSafeArea，则根据方向智能判断。
+    // 底部弹窗通常不需要顶部安全区，而其他方向需要。
     final bool applySafeArea = useSafeArea ?? false;
     popupId = PopupManager.show(
       PopupConfig(
@@ -272,7 +272,6 @@ class UnifiedPopups {
           titlePadding: titlePadding,
           titleStyle: titleStyle,
           titleAlign: titleAlign,
-          titleSpacing: titleSpacing,
           // 使用 childBuilder 构建子 Widget，并传入 dismiss 函数
           child: childBuilder(dismiss),
         ),

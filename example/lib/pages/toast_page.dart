@@ -16,7 +16,11 @@ class ToastPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ElevatedButton(
-                onPressed: () => UnifiedPopups.showToast('This is a success toast!', toastType: ToastType.success),
+                onPressed: () => UnifiedPopups.showToast(
+                  'This is a success toast!',
+                  toastType: ToastType.success,
+                  position: PopupPosition.bottom,
+                ),
                 child: const Text('Show Success Toast'),
               ),
               const SizedBox(height: 12),
