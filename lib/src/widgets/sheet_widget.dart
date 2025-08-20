@@ -59,7 +59,7 @@ class SheetWidget extends StatelessWidget {
     const defaultBackgroundColor = Colors.white;
     final defaultBoxShadow = [const BoxShadow(blurRadius: 10, color: Colors.black12, spreadRadius: 2)];
     const defaultPadding = EdgeInsets.all(16.0);
-    const defaultTitlePadding = EdgeInsets.only(bottom: 8);
+    const defaultTitlePadding = EdgeInsets.only(bottom: 0);
     final defaultTitleStyle = Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold);
     const defaultTitleAlign = TextAlign.center;
     const defaultTitleSpacing = 16.0;

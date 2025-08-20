@@ -24,14 +24,14 @@ class LoadingWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.white,
+        color: backgroundColor ?? Colors.black.withValues(alpha: 0.80),
         borderRadius: BorderRadius.circular(borderRadius ?? 12.0),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           CircularProgressIndicator(
-            color: indicatorColor ?? Colors.black ,
+            color: indicatorColor ?? Colors.white ,
             strokeWidth: indicatorStrokeWidth ?? 2.0,
           ),
           if (message != null) ...[

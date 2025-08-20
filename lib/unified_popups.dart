@@ -7,4 +7,4 @@ export 'src/core/popup_manager.dart' show PopupManager;
 export 'src/core/popup_manager.dart' show PopupConfig, PopupPosition, PopupAnimation;
 
 // 导出API
-export 'src/apis/popup_apis.dart' show UnifiedPopups , SheetDirection;
+export 'src/apis/popup_apis.dart' show UnifiedPopups , SheetDirection , ToastType;

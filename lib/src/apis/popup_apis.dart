@@ -10,23 +10,26 @@ import '../widgets/confirm_widget.dart';
 
 enum SheetDirection { top, bottom, left, right }
 
+enum ToastType { success , warn , error , none }
+
 /// 提供一组预设好的、易于使用的弹窗 API
 class UnifiedPopups {
   /// 显示一个 Toast 消息
   ///
   /// [message] 消息内容
-  /// [position] 显示位置，默认底部
-  /// [duration] 显示时长，默认 2 秒
+  /// [position] 显示位置，默认居中
+  /// [duration] 显示时长，默认 1.2 秒
   /// [showBarrier] 是否展示蒙层，默认不显示
   /// [barrierDismissible] 点击蒙层是否关闭，默认关闭
   /// [padding], [margin], [decoration], [style], [textAlign] 用于自定义 Toast 样式
   static void showToast(
       String message, {
         // Popup 级别的配置
-        PopupPosition position = PopupPosition.bottom,
-        Duration duration = const Duration(seconds: 2),
+        PopupPosition position = PopupPosition.center,
+        Duration duration = const Duration(milliseconds: 1200),
         bool showBarrier = false,
         bool barrierDismissible = false,
+        ToastType toastType = ToastType.none,
         // Widget 级别的样式配置
         EdgeInsetsGeometry? padding,
         EdgeInsetsGeometry? margin,
@@ -44,6 +47,7 @@ class UnifiedPopups {
     PopupManager.show(
       PopupConfig(
         child: ToastWidget(
+          toastType:toastType,
           message: message,
           padding: padding,
           margin: margin,
@@ -73,6 +77,7 @@ class UnifiedPopups {
     double? indicatorStrokeWidth,
     TextStyle? textStyle,
     // 遮罩层参数
+    bool showBarrier = true,
     bool barrierDismissible = false,
     Color barrierColor = Colors.black54,
   }) {
@@ -87,7 +92,7 @@ class UnifiedPopups {
           textStyle: textStyle,
         ),
         position: PopupPosition.center,
-        showBarrier: true,
+        showBarrier: showBarrier,
         barrierDismissible: barrierDismissible,
         barrierColor: barrierColor,
         duration: null,
@@ -286,7 +291,4 @@ class UnifiedPopups {
     );
     return completer.future;
   }
-
-
-
 }
