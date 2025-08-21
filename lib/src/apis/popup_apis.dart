@@ -211,6 +211,7 @@ class UnifiedPopups {
       SheetDimension? height,
       SheetDimension? maxWidth,
       SheetDimension? maxHeight,
+      bool showCloseButton = false,
       Color? backgroundColor,
       BorderRadius? borderRadius,
       List<BoxShadow>? boxShadow,
@@ -282,6 +283,8 @@ class UnifiedPopups {
         child: SheetWidget(
           title: title,
           direction: direction,
+          showCloseButton: showCloseButton, // 传递新参数
+          onClose: () => dismiss(null), // 传递关闭回调
           width: resolvedWidth,
           height: resolvedHeight,
           maxWidth: resolvedMaxWidth,

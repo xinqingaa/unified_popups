@@ -55,23 +55,50 @@ class SheetPage extends StatelessWidget {
     final result = await UnifiedPopups.showSheet<String>(
       title: '选择操作',
       useSafeArea: true,
+      showCloseButton: true,
       childBuilder: (dismiss) => ListView(
         shrinkWrap: true,
         children: [
-          ListTile(title: const Text('分享'), onTap: () => dismiss('share')),
-          ListTile(title: const Text('编辑'), onTap: () => dismiss('edit')),
-          ListTile(title: const Text('删除'), onTap: () => dismiss('delete')),
-          const Divider(),
-          ListTile(title: const Text('取消'), onTap: () => dismiss()),
+          _buildItem(
+            onTap: () => dismiss('share'),
+            title: "分享"
+          ),
+          _buildItem(
+              onTap: () => dismiss('edit'),
+              title: "编辑"
+          ),
+          _buildItem(
+              onTap: () => dismiss('delete'),
+              title: "删除"
+          ),
+          _buildItem(
+              onTap: () => dismiss(),
+              title: "返回"
+          ),
         ],
       ),
     );
     _handleSheetResult(result);
   }
 
+  Widget _buildItem({required VoidCallback onTap , required String title}){
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10 , horizontal: 0),
+        child: Row(
+          children: [
+            Text(title)
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showLeftDrawer() async {
     final result = await UnifiedPopups.showSheet<String>(
-      direction: SheetDirection.left,
+      direction: SheetDirection.right,
+      showCloseButton: true,
       maxWidth: const SheetDimension.fraction(0.75),
       title: '菜单',
       childBuilder: (dismiss) => ListView(
@@ -87,6 +114,7 @@ class SheetPage extends StatelessWidget {
   void _showTopNotification() {
     UnifiedPopups.showSheet(
       direction: SheetDirection.top,
+      showCloseButton: true,
       title: '新消息',
       backgroundColor: Colors.amber.shade100,
       childBuilder: (dismiss) => ListTile(
@@ -121,7 +149,7 @@ class SheetPage extends StatelessWidget {
     UnifiedPopups.showSheet(
       title: '全屏内容',
       // 不提供任何 height 或 maxHeight
-      useSafeArea: false,
+      useSafeArea: true,
       childBuilder: (dismiss) => Container(
         color: Colors.blue.shade50,
         child: Center(
