@@ -1,10 +1,24 @@
 // lib/src/widgets/confirm_widget.dart
 import 'package:flutter/material.dart';
+import '../../unified_popups.dart';
 
 class ConfirmWidget extends StatelessWidget {
+  // 图片资源路径
+  final String? imagePath;
+  // 图片高度
+  final double? imageHeight;
+  // 图片宽度
+  final double? imageWidth;
+  // 文本对齐方式
+  final TextAlign? textAlign;
+  // 按钮布局方式
+  final ConfirmButtonLayout? buttonLayout;
+  // 按钮圆角
+  final BorderRadiusGeometry? buttonBorderRadius;
+
   final String? title;
   final String content;
-  final String confirmText;
+  final String? confirmText;
   final String? cancelText;
   final bool showCloseButton;
 
@@ -24,11 +38,17 @@ class ConfirmWidget extends StatelessWidget {
 
   const ConfirmWidget({
     super.key,
+    this.imagePath,
+    this.imageHeight = 80.0,
+    this.imageWidth,
     this.title,
     required this.content,
     required this.confirmText,
     this.cancelText,
     this.showCloseButton = false,
+    this.textAlign,
+    this.buttonLayout ,
+    this.buttonBorderRadius,
     required this.onConfirm,
     this.onCancel,
     this.onClose,
@@ -61,11 +81,20 @@ class ConfirmWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (imagePath != null) ...[
+          Image.asset(
+            imagePath!,
+            height: imageHeight,
+            width: imageWidth,
+          ),
+          const SizedBox(height: 16),
+        ],
         if (title != null) ...[
-          Text(title!, style: titleStyle ?? defaultTitleStyle, textAlign: TextAlign.center),
+          // ?? TextAlign.center
+          Text(title!, style: titleStyle ?? defaultTitleStyle, textAlign: textAlign ),
           const SizedBox(height: 12),
         ],
-        Text(content, style: contentStyle ?? defaultContentStyle, textAlign: TextAlign.center),
+        Text(content, style: contentStyle ?? defaultContentStyle, textAlign: textAlign ),
         const SizedBox(height: 28),
         _buildButtons(),
       ],
@@ -80,7 +109,6 @@ class ConfirmWidget extends StatelessWidget {
             padding: padding ?? defaultPadding,
             child: contentWidget,
           ),
-          // 如果显示关闭按钮，则在右上角添加一个 Positioned 的 IconButton
           if (showCloseButton)
             Positioned(
               top: 8,
@@ -96,50 +124,60 @@ class ConfirmWidget extends StatelessWidget {
     );
   }
 
-  /// 根据是否有 cancelText 来构建不同的按钮布局
+  /// 根据配置构建按钮布局
   Widget _buildButtons() {
-    const defaultCancelStyle = TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.w500);
-    const defaultConfirmStyle = TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold);
+    // 按钮圆角，提供默认值
+    final effectiveBorderRadius = buttonBorderRadius ?? BorderRadius.circular(12.0);
+    // 颜色逻辑
+    final effectiveConfirmBgColor = confirmBgColor ?? Colors.black87;
+    // 确认按钮文字固定为白色
+    const defaultConfirmTextStyle = TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold);
+    // 取消按钮文字颜色默认为确认按钮的背景色
+    final defaultCancelTextStyle = TextStyle(color: effectiveConfirmBgColor, fontSize: 14, fontWeight: FontWeight.w500);
+
     final confirmButton = TextButton(
       onPressed: onConfirm,
       style: TextButton.styleFrom(
-        backgroundColor: confirmBgColor ?? Colors.black87,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: effectiveConfirmBgColor,
+        shape: RoundedRectangleBorder(borderRadius: effectiveBorderRadius),
         padding: const EdgeInsets.symmetric(vertical: 12),
       ),
-      child: Text(confirmText, style: confirmStyle ?? defaultConfirmStyle),
+      child: Text(confirmText!, style: confirmStyle ?? defaultConfirmTextStyle),
     );
 
-    // 如果 cancelText 为 null，只显示一个居中的确认按钮
+
     if (cancelText == null) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      return confirmButton;
+    }
+
+    final cancelButton = TextButton(
+      onPressed: onCancel,
+      style: TextButton.styleFrom(
+        backgroundColor: cancelBgColor ?? Colors.black12,
+        shape: RoundedRectangleBorder(borderRadius: effectiveBorderRadius),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+      ),
+      child: Text(cancelText!, style: cancelStyle ?? defaultCancelTextStyle),
+    );
+
+    // 根据 buttonLayout 返回不同的布局
+    if (buttonLayout == ConfirmButtonLayout.column) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          confirmButton,
+          const SizedBox(height: 12),
+          cancelButton,
+        ],
+      );
+    } else { // 默认为 Row 布局
+      return Row(
+        children: [
+          Expanded(child: cancelButton),
+          const SizedBox(width: 12),
           Expanded(child: confirmButton),
         ],
       );
     }
-
-    // 否则，显示两个按钮
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Expanded(
-          child: TextButton(
-            onPressed: onCancel,
-            style: TextButton.styleFrom(
-              backgroundColor: cancelBgColor ?? Colors.black12,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-            child: Text(cancelText!, style: cancelStyle ?? defaultCancelStyle),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: confirmButton,
-        )
-      ],
-    );
   }
 }

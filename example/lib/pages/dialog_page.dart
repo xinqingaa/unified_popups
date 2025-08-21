@@ -20,6 +20,11 @@ class DialogPage extends StatelessWidget {
                   final result = await Pop.confirm(
                     title: 'Confirm Deletion',
                     content: 'Are you sure you want to delete this item?',
+                    buttonBorderRadius: BorderRadius.circular(24),
+                    imagePath: "assets/img.png",
+                    imageHeight: 40,
+                    textAlign: TextAlign.center,
+                    buttonLayout:ConfirmButtonLayout.column
                   );
                   print('Confirm result: $result');
                 },

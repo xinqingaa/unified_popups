@@ -4,12 +4,16 @@ part of '../core/popup_manager.dart';
 enum PopupPosition {
   /// 顶部，位于安全区域下方
   top,
+
   /// 居中，默认值
   center,
+
   /// 底部，位于安全区域上方
   bottom,
+
   /// 左侧，位于安全区域内
   left,
+
   /// 右侧，位于安全区域内
   right,
 }
@@ -18,14 +22,19 @@ enum PopupPosition {
 enum PopupAnimation {
   /// 无动画
   none,
+
   /// 淡入淡出
   fade,
+
   /// 从上往下滑入
   slideDown,
+
   /// 从下往上滑入
   slideUp,
+
   /// 从左往右滑入
   slideLeft,
+
   /// 从右往左滑入
   slideRight,
 }
@@ -33,5 +42,11 @@ enum PopupAnimation {
 /// sheet 弹出方向
 enum SheetDirection { top, bottom, left, right }
 
-/// toast等级
-enum ToastType { success , warn , error , none }
+/// toast 等级
+enum ToastType { success, warn, error, none }
+
+/// confirm 按钮的布局方式
+enum ConfirmButtonLayout {
+  row,
+  column,
+}

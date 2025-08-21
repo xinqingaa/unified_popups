@@ -111,6 +111,12 @@ abstract class Pop {
     TextStyle? contentStyle,
     TextStyle? confirmStyle,
     TextStyle? cancelStyle,
+    String? imagePath,
+    double? imageHeight,
+    double? imageWidth,
+    TextAlign? textAlign = TextAlign.center ,
+    ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
+    BorderRadiusGeometry? buttonBorderRadius,
     Color? confirmBgColor,
     Color? cancelBgColor,
     EdgeInsetsGeometry? padding,
@@ -122,6 +128,12 @@ abstract class Pop {
       content: content,
       confirmText: confirmText,
       cancelText: cancelText,
+      imagePath:imagePath,
+      imageHeight: imageHeight,
+      imageWidth: imageWidth,
+      textAlign: textAlign,
+      buttonLayout: buttonLayout,
+      buttonBorderRadius: buttonBorderRadius,
       showCloseButton: showCloseButton,
       titleStyle: titleStyle,
       contentStyle: contentStyle,
@@ -133,6 +145,7 @@ abstract class Pop {
       margin: margin,
       decoration: decoration,
     );
+
 
   /// 显示一个从指定方向滑出的 Sheet 面板
   ///
