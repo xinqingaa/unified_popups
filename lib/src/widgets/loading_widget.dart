@@ -21,6 +21,7 @@ class LoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const defaultStyle = TextStyle(color: Colors.white, fontSize: 16);
     return Container(
       padding: const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
@@ -38,7 +39,7 @@ class LoadingWidget extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message!,
-              style: textStyle,
+              style: textStyle ?? defaultStyle,
             ),
           ],
         ],

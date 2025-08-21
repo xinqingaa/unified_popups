@@ -52,7 +52,7 @@ class SheetPage extends StatelessWidget {
   }
 
   void _showBottomSheet() async {
-    final result = await UnifiedPopups.showSheet<String>(
+    final result = await Pop.sheet<String>(
       title: '选择操作',
       useSafeArea: true,
       showCloseButton: true,
@@ -96,7 +96,7 @@ class SheetPage extends StatelessWidget {
   }
 
   void _showLeftDrawer() async {
-    final result = await UnifiedPopups.showSheet<String>(
+    final result = await Pop.sheet<String>(
       direction: SheetDirection.right,
       showCloseButton: true,
       maxWidth: const SheetDimension.fraction(0.75),
@@ -112,7 +112,7 @@ class SheetPage extends StatelessWidget {
   }
 
   void _showTopNotification() {
-    UnifiedPopups.showSheet(
+    Pop.sheet(
       direction: SheetDirection.top,
       showCloseButton: true,
       title: '新消息',
@@ -127,7 +127,7 @@ class SheetPage extends StatelessWidget {
 
 
   void _showBottomMenu() async {
-    final result = await UnifiedPopups.showSheet<String>(
+    final result = await Pop.sheet<String>(
       title: '选择一个水果 可滚动',
       direction: SheetDirection.bottom,
       maxHeight: const SheetDimension.pixel(400),
@@ -146,7 +146,7 @@ class SheetPage extends StatelessWidget {
   }
 
   void _showFullScreenBottomDrawer() {
-    UnifiedPopups.showSheet(
+    Pop.sheet(
       title: '全屏内容',
       // 不提供任何 height 或 maxHeight
       useSafeArea: true,
@@ -163,7 +163,7 @@ class SheetPage extends StatelessWidget {
   }
 
   void _showShort(){
-    UnifiedPopups.showSheet(
+    Pop.sheet(
       title: '短列表',
       // maxHeight: const SheetDimension.fraction(0.6), // 最大占屏 60%
       childBuilder: (dismiss) => ListView(

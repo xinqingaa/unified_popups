@@ -16,7 +16,7 @@ class ToastPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ElevatedButton(
-                onPressed: () => UnifiedPopups.showToast(
+                onPressed: () => Pop.toast(
                   'This is a success toast!',
                   toastType: ToastType.success,
                   position: PopupPosition.bottom,
@@ -25,16 +25,16 @@ class ToastPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => UnifiedPopups.showToast('This is a warning toast.', toastType: ToastType.warn),
+                onPressed: () => Pop.toast('This is a warning toast.', toastType: ToastType.warn),
                 child: const Text('Show Warning Toast'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => UnifiedPopups.showToast('This is an error toast.', toastType: ToastType.error),
+                onPressed: () => Pop.toast('This is an error toast.', toastType: ToastType.error),
                 child: const Text('Show Error Toast'),
               ),
               ElevatedButton(
-                onPressed: () => UnifiedPopups.showToast('This is an error toast.'),
+                onPressed: () => Pop.toast('This is an error toast.'),
                 child: const Text('Show Toast'),
               ),
             ],

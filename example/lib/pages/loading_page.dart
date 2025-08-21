@@ -13,9 +13,9 @@ class LoadingPage extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
             onPressed: () async {
-              final loadingId = UnifiedPopups.showLoading(message: '正在加载...');
+              final loadingId = Pop.loading(message: 'loading');
               await Future.delayed(const Duration(seconds: 3));
-              UnifiedPopups.hideLoading(loadingId);
+              Pop.hideLoading(loadingId);
             },
             child: const Text('Show Loading for 3 seconds'),
           ),

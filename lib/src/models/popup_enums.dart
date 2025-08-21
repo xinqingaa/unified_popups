@@ -29,3 +29,9 @@ enum PopupAnimation {
   /// 从右往左滑入
   slideRight,
 }
+
+/// sheet 弹出方向
+enum SheetDirection { top, bottom, left, right }
+
+/// toast等级
+enum ToastType { success , warn , error , none }

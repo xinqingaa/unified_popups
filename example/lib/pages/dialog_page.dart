@@ -17,7 +17,7 @@ class DialogPage extends StatelessWidget {
             children: [
               ElevatedButton(
                 onPressed: () async {
-                  final result = await UnifiedPopups.showConfirm(
+                  final result = await Pop.confirm(
                     title: 'Confirm Deletion',
                     content: 'Are you sure you want to delete this item?',
                   );
@@ -28,7 +28,7 @@ class DialogPage extends StatelessWidget {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  UnifiedPopups.showConfirm(
+                  Pop.confirm(
                     content: "This is a single-button dialog.",
                     confirmText: 'I know',
                     cancelText: null,
@@ -39,7 +39,7 @@ class DialogPage extends StatelessWidget {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  UnifiedPopups.showConfirm(
+                  Pop.confirm(
                     title: '自定义样式',
                     content: '这是一个完全自定义样式的对话框。',
                     confirmText: '接受',

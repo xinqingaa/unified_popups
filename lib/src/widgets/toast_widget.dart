@@ -1,6 +1,6 @@
 // lib/src/widgets/toast_widget.dart
 import 'package:flutter/material.dart';
-import 'package:unified_popups/src/apis/popup_apis.dart';
+import '../core/popup_manager.dart';
 
 class ToastWidget extends StatelessWidget {
   final String message;

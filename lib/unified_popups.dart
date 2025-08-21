@@ -1,13 +1,9 @@
 library unified_popups;
+// 导出核心 API
+export 'src/apis/pop.dart' show Pop;
 
-// 导出核心管理器
-export 'src/core/popup_manager.dart' show PopupManager;
+// 导出核心管理器和配置（如果需要外部直接访问）
+export 'src/core/popup_manager.dart' show PopupManager, PopupConfig, PopupPosition, PopupAnimation , SheetDirection , ToastType;
 
-// 导出配置和枚举，方便用户使用
-export 'src/core/popup_manager.dart' show PopupConfig, PopupPosition, PopupAnimation;
-
-// 导出API
-export 'src/apis/popup_apis.dart' show UnifiedPopups , SheetDirection , ToastType;
-
-// 导出工具函数
-export 'src/utils/sheet_dimension.dart' show SheetDimension;
+// 工具函数
+export 'src/utils/sheet_dimension.dart';
