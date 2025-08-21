@@ -10,6 +10,11 @@ class SheetWidget extends StatefulWidget {
   final bool showCloseButton;
   final VoidCallback? onClose;
 
+  // --- 图片相关的新增和修改参数 ---
+  final String? imgPath;
+  final double imageSize;
+  final Offset imageOffset;
+
   // 尺寸控制
   final double? width;
   final double? height;
@@ -33,6 +38,9 @@ class SheetWidget extends StatefulWidget {
     required this.child,
     this.direction = SheetDirection.bottom,
     this.showCloseButton = false, // 默认不显示
+    this.imgPath,
+    this.imageSize = 60.0,
+    this.imageOffset = const Offset(16, -40),
     this.onClose,
     this.width,
     this.height,
@@ -163,7 +171,7 @@ class _SheetWidgetState extends State<SheetWidget> {
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
-              )
+              ),
           ],
         ),
       );
@@ -184,25 +192,53 @@ class _SheetWidgetState extends State<SheetWidget> {
           boxShadow: widget.boxShadow ?? defaultBoxShadow,
         ),
         child: Material(
-            color: Colors.transparent,
-            child: SafeArea(
-              child: Padding(
-                padding: widget.padding ?? defaultPadding,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (titleBar != null) titleBar,
-                    if (isHorizontal)
-                      Expanded(child: widget.child)
-                    else
-                      Flexible(child: widget.child),
-                  ],
-                ),
+          color: Colors.transparent,
+          child: SafeArea(
+            child: Padding(
+              padding: widget.padding ?? defaultPadding,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (titleBar != null) titleBar,
+                  if (isHorizontal)
+                    Expanded(child: widget.child)
+                  else
+                    Flexible(child: widget.child),
+                ],
               ),
-            )
+            ),
+          )
         ),
       ),
+    );
+
+    // 创建一个单独的图片 Widget
+    Widget? imageWidget;
+    if (widget.imgPath != null) {
+      imageWidget = Positioned(
+        // 使用新的参数进行定位
+        left: widget.imageOffset.dx,
+        top: widget.imageOffset.dy,
+        child: Image.asset(
+          widget.imgPath!,
+          width: widget.imageSize,
+          height: widget.imageSize,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    // 使用一个新的 Stack 来组合面板和图片
+    final mainLayout = Stack(
+      // 关键！允许子组件绘制到 Stack 边界之外
+      clipBehavior: Clip.none,
+      children: [
+        // 底层是白色面板
+        sheetContent,
+        // 顶层是图片（如果存在）
+        if (imageWidget != null && widget.direction == SheetDirection.bottom) imageWidget,
+      ],
     );
 
     // 使用 GestureDetector 包裹整个内容以捕获拖动手势
@@ -214,7 +250,7 @@ class _SheetWidgetState extends State<SheetWidget> {
       // 使用 Transform.translate 来根据拖动偏移量移动 Widget
       child: Transform.translate(
         offset: _dragOffset,
-        child: sheetContent,
+        child: mainLayout,
       ),
     );
   }

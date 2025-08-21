@@ -1,9 +1,5 @@
 part of 'pop.dart';
 
-/// 显示一个 Loading 加载指示器
-///
-/// [message] 加载时显示的文本，可选
-/// returns [String] 弹窗的唯一 ID，用于手动关闭
 String _loadingImpl({
   String? message,
   // 样式参数
@@ -36,9 +32,7 @@ String _loadingImpl({
   );
 }
 
-/// 隐藏 Loading
-///
-/// [id] showLoading 返回的 ID
+
 void _hideLoadingImpl(String id) {
   PopupManager.hide(id);
 }

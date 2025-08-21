@@ -130,6 +130,7 @@ class SheetPage extends StatelessWidget {
     final result = await Pop.sheet<String>(
       title: '选择一个水果 可滚动',
       direction: SheetDirection.bottom,
+      imgPath: "assets/temp.png",
       maxHeight: const SheetDimension.pixel(400),
       childBuilder: (dismiss) => ListView.builder(
         itemCount: 20, // 很多项，以确保内容会滚动
