@@ -8,3 +8,6 @@ export 'src/core/popup_manager.dart' show PopupConfig, PopupPosition, PopupAnima
 
 // 导出API
 export 'src/apis/popup_apis.dart' show UnifiedPopups , SheetDirection , ToastType;
+
+// 导出工具函数
+export 'src/utils/sheet_dimension.dart' show SheetDimension;

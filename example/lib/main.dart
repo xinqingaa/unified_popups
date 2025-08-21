@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         '/toast': (context) => const ToastPage(),
         '/dialog': (context) => const DialogPage(),
         '/loading': (context) => const LoadingPage(),
-        '/sheet': (context) => const SheetPage(),
+        '/sheet': (context) => SheetPage(),
         '/anchored': (context) => const AnchoredPage(),
       },
     );

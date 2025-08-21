@@ -39,10 +39,20 @@ class PopupManager {
   /// 按显示顺序记录弹窗ID，方便实现 hideLast()
   final List<String> _popupOrder = [];
 
+
+  static GlobalKey<NavigatorState> get navigatorKey {
+    if (_navigatorKey == null) {
+      throw StateError('PopupManager has not been initialized. Please call PopupManager.initialize() in your main function.');
+    }
+    return _navigatorKey!;
+  }
+
+
   /// 初始化管理器，必须在 MaterialApp 中设置 navigatorKey
   static void initialize({required GlobalKey<NavigatorState> navigatorKey}) {
     _navigatorKey = navigatorKey;
   }
+
 
   /// 显示弹出层，并返回一个唯一的 ID 用于后续控制。
   ///

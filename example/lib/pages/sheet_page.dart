@@ -16,18 +16,33 @@ class SheetPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ElevatedButton(
+                onPressed: _showBottomSheet,
                 child: const Text('Show Bottom Sheet'),
-                onPressed: () => _showBottomSheet(context),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
+                onPressed: _showLeftDrawer,
                 child: const Text('Show Left Drawer'),
-                onPressed: () => _showLeftDrawer(context),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
+                onPressed:_showTopNotification,
                 child: const Text('Show Top Notification'),
-                onPressed: () => _showTopNotification(context),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _showBottomMenu,
+                child: const Text('显示底部 Sheet 菜单 (可滚动)'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _showShort,
+                child: const Text('短列表'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _showFullScreenBottomDrawer,
+                child: const Text('全屏底部抽屉 (无尺寸限制)'),
               ),
             ],
           ),
@@ -36,9 +51,8 @@ class SheetPage extends StatelessWidget {
     );
   }
 
-  void _showBottomSheet(BuildContext context) async {
+  void _showBottomSheet() async {
     final result = await UnifiedPopups.showSheet<String>(
-      context,
       title: '选择操作',
       useSafeArea: true,
       childBuilder: (dismiss) => ListView(
@@ -55,10 +69,10 @@ class SheetPage extends StatelessWidget {
     _handleSheetResult(result);
   }
 
-  void _showLeftDrawer(BuildContext context) async {
+  void _showLeftDrawer() async {
     final result = await UnifiedPopups.showSheet<String>(
-      context,
       direction: SheetDirection.left,
+      maxWidth: const SheetDimension.fraction(0.75),
       title: '菜单',
       childBuilder: (dismiss) => ListView(
         children: [
@@ -70,9 +84,8 @@ class SheetPage extends StatelessWidget {
     _handleSheetResult(result);
   }
 
-  void _showTopNotification(BuildContext context) {
+  void _showTopNotification() {
     UnifiedPopups.showSheet(
-      context,
       direction: SheetDirection.top,
       title: '新消息',
       backgroundColor: Colors.amber.shade100,
@@ -84,11 +97,58 @@ class SheetPage extends StatelessWidget {
     );
   }
 
+
+  void _showBottomMenu() async {
+    final result = await UnifiedPopups.showSheet<String>(
+      title: '选择一个水果 可滚动',
+      direction: SheetDirection.bottom,
+      maxHeight: const SheetDimension.pixel(400),
+      childBuilder: (dismiss) => ListView.builder(
+        itemCount: 20, // 很多项，以确保内容会滚动
+        itemBuilder: (context, index) {
+          final fruit = '水果 ${index + 1}';
+          return ListTile(
+            title: Text(fruit),
+            onTap: () => dismiss(fruit),
+          );
+        },
+      ),
+    );
+    _handleSheetResult(result);
+  }
+
+  void _showFullScreenBottomDrawer() {
+    UnifiedPopups.showSheet(
+      title: '全屏内容',
+      // 不提供任何 height 或 maxHeight
+      useSafeArea: false,
+      childBuilder: (dismiss) => Container(
+        color: Colors.blue.shade50,
+        child: Center(
+          child: TextButton(
+            onPressed: () => dismiss(),
+            child: const Text('关闭'),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showShort(){
+    UnifiedPopups.showSheet(
+      title: '短列表',
+      // maxHeight: const SheetDimension.fraction(0.6), // 最大占屏 60%
+      childBuilder: (dismiss) => ListView(
+        shrinkWrap: true,
+        children: const [
+          ListTile(title: Text('选项 1')),
+          ListTile(title: Text('选项 2')),
+        ],
+      ),
+    );
+  }
+
   void _handleSheetResult(String? result) {
-    // if (result != null) {
-    //   UnifiedPopups.showToast('你选择了: $result');
-    // } else {
-    //   UnifiedPopups.showToast('关闭了 Sheet');
-    // }
+    print("result: $result");
   }
 }

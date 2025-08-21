@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
+import '../utils/sheet_dimension.dart';
 import '../widgets/sheet_widget.dart';
 import '../widgets/toast_widget.dart';
 import '../widgets/loading_widget.dart';
@@ -200,15 +201,16 @@ class UnifiedPopups {
   /// [backgroundColor], [borderRadius], [boxShadow] 等参数用于完全自定义 Sheet 的外观
   ///
   /// returns [Future<T?>] 当 Sheet 关闭时返回。如果通过 dismiss([result]) 关闭，则返回 result；如果点击蒙层关闭，则返回 null。
-  static Future<T?> showSheet<T>(
-    BuildContext context, {
+  static Future<T?> showSheet<T>({
       required Widget Function(void Function([T? result]) dismiss) childBuilder,
       String? title,
       SheetDirection direction = SheetDirection.bottom,
       bool? useSafeArea,
       // Widget 级别的样式配置
-      double? width,
-      double? height,
+      SheetDimension? width,
+      SheetDimension? height,
+      SheetDimension? maxWidth,
+      SheetDimension? maxHeight,
       Color? backgroundColor,
       BorderRadius? borderRadius,
       List<BoxShadow>? boxShadow,
@@ -249,22 +251,41 @@ class UnifiedPopups {
         break;
     }
 
-    // 为左右抽屉设置默认宽度
-    double? sheetWidth = width;
-    if (sheetWidth == null && (direction == SheetDirection.left || direction == SheetDirection.right)) {
-      sheetWidth = MediaQuery.of(context).size.width * 0.7;
+    // 从 PopupManager 获取全局 context 和屏幕尺寸
+    final context = PopupManager.navigatorKey.currentContext;
+    if (context == null) {
+      throw StateError('PopupManager could not find a valid BuildContext. Is the navigatorKey set correctly?');
     }
+    final screenSize = MediaQuery.of(context).size;
+
+    // 定义一个辅助函数来解析 SheetDimension
+    double? resolveDimension(SheetDimension? dimension, double fullSize) {
+      if (dimension == null) return null;
+      return switch (dimension) {
+        Pixel(value: final v) => v,
+        Fraction(value: final v) => v * fullSize,
+      };
+    }
+
+    // 解析所有尺寸参数为具体的 double? 值
+    final resolvedWidth = resolveDimension(width, screenSize.width);
+    final resolvedHeight = resolveDimension(height, screenSize.height);
+    final resolvedMaxWidth = resolveDimension(maxWidth, screenSize.width);
+    final resolvedMaxHeight = resolveDimension(maxHeight, screenSize.height);
+
 
     // 如果用户没有指定 useSafeArea，则根据方向智能判断。
     // 底部弹窗通常不需要顶部安全区，而其他方向需要。
-    final bool applySafeArea = useSafeArea ?? false;
+    final bool applySafeArea = useSafeArea ?? direction == SheetDirection.bottom ? true : false;
     popupId = PopupManager.show(
       PopupConfig(
         child: SheetWidget(
           title: title,
           direction: direction,
-          width: sheetWidth,
-          height: height,
+          width: resolvedWidth,
+          height: resolvedHeight,
+          maxWidth: resolvedMaxWidth,
+          maxHeight: resolvedMaxHeight,
           backgroundColor: backgroundColor,
           borderRadius: borderRadius,
           boxShadow: boxShadow,
