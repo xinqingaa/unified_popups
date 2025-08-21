@@ -39,7 +39,7 @@ class ConfirmWidget extends StatelessWidget {
   const ConfirmWidget({
     super.key,
     this.imagePath,
-    this.imageHeight = 80.0,
+    this.imageHeight,
     this.imageWidth,
     this.title,
     required this.content,
@@ -127,7 +127,7 @@ class ConfirmWidget extends StatelessWidget {
   /// 根据配置构建按钮布局
   Widget _buildButtons() {
     // 按钮圆角，提供默认值
-    final effectiveBorderRadius = buttonBorderRadius ?? BorderRadius.circular(12.0);
+    final effectiveBorderRadius = buttonBorderRadius ?? BorderRadius.circular(24.0);
     // 颜色逻辑
     final effectiveConfirmBgColor = confirmBgColor ?? Colors.black87;
     // 确认按钮文字固定为白色

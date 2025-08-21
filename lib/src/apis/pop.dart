@@ -104,6 +104,7 @@ abstract class Pop {
   static Future<bool?> confirm({
     String? title,
     required String content,
+    PopupPosition position = PopupPosition.center,
     String confirmText = 'confirm',
     String? cancelText = 'cancel',
     bool showCloseButton = true,
@@ -112,7 +113,7 @@ abstract class Pop {
     TextStyle? confirmStyle,
     TextStyle? cancelStyle,
     String? imagePath,
-    double? imageHeight,
+    double? imageHeight = 80,
     double? imageWidth,
     TextAlign? textAlign = TextAlign.center ,
     ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
@@ -126,6 +127,7 @@ abstract class Pop {
     _confirmImpl(
       title: title,
       content: content,
+      position:position,
       confirmText: confirmText,
       cancelText: cancelText,
       imagePath:imagePath,

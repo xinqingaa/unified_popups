@@ -1,10 +1,9 @@
 part of 'pop.dart';
 
-
-
 Future<bool?> _confirmImpl({
   String? title,
   required String content,
+  required PopupPosition position,
   String?  confirmText,
   String? cancelText,
   String? imagePath,
@@ -34,6 +33,12 @@ Future<bool?> _confirmImpl({
     }
   }
 
+  final animation = (position == PopupPosition.top)
+      ? PopupAnimation.slideDown
+      : (position == PopupPosition.bottom)
+      ? PopupAnimation.slideUp
+      : PopupAnimation.fade;
+
   popupId = PopupManager.show(
     PopupConfig(
       child: ConfirmWidget(
@@ -62,7 +67,8 @@ Future<bool?> _confirmImpl({
         margin: margin,
         decoration: decoration,
       ),
-      position: PopupPosition.center,
+      animation: animation,
+      position: position,
       barrierDismissible: true,
       onDismiss: () {
         // 如果是通过点击遮罩层关闭的，也需要 complete

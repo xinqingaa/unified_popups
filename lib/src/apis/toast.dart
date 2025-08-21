@@ -1,11 +1,9 @@
 part of 'pop.dart';
 
-
-
 void _toastImpl(
   String message, {
     // Popup 级别的配置
-    PopupPosition position = PopupPosition.center,
+    required PopupPosition position,
     Duration duration = const Duration(milliseconds: 1200),
     bool showBarrier = false,
     bool barrierDismissible = false,

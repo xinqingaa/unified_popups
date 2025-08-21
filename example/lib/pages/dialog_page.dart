@@ -22,13 +22,24 @@ class DialogPage extends StatelessWidget {
                     content: 'Are you sure you want to delete this item?',
                     buttonBorderRadius: BorderRadius.circular(24),
                     imagePath: "assets/img.png",
-                    imageHeight: 40,
-                    textAlign: TextAlign.center,
                     buttonLayout:ConfirmButtonLayout.column
                   );
                   print('Confirm result: $result');
                 },
-                child: const Text('双按钮 Confirm Dialog'),
+                child: const Text('双按钮（行） Confirm Dialog 带图片'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await Pop.confirm(
+                    title: 'Confirm Deletion',
+                    content: 'Are you sure you want to delete this item?',
+                    buttonBorderRadius: BorderRadius.circular(24),
+                    imagePath: "assets/img.png",
+                  );
+                  print('Confirm result: $result');
+                },
+                child: const Text('双按钮（列） Confirm Dialog 带图片'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -36,10 +47,26 @@ class DialogPage extends StatelessWidget {
                   Pop.confirm(
                     content: "This is a single-button dialog.",
                     confirmText: 'I know',
+                    buttonLayout:ConfirmButtonLayout.column,
                     cancelText: null,
                   );
                 },
                 child: const Text('单按钮 Confirm Dialog'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await Pop.confirm(
+                    title: 'Confirm Deletion',
+                    content: 'Are you sure you want to delete this item?',
+                    buttonBorderRadius: BorderRadius.circular(24),
+                    imagePath: "assets/img.png",
+                    buttonLayout:ConfirmButtonLayout.column,
+                    position: PopupPosition.bottom
+                  );
+                  print('Confirm result: $result');
+                },
+                child: const Text(' Confirm Dialog 底部'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -51,17 +78,17 @@ class DialogPage extends StatelessWidget {
                     cancelText: '拒绝',
                     showCloseButton: true,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.black, Colors.grey.shade200],
+                      gradient: const LinearGradient(
+                        colors: [Colors.tealAccent, Colors.white],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    titleStyle: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                    contentStyle: const TextStyle(color: Colors.white70, fontSize: 16),
+                    titleStyle: const TextStyle(color: Colors.blueAccent, fontSize: 20, fontWeight: FontWeight.bold),
+                    contentStyle: const TextStyle(color: Colors.blueGrey, fontSize: 16),
                     confirmBgColor: Colors.green,
-                    cancelBgColor: Colors.transparent,
+                    cancelBgColor: Colors.pink,
                     cancelStyle: const TextStyle(color: Colors.white),
                   );
                 },
