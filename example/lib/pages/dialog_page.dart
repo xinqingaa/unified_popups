@@ -4,6 +4,34 @@ import 'package:unified_popups/unified_popups.dart';
 class DialogPage extends StatelessWidget {
   const DialogPage({super.key});
 
+  Widget _buildInputList(){
+    return const Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          decoration: InputDecoration(
+            labelText: '姓名',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        SizedBox(height: 12),
+        TextField(
+          decoration: InputDecoration(
+            labelText: '邮箱',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        SizedBox(height: 12),
+        TextField(
+          decoration: InputDecoration(
+            labelText: '手机',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,9 +127,8 @@ class DialogPage extends StatelessWidget {
                   await Pop.confirm(
                     title: '输入信息',
                     content: '请填写下方字段，然后点击确认',
-                    // 不做键盘避让，演示遮挡
                     buttonLayout: ConfirmButtonLayout.column,
-                    footer: const Column(
+                    confirmChild: const Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         TextField(
@@ -123,6 +150,18 @@ class DialogPage extends StatelessWidget {
                 },
                 child: const Text('Confirm 含输入框（不避让键盘）'),
               ),
+              ElevatedButton(
+                onPressed: () async {
+                  await Pop.confirm(
+                    imagePath: "assets/img.png",
+                    content: '请填写以下信息后提交：',
+                    buttonLayout: ConfirmButtonLayout.column,
+                    confirmChild: _buildInputList(),
+                  );
+                },
+                child: const Text('含多输入框 Confirm（键盘避让+可滚动）'),
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         ),

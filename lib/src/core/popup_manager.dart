@@ -11,12 +11,14 @@ class _PopupInfo {
   final OverlayEntry entry;
   final AnimationController controller;
   final VoidCallback? onDismissCallback;
+  final PopupType type;
   Timer? dismissTimer;
 
   _PopupInfo({
     required this.entry,
     required this.controller,
     this.onDismissCallback,
+    this.type = PopupType.other,
   });
 }
 
@@ -90,6 +92,7 @@ class PopupManager {
       entry: overlayEntry,
       controller: animationController,
       onDismissCallback: config.onDismiss,
+      type: config.type,
     );
     _instance._popups[popupId] = popupInfo;
     _instance._popupOrder.add(popupId);
@@ -155,5 +158,44 @@ class PopupManager {
   /// 检查指定ID的弹窗是否仍然可见
   static bool isVisible(String popupId) {
     return _instance._popups.containsKey(popupId);
+  }
+
+  /// 是否存在非 Toast 的弹窗
+  static bool get hasNonToastPopup {
+    for (final id in _instance._popupOrder) {
+      final info = _instance._popups[id];
+      if (info != null && info.type != PopupType.toast) return true;
+    }
+    return false;
+  }
+
+  /// 关闭最新的非 Toast 弹窗。成功关闭返回 true
+  static bool hideLastNonToast() {
+    for (int i = _instance._popupOrder.length - 1; i >= 0; i--) {
+      final id = _instance._popupOrder[i];
+      final info = _instance._popups[id];
+      if (info != null && info.type != PopupType.toast) {
+        hide(id);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// 智能返回方法
+  ///
+  /// 如果有弹窗（非Toast），则关闭最上层的弹窗。
+  /// 否则，执行标准的 Navigator.pop()。
+  /// 这对于自定义返回按钮非常有用。
+  static void maybePop(BuildContext context) {
+    if (hideLastNonToast()) {
+      // 如果成功关闭了一个弹窗，则什么都不做
+      return;
+    } else {
+      // 否则，如果 context 仍然有效，则返回上一页
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    }
   }
 }

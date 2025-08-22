@@ -49,6 +49,7 @@ Future<DateTime?> _dateImpl({
       ),
       animation: animation,
       position: position,
+      type: PopupType.date,
       barrierDismissible: true,
       onDismiss: () {
         // 如果是通过点击遮罩层关闭的，也需要 complete

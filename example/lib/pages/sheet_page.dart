@@ -32,7 +32,7 @@ class SheetPage extends StatelessWidget {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: _showBottomMenu,
-                child: const Text('显示底部 Sheet 菜单 (可滚动)'),
+                child: const Text('长列表 Bottom Sheet'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -47,7 +47,7 @@ class SheetPage extends StatelessWidget {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: _showBottomSheetWithInputNoAvoid,
-                child: const Text('Bottom Sheet 含输入框（不避让键盘）'),
+                child: const Text('Bottom Sheet 含输入框'),
               ),
             ],
           ),

@@ -182,7 +182,7 @@ abstract class Pop {
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
     Decoration? decoration,
-    Widget? footer,
+    Widget? confirmChild,
   }) =>
       _confirmImpl(
         title: title,
@@ -206,7 +206,7 @@ abstract class Pop {
         padding: padding,
         margin: margin,
         decoration: decoration,
-        footer: footer,
+        confirmChild: confirmChild,
       );
 
   /// 显示一个从指定方向滑出的 Sheet 面板。

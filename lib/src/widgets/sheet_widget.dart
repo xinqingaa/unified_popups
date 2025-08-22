@@ -146,6 +146,10 @@ class _SheetWidgetState extends State<SheetWidget> {
     const defaultTitleAlign = TextAlign.center;
 
     bool isHorizontal = widget.direction == SheetDirection.left || widget.direction == SheetDirection.right;
+    final bool isChildScrollable = widget.child is ListView ||
+        widget.child is GridView ||
+        widget.child is CustomScrollView ||
+        widget.child is SingleChildScrollView;
 
     // 标题和关闭按钮的组合
     Widget? titleBar;
@@ -208,16 +212,23 @@ class _SheetWidgetState extends State<SheetWidget> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (titleBar != null) titleBar,
-                    // 当为垂直方向（top/bottom）时，内容在键盘弹出时可能空间不足，提供滚动容器
+                    // 当为垂直方向（top/bottom）时，如果 child 已经是可滚动组件，则不要再包一层
                     if (isHorizontal)
                       Expanded(child: widget.child)
-                    else
-                      Flexible(
-                        child: SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: widget.child,
+                    else ...[
+                      if (widget.child is ListView ||
+                          widget.child is GridView ||
+                          widget.child is CustomScrollView ||
+                          widget.child is SingleChildScrollView)
+                        Flexible(child: widget.child)
+                      else
+                        Flexible(
+                          child: SingleChildScrollView(
+                            physics: const ClampingScrollPhysics(),
+                            child: widget.child,
+                          ),
                         ),
-                      ),
+                    ],
                   ],
                 ),
               ),
@@ -257,10 +268,11 @@ class _SheetWidgetState extends State<SheetWidget> {
 
     // 使用 GestureDetector 包裹整个内容以捕获拖动手势
     return GestureDetector(
-      onVerticalDragUpdate: !isHorizontal ? _handleDragUpdate : null,
-      onVerticalDragEnd: !isHorizontal ? _handleDragEnd : null,
-      onHorizontalDragUpdate: isHorizontal ? _handleDragUpdate : null,
-      onHorizontalDragEnd: isHorizontal ? _handleDragEnd : null,
+      // 避免与内部可滚动组件手势冲突：当内容可滚动时不拦截对应方向的拖拽
+      onVerticalDragUpdate: !isHorizontal && !isChildScrollable ? _handleDragUpdate : null,
+      onVerticalDragEnd: !isHorizontal && !isChildScrollable ? _handleDragEnd : null,
+      onHorizontalDragUpdate: isHorizontal && !isChildScrollable ? _handleDragUpdate : null,
+      onHorizontalDragEnd: isHorizontal && !isChildScrollable ? _handleDragEnd : null,
       onTap: () {
         // 轻触内容区域时也尝试收起键盘，避免遮挡
         FocusScope.of(context).unfocus();

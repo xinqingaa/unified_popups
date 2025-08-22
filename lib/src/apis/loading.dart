@@ -28,6 +28,7 @@ String _loadingImpl({
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor,
       duration: null,
+      type: PopupType.loading,
     ),
   );
 }

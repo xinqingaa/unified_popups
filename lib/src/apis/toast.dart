@@ -38,6 +38,7 @@ void _toastImpl(
       animation: animation,
       showBarrier: showBarrier,
       barrierDismissible: barrierDismissible,
+      type: PopupType.toast,
     ),
   );
 }

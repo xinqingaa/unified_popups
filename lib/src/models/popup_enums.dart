@@ -50,3 +50,14 @@ enum ConfirmButtonLayout {
   row,
   column,
 }
+
+/// 弹层类型，用于系统返回事件处理等逻辑
+enum PopupType {
+  toast,
+  loading,
+  confirm,
+  sheet,
+  date,
+  menu,
+  other,
+}

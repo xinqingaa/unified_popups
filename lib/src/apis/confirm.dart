@@ -22,7 +22,7 @@ Future<bool?> _confirmImpl({
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
-  Widget? footer,
+  Widget? confirmChild,
 }) {
   final completer = Completer<bool?>();
   late String popupId;
@@ -67,11 +67,12 @@ Future<bool?> _confirmImpl({
         padding: padding,
         margin: margin,
         decoration: decoration,
-        footer: footer,
+        confirmChild: confirmChild,
       ),
       animation: animation,
       position: position,
       barrierDismissible: true,
+      type: PopupType.confirm,
       onDismiss: () {
         // 如果是通过点击遮罩层关闭的，也需要 complete
         if (!completer.isCompleted) {

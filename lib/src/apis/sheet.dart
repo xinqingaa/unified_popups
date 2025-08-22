@@ -105,6 +105,7 @@ Future<T?> _sheetImpl<T>({
       useSafeArea: applySafeArea,
       showBarrier: true,
       barrierDismissible: true,
+      type: PopupType.sheet,
       onDismiss: () {
         // 点击蒙层关闭
         if (!completer.isCompleted) {

@@ -31,7 +31,7 @@ class ConfirmWidget extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Decoration? decoration;
-  final Widget? footer;
+  final Widget? confirmChild;
 
   final VoidCallback onConfirm;
   final VoidCallback? onCancel;
@@ -62,7 +62,7 @@ class ConfirmWidget extends StatelessWidget {
     this.confirmStyle,
     this.cancelBgColor,
     this.confirmBgColor,
-    this.footer
+    this.confirmChild
   }) : assert(cancelText == null || onCancel != null,
   'onCancel must be provided if cancelText is not null.');
 
@@ -113,9 +113,9 @@ class ConfirmWidget extends StatelessWidget {
           const SizedBox(height: 12),
         ],
         Text(content, style: contentStyle ?? defaultContentStyle, textAlign: textAlign ),
-        if (footer != null) ...[
+        if (confirmChild != null) ...[
           const SizedBox(height: 12),
-          footer!,
+          confirmChild!,
         ],
         const SizedBox(height: 28),
         _buildButtons(onConfirmTap: handleConfirm, onCancelTap: handleCancel),

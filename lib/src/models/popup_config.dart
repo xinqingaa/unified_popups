@@ -44,6 +44,9 @@ class PopupConfig {
   /// [可选] 控制安全区域 默认在安全区域内
   final bool useSafeArea;
 
+  /// [必填] 弹层类型，驱动系统返回键拦截等策略
+  final PopupType type;
+
   PopupConfig({
     required this.child,
     this.position = PopupPosition.center,
@@ -58,5 +61,6 @@ class PopupConfig {
     this.duration,
     this.onShow,
     this.onDismiss,
+    this.type = PopupType.other,
   });
 }

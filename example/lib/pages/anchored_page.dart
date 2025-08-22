@@ -9,25 +9,39 @@ class AnchoredPage extends StatelessWidget {
     // GlobalKey 可以在 build 方法内部创建，因为它只在此处使用
     final GlobalKey anchorButtonKey = GlobalKey();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Anchored Popup Demo')),
-           body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              key: anchorButtonKey,
-              onPressed: () => _showAnchoredPopup(anchorButtonKey),
-              child: const Text('Show Anchored Popup Here'),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: () => _showAnchoredMenu(anchorButtonKey),
-              child: const Text('Show Pop.menu'),
-            ),
-          ],
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        if (didPop) return;
+        // 尝试关闭弹窗
+        final bool wasPopupHidden = PopupManager.hideLastNonToast();
+        // 如果没有弹窗，则返回页面
+        if (!wasPopupHidden) {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Anchored Popup Demo')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                key: anchorButtonKey,
+                onPressed: () => _showAnchoredPopup(anchorButtonKey),
+                child: const Text('Show Anchored Popup Here'),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: () => _showAnchoredMenu(anchorButtonKey),
+                child: const Text('Show Pop.menu'),
+              ),
+            ],
+          ),
         ),
-      ),
+      )
     );
   }
 
@@ -54,7 +68,7 @@ class AnchoredPage extends StatelessWidget {
     );
   }
 
-    void _showAnchoredMenu(GlobalKey anchorKey) async {
+  void _showAnchoredMenu(GlobalKey anchorKey) async {
     final selected = await Pop.menu<String>(
       anchorKey: anchorKey,
       anchorOffset: const Offset(0, 8),

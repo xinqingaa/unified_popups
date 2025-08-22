@@ -31,6 +31,7 @@ Future<T?> _menuImpl<T>({
       barrierColor: barrierColor,
       // 锚定菜单不使用 SafeArea
       useSafeArea: false,
+      type: PopupType.menu,
       // 传入菜单内容
       child: MenuWidget(
         child: builder(dismiss),
