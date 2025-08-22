@@ -11,7 +11,8 @@ Future<DateTime?> _dateImpl({
   Color? activeColor,
   Color? noActiveColor,
   Color? headerBg,
-  double? height
+  double? height,
+  double? radius,
 }) {
   final completer = Completer<DateTime?>();
   late String popupId;
@@ -33,7 +34,6 @@ Future<DateTime?> _dateImpl({
     PopupConfig(
       child: DatePickerWidget(
         initialDate: initialDate ?? DateTime.now(),
-        // 默认年份范围：1960年1月1日 到 今天
         minDate: minDate ?? DateTime(1960),
         maxDate: maxDate ?? DateTime.now(),
         title: title,
@@ -41,6 +41,7 @@ Future<DateTime?> _dateImpl({
         cancelText: cancelText,
         activeColor: activeColor,
         noActiveColor: noActiveColor,
+        radius: radius,
         height: height,
         headerBg: headerBg,
         onConfirm: (selectedDate) => dismiss(selectedDate),

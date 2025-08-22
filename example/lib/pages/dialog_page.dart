@@ -92,6 +92,37 @@ class DialogPage extends StatelessWidget {
                 },
                 child: const Text("完全自定义样式"),
               ),
+
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  await Pop.confirm(
+                    title: '输入信息',
+                    content: '请填写下方字段，然后点击确认',
+                    // 不做键盘避让，演示遮挡
+                    buttonLayout: ConfirmButtonLayout.column,
+                    footer: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          decoration: InputDecoration(
+                            labelText: '邮箱',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        TextField(
+                          decoration: InputDecoration(
+                            labelText: '手机',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text('Confirm 含输入框（不避让键盘）'),
+              ),
             ],
           ),
         ),

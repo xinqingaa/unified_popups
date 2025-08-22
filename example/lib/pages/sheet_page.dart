@@ -44,6 +44,11 @@ class SheetPage extends StatelessWidget {
                 onPressed: _showFullScreenBottomDrawer,
                 child: const Text('全屏底部抽屉 (无尺寸限制)'),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _showBottomSheetWithInputNoAvoid,
+                child: const Text('Bottom Sheet 含输入框（不避让键盘）'),
+              ),
             ],
           ),
         ),
@@ -173,6 +178,45 @@ class SheetPage extends StatelessWidget {
           ListTile(title: Text('选项 1')),
           ListTile(title: Text('选项 2')),
         ],
+      ),
+    );
+  }
+
+    void _showBottomSheetWithInputNoAvoid() async {
+    await Pop.sheet<void>(
+      title: '填写信息',
+      // 不做任何 viewInsets 处理，演示遮挡问题
+      childBuilder: (dismiss) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const TextField(
+              decoration: InputDecoration(
+                labelText: '昵称',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const TextField(
+              decoration: InputDecoration(
+                labelText: '备注',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => dismiss(),
+                    child: const Text('提交'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

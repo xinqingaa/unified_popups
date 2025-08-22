@@ -123,6 +123,8 @@ class _SheetWidgetState extends State<SheetWidget> {
     }
 
     if (shouldDismiss) {
+      // 键盘焦点管理：关闭前先收起键盘
+      FocusScope.of(context).unfocus();
       widget.onClose?.call();
     } else {
       // 如果未超过阈值，弹回原位
@@ -194,18 +196,30 @@ class _SheetWidgetState extends State<SheetWidget> {
         child: Material(
           color: Colors.transparent,
           child: SafeArea(
-            child: Padding(
-              padding: widget.padding ?? defaultPadding,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (titleBar != null) titleBar,
-                  if (isHorizontal)
-                    Expanded(child: widget.child)
-                  else
-                    Flexible(child: widget.child),
-                ],
+            // 键盘避让：使用 AnimatedPadding 根据键盘高度动态上移
+            child: AnimatedPadding(
+              padding: MediaQuery.of(context).viewInsets,
+              duration: kThemeAnimationDuration,
+              curve: Curves.easeOut,
+              child: Padding(
+                padding: widget.padding ?? defaultPadding,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (titleBar != null) titleBar,
+                    // 当为垂直方向（top/bottom）时，内容在键盘弹出时可能空间不足，提供滚动容器
+                    if (isHorizontal)
+                      Expanded(child: widget.child)
+                    else
+                      Flexible(
+                        child: SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          child: widget.child,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           )
@@ -247,6 +261,10 @@ class _SheetWidgetState extends State<SheetWidget> {
       onVerticalDragEnd: !isHorizontal ? _handleDragEnd : null,
       onHorizontalDragUpdate: isHorizontal ? _handleDragUpdate : null,
       onHorizontalDragEnd: isHorizontal ? _handleDragEnd : null,
+      onTap: () {
+        // 轻触内容区域时也尝试收起键盘，避免遮挡
+        FocusScope.of(context).unfocus();
+      },
       // 使用 Transform.translate 来根据拖动偏移量移动 Widget
       child: Transform.translate(
         offset: _dragOffset,

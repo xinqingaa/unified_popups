@@ -31,6 +31,7 @@ class ConfirmWidget extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Decoration? decoration;
+  final Widget? footer;
 
   final VoidCallback onConfirm;
   final VoidCallback? onCancel;
@@ -61,6 +62,7 @@ class ConfirmWidget extends StatelessWidget {
     this.confirmStyle,
     this.cancelBgColor,
     this.confirmBgColor,
+    this.footer
   }) : assert(cancelText == null || onCancel != null,
   'onCancel must be provided if cancelText is not null.');
 
@@ -73,8 +75,24 @@ class ConfirmWidget extends StatelessWidget {
     const defaultContentStyle = TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500, height: 1.5);
     final defaultDecoration = BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16.0),
+      borderRadius: BorderRadius.circular(32.0),
     );
+
+    // 焦点管理：在操作前收起键盘
+    void handleConfirm() {
+      FocusScope.of(context).unfocus();
+      onConfirm();
+    }
+
+    void handleCancel() {
+      FocusScope.of(context).unfocus();
+      onCancel?.call();
+    }
+
+    void handleClose() {
+      FocusScope.of(context).unfocus();
+      onClose?.call();
+    }
 
     // 内部内容
     final contentWidget = Column(
@@ -95,37 +113,50 @@ class ConfirmWidget extends StatelessWidget {
           const SizedBox(height: 12),
         ],
         Text(content, style: contentStyle ?? defaultContentStyle, textAlign: textAlign ),
+        if (footer != null) ...[
+          const SizedBox(height: 12),
+          footer!,
+        ],
         const SizedBox(height: 28),
-        _buildButtons(),
+        _buildButtons(onConfirmTap: handleConfirm, onCancelTap: handleCancel),
       ],
     );
 
-    return Container(
-      margin: margin ?? defaultMargin,
-      decoration: decoration ?? defaultDecoration,
-      child: Stack(
-        children: [
-          Padding(
-            padding: padding ?? defaultPadding,
-            child: contentWidget,
-          ),
-          if (showCloseButton)
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.black45, size: 20),
-                onPressed: onClose,
-                splashRadius: 20,
+    return AnimatedPadding(
+      padding: MediaQuery.of(context).viewInsets,
+      duration: kThemeAnimationDuration,
+      curve: Curves.easeOut,
+      child: Container(
+        margin: margin ?? defaultMargin,
+        decoration: decoration ?? defaultDecoration,
+        child: Stack(
+          children: [
+            // 小屏或键盘弹出时可滚动
+            SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Padding(
+                padding: padding ?? defaultPadding,
+                child: contentWidget,
               ),
             ),
-        ],
+            if (showCloseButton)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.black45, size: 20),
+                  onPressed: handleClose,
+                  splashRadius: 20,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
   /// 根据配置构建按钮布局
-  Widget _buildButtons() {
+  Widget _buildButtons({required VoidCallback onConfirmTap, VoidCallback? onCancelTap}) {
     // 按钮圆角，提供默认值
     final effectiveBorderRadius = buttonBorderRadius ?? BorderRadius.circular(24.0);
     // 颜色逻辑
@@ -136,7 +167,7 @@ class ConfirmWidget extends StatelessWidget {
     final defaultCancelTextStyle = TextStyle(color: effectiveConfirmBgColor, fontSize: 14, fontWeight: FontWeight.w500);
 
     final confirmButton = TextButton(
-      onPressed: onConfirm,
+      onPressed: onConfirmTap,
       style: TextButton.styleFrom(
         backgroundColor: effectiveConfirmBgColor,
         shape: RoundedRectangleBorder(borderRadius: effectiveBorderRadius),
@@ -151,7 +182,7 @@ class ConfirmWidget extends StatelessWidget {
     }
 
     final cancelButton = TextButton(
-      onPressed: onCancel,
+      onPressed: onCancelTap,
       style: TextButton.styleFrom(
         backgroundColor: cancelBgColor ?? Colors.black12,
         shape: RoundedRectangleBorder(borderRadius: effectiveBorderRadius),

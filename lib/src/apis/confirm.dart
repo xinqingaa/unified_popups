@@ -22,6 +22,7 @@ Future<bool?> _confirmImpl({
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
+  Widget? footer,
 }) {
   final completer = Completer<bool?>();
   late String popupId;
@@ -66,6 +67,7 @@ Future<bool?> _confirmImpl({
         padding: padding,
         margin: margin,
         decoration: decoration,
+        footer: footer,
       ),
       animation: animation,
       position: position,

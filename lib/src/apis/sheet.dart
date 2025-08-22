@@ -76,9 +76,8 @@ Future<T?> _sheetImpl<T>({
   final resolvedMaxHeight = resolveDimension(maxHeight, screenSize.height);
 
   // 如果用户没有指定 useSafeArea，则根据方向智能判断。
-  // 底部弹窗通常不需要顶部安全区，而其他方向需要。
-  final bool applySafeArea =
-      useSafeArea ?? direction == SheetDirection.bottom ? true : false;
+  final bool applySafeArea = useSafeArea ?? (direction == SheetDirection.bottom);
+
   popupId = PopupManager.show(
     PopupConfig(
       child: SheetWidget(

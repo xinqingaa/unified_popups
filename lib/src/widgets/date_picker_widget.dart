@@ -12,6 +12,7 @@ class DatePickerWidget extends StatefulWidget {
   final Color? noActiveColor;
   final Color? headerBg;
   final double? height;
+  final double? radius;
   final ValueChanged<DateTime> onConfirm;
   final VoidCallback onCancel;
 
@@ -27,6 +28,7 @@ class DatePickerWidget extends StatefulWidget {
     this.noActiveColor,
     this.headerBg,
     this.height,
+    this.radius,
     required this.onConfirm,
     required this.onCancel,
   });
@@ -81,20 +83,21 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final BorderRadiusGeometry radius = BorderRadius.only(
+      topLeft: Radius.circular(widget.radius!),
+      topRight: Radius.circular(widget.radius!),
+    );
     return Material(
       color: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24.0),
-          topRight: Radius.circular(24.0),
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
       ),
       child: SafeArea(
         top: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeader(),
+            _buildHeader(radius),
             _buildPickers(),
           ],
         ),
@@ -102,16 +105,13 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader( BorderRadiusGeometry radius) {
     return Container(
       decoration: BoxDecoration(
         color: widget.headerBg,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24.0),
-          topRight: Radius.circular(24.0),
-        )
+        borderRadius:radius
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -125,7 +125,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
             widget.title,
             style: const TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
               color: Colors.white,
             ),
           ),
@@ -155,13 +155,12 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
       child: GestureDetector(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Text(
             text ,
             textAlign: textAlign,
             style: const TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
               color: Colors.white,
             ),
           ),
