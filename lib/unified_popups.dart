@@ -16,3 +16,5 @@ export 'src/core/popup_manager.dart'
 
 // 工具函数
 export 'src/utils/sheet_dimension.dart';
+
+export 'src/widgets/pop_scope_widget.dart';

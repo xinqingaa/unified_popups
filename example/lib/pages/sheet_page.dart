@@ -6,7 +6,8 @@ class SheetPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScopeWidget(
+      child: Scaffold(
       appBar: AppBar(title: const Text('Sheet & Drawer Demo')),
       body: Center(
         child: SingleChildScrollView(
@@ -53,6 +54,7 @@ class SheetPage extends StatelessWidget {
           ),
         ),
       ),
+      )
     );
   }
 

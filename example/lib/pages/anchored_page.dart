@@ -9,19 +9,7 @@ class AnchoredPage extends StatelessWidget {
     // GlobalKey 可以在 build 方法内部创建，因为它只在此处使用
     final GlobalKey anchorButtonKey = GlobalKey();
 
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (bool didPop) {
-        if (didPop) return;
-        // 尝试关闭弹窗
-        final bool wasPopupHidden = PopupManager.hideLastNonToast();
-        // 如果没有弹窗，则返回页面
-        if (!wasPopupHidden) {
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
-          }
-        }
-      },
+    return PopScopeWidget(
       child: Scaffold(
         appBar: AppBar(title: const Text('Anchored Popup Demo')),
         body: Center(

@@ -6,7 +6,8 @@ class ToastPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScopeWidget(
+      child: Scaffold(
       appBar: AppBar(title: const Text('Toast Demo')),
       body: Center(
         child: Padding(
@@ -42,6 +43,7 @@ class ToastPage extends StatelessWidget {
           ),
         ),
       ),
+    )
     );
   }
 }
