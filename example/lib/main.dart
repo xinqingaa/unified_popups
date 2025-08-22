@@ -1,3 +1,4 @@
+import 'package:example/pages/date_page.dart';
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 import 'pages/anchored_page.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         '/loading': (context) => const LoadingPage(),
         '/sheet': (context) => const SheetPage(),
         '/anchored': (context) => const AnchoredPage(),
+        '/date': (context) => const DatePage()
       },
     );
   }

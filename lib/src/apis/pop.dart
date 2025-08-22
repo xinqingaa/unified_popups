@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
 import '../utils/sheet_dimension.dart';
 import '../widgets/confirm_widget.dart';
+import '../widgets/date_picker_widget.dart';
 import '../widgets/loading_widget.dart';
 import '../widgets/sheet_widget.dart';
 import '../widgets/toast_widget.dart';
@@ -12,6 +13,7 @@ part 'toast.dart';
 part 'loading.dart';
 part 'confirm.dart';
 part 'sheet.dart';
+part 'date.dart';
 
 /// 简洁、易用弹窗API的静态工具类。
 abstract class Pop {
@@ -197,4 +199,45 @@ abstract class Pop {
         titleStyle: titleStyle,
         titleAlign: titleAlign,
       );
+
+
+  /// 显示一个日期选择弹窗
+  ///
+  /// [initialDate] 初始选中的日期，默认为当前时间
+  /// [minDate] 最小可选日期，默认为 1960-01-01
+  /// [maxDate] 最大可选日期，默认为当前时间
+  /// [title] 弹窗标题，默认为 'Date of Birth'
+  /// [position] 弹窗位置，默认为 PopupPosition.bottom
+  /// [confirmText] 确认按钮文字
+  /// [cancelText] 取消按钮文字
+  ///
+  /// 返回一个 Future<DateTime?>，如果用户点击确认，则返回选择的日期；
+  /// 如果点击取消或遮罩，则返回 null。
+  static Future<DateTime?> date({
+    DateTime? initialDate,
+    DateTime? minDate,
+    DateTime? maxDate,
+    String title = 'Date of Birth',
+    PopupPosition position = PopupPosition.bottom,
+    String confirmText = 'Confirm',
+    String? cancelText = 'Cancel',
+    Color? activeColor = Colors.black,
+    Color? noActiveColor = Colors.black38,
+    Color? headerBg = Colors.grey,
+    double? height = 180.0
+  }) =>
+      _dateImpl(
+        initialDate: initialDate,
+        minDate: minDate,
+        maxDate: maxDate,
+        title: title,
+        position: position,
+        confirmText: confirmText,
+        cancelText: cancelText,
+        activeColor: activeColor,
+        noActiveColor: noActiveColor,
+        height: height,
+        headerBg: headerBg
+      );
+
 }

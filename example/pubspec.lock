@@ -131,23 +131,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.16.0"
-  omni_calendar_view:
-    dependency: "direct main"
-    description:
-      name: omni_calendar_view
-      sha256: "5a2123dea64d19fcdb0a81f6cb2d9c8e9f8094bffd2ed84a4bfce617194e1547"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.0.1"
-  omni_date_picker:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: "v1.0.4"
-      resolved-ref: "57bf727d3bab83b7f50625a07d4605ff79c83cd9"
-      url: "https://gitee.com/lin-ruiqiang/omni_date_picker"
-    source: git
-    version: "1.0.0"
   path:
     dependency: transitive
     description:

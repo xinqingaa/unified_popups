@@ -49,6 +49,12 @@ class HomePage extends StatelessWidget {
             subtitle: '跟随特定组件弹出的气泡',
             routeName: '/anchored',
           ),
+          _buildMenuItem(
+            context,
+            title: 'Date Popup',
+            subtitle: '时间选择器，用于选择生日',
+            routeName: '/date',
+          ),
           const Divider(),
           // 你之前的日历页面入口
           // _buildMenuItem(
