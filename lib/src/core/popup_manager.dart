@@ -40,6 +40,9 @@ class PopupManager {
   /// 按显示顺序记录弹窗ID，方便实现 hideLast()
   final List<String> _popupOrder = [];
 
+  /// 创建一个 ValueNotifier 来广播非 Toast 弹窗的状态。
+  static final ValueNotifier<bool> hasNonToastPopupNotifier = ValueNotifier(false);
+
   static GlobalKey<NavigatorState> get navigatorKey {
     if (_navigatorKey == null) {
       throw StateError(
@@ -51,6 +54,13 @@ class PopupManager {
   /// 初始化管理器，必须在 MaterialApp 中设置 navigatorKey
   static void initialize({required GlobalKey<NavigatorState> navigatorKey}) {
     _navigatorKey = navigatorKey;
+  }
+
+  /// 私有辅助方法，用于在状态改变时更新 Notifier。
+  static void _updateNotifier() {
+    // 只有当值确实发生变化时，ValueNotifier 才会通知其监听者，性能开销极小。
+    hasNonToastPopupNotifier.value = hasNonToastPopup;
+    // debugPrint('[PopupManager] Notifier: $hasNonToastPopup');
   }
 
   /// 显示弹出层，并返回一个唯一的 ID 用于后续控制。
@@ -97,6 +107,8 @@ class PopupManager {
     _instance._popups[popupId] = popupInfo;
     _instance._popupOrder.add(popupId);
 
+    _updateNotifier();
+
     // 4. 插入并播放动画
     overlay.insert(overlayEntry);
     animationController.forward().whenComplete(() {
@@ -121,6 +133,8 @@ class PopupManager {
     // 从管理器中立即移除，防止重复关闭
     _instance._popups.remove(popupId);
     _instance._popupOrder.remove(popupId);
+
+    _updateNotifier();
 
     // 取消可能存在的倒计时
     popupInfo.dismissTimer?.cancel();
@@ -171,14 +185,17 @@ class PopupManager {
 
   /// 关闭最新的非 Toast 弹窗。成功关闭返回 true
   static bool hideLastNonToast() {
+    // debugPrint('[PopupManager] hideLastNonToast.');
     for (int i = _instance._popupOrder.length - 1; i >= 0; i--) {
       final id = _instance._popupOrder[i];
       final info = _instance._popups[id];
       if (info != null && info.type != PopupType.toast) {
         hide(id);
+        // debugPrint('[PopupManager] Found and hid a non-toast popup.');
         return true;
       }
     }
+    // debugPrint('[PopupManager] No non-toast popup found to hide.');
     return false;
   }
 

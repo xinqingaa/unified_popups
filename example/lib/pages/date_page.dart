@@ -28,6 +28,7 @@ class DatePage extends StatelessWidget {
                 },
                 child: const Text('时间选择器: 默认配置 '),
               ),
+              const SizedBox(height: 12,),
               ElevatedButton(
                 onPressed: () async {
                   final result = await Pop.date(
@@ -42,7 +43,6 @@ class DatePage extends StatelessWidget {
                 },
                 child: const Text('时间选择器: 无圆角、 定制高度和头部颜色'),
               ),
-              const SizedBox(height: 12,),
             ],
           ),
         ),
