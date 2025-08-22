@@ -32,7 +32,6 @@ String _loadingImpl({
   );
 }
 
-
 void _hideLoadingImpl(String id) {
   PopupManager.hide(id);
 }

@@ -21,7 +21,7 @@ class ToastPage extends StatelessWidget {
                   toastType: ToastType.success,
                   position: PopupPosition.bottom,
                 ),
-                child: const Text('Show Success Toast'),
+                child: const Text('Show Success Toast （bottom）'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -33,9 +33,10 @@ class ToastPage extends StatelessWidget {
                 onPressed: () => Pop.toast('This is an error toast.', toastType: ToastType.error),
                 child: const Text('Show Error Toast'),
               ),
+              const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () => Pop.toast('This is an error toast.'),
-                child: const Text('Show Toast'),
+                child: const Text('Show None Toast'),
               ),
             ],
           ),

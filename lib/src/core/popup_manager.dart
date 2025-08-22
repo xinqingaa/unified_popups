@@ -6,7 +6,6 @@ part '../models/popup_config.dart';
 part '../models/popup_enums.dart';
 part '../widgets/popup_layout.dart';
 
-
 /// 一个用于管理 OverlayEntry 的辅助类，存储每个弹窗的独立状态。
 class _PopupInfo {
   final OverlayEntry entry;
@@ -39,20 +38,18 @@ class PopupManager {
   /// 按显示顺序记录弹窗ID，方便实现 hideLast()
   final List<String> _popupOrder = [];
 
-
   static GlobalKey<NavigatorState> get navigatorKey {
     if (_navigatorKey == null) {
-      throw StateError('PopupManager has not been initialized. Please call PopupManager.initialize() in your main function.');
+      throw StateError(
+          'PopupManager has not been initialized. Please call PopupManager.initialize() in your main function.');
     }
     return _navigatorKey!;
   }
-
 
   /// 初始化管理器，必须在 MaterialApp 中设置 navigatorKey
   static void initialize({required GlobalKey<NavigatorState> navigatorKey}) {
     _navigatorKey = navigatorKey;
   }
-
 
   /// 显示弹出层，并返回一个唯一的 ID 用于后续控制。
   ///
@@ -65,7 +62,8 @@ class PopupManager {
     }
 
     final overlay = _navigatorKey!.currentState!.overlay!;
-    final popupId = 'popup_${DateTime.now().microsecondsSinceEpoch}_${_instance._popups.length}';
+    final popupId =
+        'popup_${DateTime.now().microsecondsSinceEpoch}_${_instance._popups.length}';
 
     // 1. 为新弹窗创建独立的 AnimationController
     final animationController = AnimationController(
@@ -95,7 +93,6 @@ class PopupManager {
     );
     _instance._popups[popupId] = popupInfo;
     _instance._popupOrder.add(popupId);
-
 
     // 4. 插入并播放动画
     overlay.insert(overlayEntry);

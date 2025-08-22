@@ -4,7 +4,7 @@ Future<bool?> _confirmImpl({
   String? title,
   required String content,
   required PopupPosition position,
-  String?  confirmText,
+  String? confirmText,
   String? cancelText,
   String? imagePath,
   double? imageHeight,
@@ -36,8 +36,8 @@ Future<bool?> _confirmImpl({
   final animation = (position == PopupPosition.top)
       ? PopupAnimation.slideDown
       : (position == PopupPosition.bottom)
-      ? PopupAnimation.slideUp
-      : PopupAnimation.fade;
+          ? PopupAnimation.slideUp
+          : PopupAnimation.fade;
 
   popupId = PopupManager.show(
     PopupConfig(
@@ -47,7 +47,7 @@ Future<bool?> _confirmImpl({
         confirmText: confirmText,
         cancelText: cancelText,
         showCloseButton: showCloseButton,
-        imagePath:imagePath,
+        imagePath: imagePath,
         imageHeight: imageHeight,
         imageWidth: imageWidth,
         textAlign: textAlign,

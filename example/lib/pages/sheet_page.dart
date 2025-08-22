@@ -73,7 +73,7 @@ class SheetPage extends StatelessWidget {
           ),
           _buildItem(
               onTap: () => dismiss(),
-              title: "返回"
+              title: "关闭"
           ),
         ],
       ),
@@ -97,7 +97,7 @@ class SheetPage extends StatelessWidget {
 
   void _showLeftDrawer() async {
     final result = await Pop.sheet<String>(
-      direction: SheetDirection.right,
+      direction: SheetDirection.left,
       showCloseButton: true,
       maxWidth: const SheetDimension.fraction(0.75),
       title: '菜单',
@@ -156,7 +156,7 @@ class SheetPage extends StatelessWidget {
         child: Center(
           child: TextButton(
             onPressed: () => dismiss(),
-            child: const Text('关闭'),
+            child: const Text('返回'),
           ),
         ),
       ),

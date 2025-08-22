@@ -1,6 +1,5 @@
 part of 'pop.dart';
 
-
 Future<T?> _sheetImpl<T>({
   required Widget Function(void Function([T? result]) dismiss) childBuilder,
   String? title,
@@ -56,7 +55,8 @@ Future<T?> _sheetImpl<T>({
   // 从 PopupManager 获取全局 context 和屏幕尺寸
   final context = PopupManager.navigatorKey.currentContext;
   if (context == null) {
-    throw StateError('PopupManager could not find a valid BuildContext. Is the navigatorKey set correctly?');
+    throw StateError(
+        'PopupManager could not find a valid BuildContext. Is the navigatorKey set correctly?');
   }
   final screenSize = MediaQuery.of(context).size;
 
@@ -75,10 +75,10 @@ Future<T?> _sheetImpl<T>({
   final resolvedMaxWidth = resolveDimension(maxWidth, screenSize.width);
   final resolvedMaxHeight = resolveDimension(maxHeight, screenSize.height);
 
-
   // 如果用户没有指定 useSafeArea，则根据方向智能判断。
   // 底部弹窗通常不需要顶部安全区，而其他方向需要。
-  final bool applySafeArea = useSafeArea ?? direction == SheetDirection.bottom ? true : false;
+  final bool applySafeArea =
+      useSafeArea ?? direction == SheetDirection.bottom ? true : false;
   popupId = PopupManager.show(
     PopupConfig(
       child: SheetWidget(
@@ -116,4 +116,3 @@ Future<T?> _sheetImpl<T>({
   );
   return completer.future;
 }
-
