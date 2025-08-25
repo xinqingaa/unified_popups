@@ -163,6 +163,22 @@ class DialogPage extends StatelessWidget {
                 child: const Text('含多输入框 Confirm（键盘避让+可滚动）'),
               ),
               const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  await Pop.confirm(
+                    title: '危险操作确认',
+                    content: '此操作不可撤销，请确认您要删除此项目？',
+                    confirmText: '删除',
+                    cancelText: '取消',
+                    confirmBgColor: Colors.red,
+                    cancelBgColor: Colors.grey,
+                    buttonLayout: ConfirmButtonLayout.column,
+                    showCloseButton: true,
+                  );
+                },
+                child: const Text('危险操作确认框'),
+              ),
+              
             ],
           ),
         ),

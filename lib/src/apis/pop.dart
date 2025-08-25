@@ -148,6 +148,7 @@ abstract class Pop {
   /// - [buttonBorderRadius]：按钮圆角。
   /// - [confirmBgColor]/[cancelBgColor]：按钮背景色。
   /// - [padding]/[margin]/[decoration]：外观与间距定制。
+  /// - [confirmChild]：在内容与按钮之间插入的自定义组件，常用于放置输入框等交互元素。
   ///
   /// 用法示例：
   /// ```dart

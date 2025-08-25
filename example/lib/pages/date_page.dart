@@ -43,6 +43,26 @@ class DatePage extends StatelessWidget {
                 },
                 child: const Text('时间选择器: 无圆角、 定制高度和头部颜色'),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await Pop.date(
+                    title: '选择入职日期',
+                    initialDate: DateTime.now(),
+                    minDate: DateTime(2020, 1, 1),
+                    maxDate: DateTime.now(),
+                    confirmText: '确定',
+                    cancelText: '取消',
+                    activeColor: Colors.green,
+                    noActiveColor: Colors.grey,
+                    headerBg: Colors.green,
+                    height: 200,
+                    radius: 16,
+                  );
+                  log("入职日期: $result", name: "DatePage", level: 800);
+                },
+                child: const Text('入职日期选择器'),
+              ),
             ],
           ),
         ),

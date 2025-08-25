@@ -55,6 +55,16 @@ class SheetPage extends StatelessWidget {
                 onPressed: _showBottomSheetWithInputNoAvoid,
                 child: const Text('Bottom Sheet 含输入框'),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _showBottomSheetWithForm,
+                child: const Text('表单 Sheet'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _showBottomSheetWithCustomStyle,
+                child: const Text('自定义样式 Sheet'),
+              ),
             ],
           ),
         ),
@@ -246,5 +256,134 @@ class SheetPage extends StatelessWidget {
 
   void _handleSheetResult(String? result) {
     print("result: $result");
+  }
+
+  void _showBottomSheetWithForm() async {
+    await Pop.sheet<void>(
+      title: '用户信息表单',
+      childBuilder: (dismiss) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const TextField(
+              decoration: InputDecoration(
+                labelText: '姓名',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const TextField(
+              decoration: InputDecoration(
+                labelText: '邮箱',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const TextField(
+              decoration: InputDecoration(
+                labelText: '手机号',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => dismiss(),
+                    child: const Text('取消'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => dismiss(),
+                    child: const Text('提交'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBottomSheetWithCustomStyle() async {
+    await Pop.sheet<void>(
+      title: '自定义样式',
+      backgroundColor: Colors.grey[100],
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withAlpha(10),
+          blurRadius: 10,
+          offset: const Offset(0, -2),
+        ),
+      ],
+      childBuilder: (dismiss) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(5),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Column(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 48),
+                  SizedBox(height: 12),
+                  Text(
+                    '操作成功',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '您的操作已完成',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => dismiss(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('确定'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

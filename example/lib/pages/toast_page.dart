@@ -36,8 +36,39 @@ class ToastPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => Pop.toast('This is an error toast.'),
+                onPressed: () => Pop.toast('This is an none toast.'),
                 child: const Text('Show None Toast'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => Pop.toast(
+                  '这是一个自定义样式的 Toast',
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.purple, Colors.blue],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                child: const Text('自定义样式 Toast'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => Pop.toast(
+                  '带遮罩的 Toast，点击遮罩关闭',
+                  showBarrier: true,
+                  barrierDismissible: true,
+                  duration: const Duration(seconds: 5),
+                ),
+                child: const Text('带遮罩 Toast'),
               ),
             ],
           ),
