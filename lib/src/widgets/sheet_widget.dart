@@ -10,7 +10,7 @@ class SheetWidget extends StatefulWidget {
   final bool showCloseButton;
   final VoidCallback? onClose;
 
-  // --- 图片相关的新增和修改参数 ---
+  // 图片路由和属性
   final String? imgPath;
   final double imageSize;
   final Offset imageOffset;
@@ -65,6 +65,9 @@ class _SheetWidgetState extends State<SheetWidget> {
   // 定义关闭的阈值
   static const double _dismissThreshold = 75.0;
 
+  // 用于标记当前是否正在拖动整个 Sheet，以解决手势冲突
+  bool _isDraggingSheet = false;
+
   BorderRadius _getDefaultBorderRadius() {
     const radius = Radius.circular(20);
     switch (widget.direction) {
@@ -84,23 +87,26 @@ class _SheetWidgetState extends State<SheetWidget> {
     setState(() {
       // 累加拖动偏移
       final newOffset = _dragOffset + details.delta;
-
-      // 根据方向限制拖动
-      switch (widget.direction) {
-        case SheetDirection.bottom:
-          _dragOffset = Offset(0, newOffset.dy.clamp(0.0, double.infinity));
-          break;
-        case SheetDirection.top:
-          _dragOffset = Offset(0, newOffset.dy.clamp(double.negativeInfinity, 0.0));
-          break;
-        case SheetDirection.left:
-          _dragOffset = Offset(newOffset.dx.clamp(double.negativeInfinity, 0.0), 0);
-          break;
-        case SheetDirection.right:
-          _dragOffset = Offset(newOffset.dx.clamp(0.0, double.infinity), 0);
-          break;
-      }
+      _updateDragOffset(newOffset);
     });
+  }
+
+  // 更新拖动偏移量
+  void _updateDragOffset(Offset newOffset) {
+    switch (widget.direction) {
+      case SheetDirection.bottom:
+        _dragOffset = Offset(0, newOffset.dy.clamp(0.0, double.infinity));
+        break;
+      case SheetDirection.top:
+        _dragOffset = Offset(0, newOffset.dy.clamp(double.negativeInfinity, 0.0));
+        break;
+      case SheetDirection.left:
+        _dragOffset = Offset(newOffset.dx.clamp(double.negativeInfinity, 0.0), 0);
+        break;
+      case SheetDirection.right:
+        _dragOffset = Offset(newOffset.dx.clamp(0.0, double.infinity), 0);
+        break;
+    }
   }
 
   // 处理拖动结束
@@ -132,6 +138,76 @@ class _SheetWidgetState extends State<SheetWidget> {
         _dragOffset = Offset.zero;
       });
     }
+    // 重置拖动状态
+    _isDraggingSheet = false;
+  }
+
+  // 处理滚动通知 
+  bool _handleScrollNotification(ScrollNotification notification) {
+    // 如果不是垂直方向的 Sheet，直接忽略滚动通知，交由 GestureDetector 处理
+    if (widget.direction == SheetDirection.left || widget.direction == SheetDirection.right) {
+      return false;
+    }
+
+    // 打印所有通知类型，方便观察事件流
+    if (notification is ScrollEndNotification) {
+      debugPrint("⏹️ 滚动结束. 当前是否在拖拽Sheet: $_isDraggingSheet");
+      if (_isDraggingSheet) {
+        // 使用 notification.dragDetails 来获取结束时的速度信息
+        _handleDragEnd(DragEndDetails(velocity: notification.dragDetails?.velocity ?? Velocity.zero));
+      }
+      return false; // 返回 false 让其他监听器也能收到事件
+    }
+
+
+     // 2. 核心：处理越界滚动
+    if (notification is OverscrollNotification) {
+      // `overscroll` < 0 表示在顶部向下拖（或在左边向右拖）
+      // `overscroll` > 0 表示在底部向上拖（或在右边向左拖）
+      bool isDragInDismissDirection = false;
+      switch(widget.direction) {
+        case SheetDirection.bottom:
+          isDragInDismissDirection = notification.overscroll < 0;
+          break;
+        case SheetDirection.top:
+          isDragInDismissDirection = notification.overscroll > 0;
+          break;
+       default: break;
+      }
+
+      // 如果是在关闭方向上越界滚动，我们就开始拖拽Sheet
+      if (isDragInDismissDirection) {
+        // 标记我们正在拖拽 Sheet
+        if (!_isDraggingSheet) {
+          debugPrint("✅ 触发拖拽！(通过 OverscrollNotification)");
+          _isDraggingSheet = true;
+        }
+        
+        // 更新拖拽偏移量。overscroll 的方向与我们想要的偏移量方向相反，所以取反。
+       final double delta = -notification.overscroll;
+        final dragDelta = Offset(0, delta); 
+
+        setState(() {
+          // 在现有偏移量的基础上累加
+          _updateDragOffset(_dragOffset + dragDelta);
+        });
+
+        // 返回 true，消费掉这个事件，防止列表出现默认的越界效果（如蓝色光晕）
+        return true;
+      }
+    }
+
+    // 3. 如果用户从拖拽Sheet的状态，又反向滚动回列表，我们需要重置状态
+    if (_isDraggingSheet && notification is ScrollUpdateNotification) {
+      // 如果滚动回正方向，并且偏移量已经归零，那么就停止拖拽Sheet，把控制权还给ListView
+      if (_dragOffset.distance == 0) {
+         debugPrint("↩️ 已返回列表滚动模式");
+        _isDraggingSheet = false;
+      }
+    }
+
+    // 对于其他所有情况，返回 false，让滚动视图正常处理事件
+    return false;
   }
 
 
@@ -154,7 +230,7 @@ class _SheetWidgetState extends State<SheetWidget> {
     // 标题和关闭按钮的组合
     Widget? titleBar;
     if (widget.title != null || widget.showCloseButton) {
-      titleBar = Padding(
+      final titleContent  = Padding(
         padding: widget.titlePadding ?? defaultTitlePadding,
         child: Stack(
           children: [
@@ -181,6 +257,46 @@ class _SheetWidgetState extends State<SheetWidget> {
           ],
         ),
       );
+      titleBar = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: !isHorizontal ? _handleDragUpdate : null,
+        onVerticalDragEnd: !isHorizontal ? _handleDragEnd : null,
+        onHorizontalDragUpdate: isHorizontal ? _handleDragUpdate : null,
+        onHorizontalDragEnd: isHorizontal ? _handleDragEnd : null,
+        child: titleContent,
+      );
+    }
+
+    // 将 child 的构建和包裹逻辑提取出来
+    Widget buildChild() {
+      final content = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (titleBar != null) titleBar,
+          if (isHorizontal)
+            Expanded(child: widget.child)
+          else
+            Flexible(child: widget.child),
+        ],
+      );
+
+      // 如果 child 本身是可滚动的，就用 NotificationListener 包裹它
+        if (isChildScrollable) {
+        // 使用 ClampingScrollPhysics 可以获得更统一、无光晕的体验
+        final scrollableChild = ScrollConfiguration(
+          behavior: const ScrollBehavior().copyWith(
+            physics: const ClampingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+          ),
+          child: content,
+        );
+        return NotificationListener<ScrollNotification>(
+          onNotification: _handleScrollNotification,
+          child: scrollableChild,
+        );
+      }
+      // 否则，返回原始内容（将由外部的 GestureDetector 处理）
+      return content;
     }
 
 
@@ -207,30 +323,7 @@ class _SheetWidgetState extends State<SheetWidget> {
               curve: Curves.easeOut,
               child: Padding(
                 padding: widget.padding ?? defaultPadding,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (titleBar != null) titleBar,
-                    // 当为垂直方向（top/bottom）时，如果 child 已经是可滚动组件，则不要再包一层
-                    if (isHorizontal)
-                      Expanded(child: widget.child)
-                    else ...[
-                      if (widget.child is ListView ||
-                          widget.child is GridView ||
-                          widget.child is CustomScrollView ||
-                          widget.child is SingleChildScrollView)
-                        Flexible(child: widget.child)
-                      else
-                        Flexible(
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            child: widget.child,
-                          ),
-                        ),
-                    ],
-                  ],
-                ),
+                child: buildChild()
               ),
             ),
           )
@@ -268,11 +361,11 @@ class _SheetWidgetState extends State<SheetWidget> {
 
     // 使用 GestureDetector 包裹整个内容以捕获拖动手势
     return GestureDetector(
-      // 避免与内部可滚动组件手势冲突：当内容可滚动时不拦截对应方向的拖拽
-      onVerticalDragUpdate: !isHorizontal && !isChildScrollable ? _handleDragUpdate : null,
-      onVerticalDragEnd: !isHorizontal && !isChildScrollable ? _handleDragEnd : null,
-      onHorizontalDragUpdate: isHorizontal && !isChildScrollable ? _handleDragUpdate : null,
-      onHorizontalDragEnd: isHorizontal && !isChildScrollable ? _handleDragEnd : null,
+    // 当子组件是可滚动时，不处理这里的拖动，交由 NotificationListener
+      onVerticalDragUpdate: !isChildScrollable && !isHorizontal ? _handleDragUpdate : null,
+      onVerticalDragEnd: !isChildScrollable && !isHorizontal ? _handleDragEnd : null,
+      onHorizontalDragUpdate: isHorizontal ? _handleDragUpdate : null,
+      onHorizontalDragEnd: isHorizontal ? _handleDragEnd : null,
       onTap: () {
         // 轻触内容区域时也尝试收起键盘，避免遮挡
         FocusScope.of(context).unfocus();

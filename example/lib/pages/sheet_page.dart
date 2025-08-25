@@ -27,6 +27,11 @@ class SheetPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
+                onPressed: _showRightDrawer,
+                child: const Text('Show Right Drawer'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
                 onPressed:_showTopNotification,
                 child: const Text('Show Top Notification'),
               ),
@@ -43,7 +48,7 @@ class SheetPage extends StatelessWidget {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: _showFullScreenBottomDrawer,
-                child: const Text('全屏底部抽屉 (无尺寸限制)'),
+                child: const Text('全屏底部抽屉'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
@@ -118,6 +123,22 @@ class SheetPage extends StatelessWidget {
     _handleSheetResult(result);
   }
 
+  void _showRightDrawer() async {
+    final result = await Pop.sheet<String>(
+      direction: SheetDirection.right,
+      showCloseButton: true,
+      maxWidth: const SheetDimension.fraction(0.75),
+      title: '菜单',
+      childBuilder: (dismiss) => Column(
+        children: [
+          ListTile(leading: const Icon(Icons.abc), title: const Text('abc'), onTap: () => dismiss('abc')),
+          ListTile(leading: const Icon(Icons.vaccines), title: const Text('vaccines'), onTap: () => dismiss('vaccines')),
+        ],
+      ),
+    );
+    _handleSheetResult(result);
+  }
+
   void _showTopNotification() {
     Pop.sheet(
       direction: SheetDirection.top,
@@ -156,7 +177,7 @@ class SheetPage extends StatelessWidget {
   void _showFullScreenBottomDrawer() {
     Pop.sheet(
       title: '全屏内容',
-      // 不提供任何 height 或 maxHeight
+      height: const SheetDimension.fraction(1),
       useSafeArea: true,
       childBuilder: (dismiss) => Container(
         color: Colors.blue.shade50,
