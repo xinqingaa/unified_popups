@@ -19,7 +19,7 @@ class PopupConfig {
   /// [可选] 弹出动画，默认为 [PopupAnimation.fade]
   final PopupAnimation animation;
 
-  /// [可选] 动画持续时间，默认为 250 毫秒
+  /// [可选] 动画持续时间，默认为 300 毫秒
   final Duration animationDuration;
 
   /// [可选] 是否显示遮盖层，默认为 true
@@ -53,7 +53,7 @@ class PopupConfig {
     this.anchorKey,
     this.anchorOffset = Offset.zero,
     this.animation = PopupAnimation.fade,
-    this.animationDuration = const Duration(milliseconds: 320),
+    this.animationDuration = const Duration(milliseconds: 300),
     this.showBarrier = true,
     this.barrierColor = Colors.black54,
     this.barrierDismissible = true,

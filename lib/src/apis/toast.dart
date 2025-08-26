@@ -8,6 +8,7 @@ void _toastImpl(
   bool showBarrier = false,
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
+  Duration animationDuration = const Duration(milliseconds: 200),
   // Widget 级别的样式配置
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
@@ -36,6 +37,7 @@ void _toastImpl(
       position: position,
       duration: duration,
       animation: animation,
+      animationDuration: animationDuration,
       showBarrier: showBarrier,
       barrierDismissible: barrierDismissible,
       type: PopupType.toast,

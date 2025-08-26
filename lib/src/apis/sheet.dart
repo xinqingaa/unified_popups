@@ -19,6 +19,7 @@ Future<T?> _sheetImpl<T>({
   EdgeInsetsGeometry? titlePadding,
   TextStyle? titleStyle,
   TextAlign? titleAlign,
+  Duration animationDuration = const Duration(milliseconds: 400),
 }) {
   final completer = Completer<T?>();
   late String popupId;
@@ -102,6 +103,7 @@ Future<T?> _sheetImpl<T>({
       ),
       position: position,
       animation: animation,
+      animationDuration: animationDuration,
       useSafeArea: applySafeArea,
       showBarrier: true,
       barrierDismissible: true,

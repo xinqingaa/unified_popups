@@ -87,6 +87,12 @@ Pop.toast(
   duration: Duration(seconds: 3),
 );
 
+// ✅ 推荐：快速提示使用短动画
+Pop.toast(
+  '快速提示',
+  animationDuration: Duration(milliseconds: 100),
+);
+
 // ❌ 避免：过于复杂的 Toast
 Pop.toast(
   '这是一个非常长的消息，包含了太多信息，用户可能无法快速理解...',
@@ -129,6 +135,23 @@ Future<void> uploadFile() async {
     Pop.toast('上传失败', toastType: ToastType.error);
   }
 }
+
+// ✅ 推荐：快速操作使用短动画
+Future<void> quickOperation() async {
+  final loadingId = Pop.loading(
+    message: '快速处理中...',
+    animationDuration: Duration(milliseconds: 100),
+  );
+  
+  try {
+    await quickTask();
+    Pop.hideLoading(loadingId);
+    Pop.toast('处理完成', toastType: ToastType.success);
+  } catch (e) {
+    Pop.hideLoading(loadingId);
+    Pop.toast('处理失败', toastType: ToastType.error);
+  }
+}
 ```
 
 ### 3. Confirm 使用建议
@@ -164,6 +187,13 @@ final result = await Pop.confirm(
   confirmBgColor: Colors.red,
   buttonLayout: ConfirmButtonLayout.column,
   showCloseButton: true,
+);
+
+// ✅ 推荐：快速确认使用短动画
+final result = await Pop.confirm(
+  title: '快速确认',
+  content: '快速确认操作',
+  animationDuration: Duration(milliseconds: 150),
 );
 ```
 
@@ -226,6 +256,21 @@ await Pop.sheet(
     ),
   ),
 );
+
+// ✅ 推荐：快速面板使用短动画
+await Pop.sheet(
+  title: '快速操作',
+  animationDuration: Duration(milliseconds: 200),
+  childBuilder: (dismiss) => Container(
+    padding: EdgeInsets.all(16),
+    child: Column(
+      children: [
+        ListTile(title: Text('快速选项 1'), onTap: () => dismiss('option1')),
+        ListTile(title: Text('快速选项 2'), onTap: () => dismiss('option2')),
+      ],
+    ),
+  ),
+);
 ```
 
 ### 5. Date 使用建议
@@ -247,6 +292,12 @@ final date = await Pop.date(
   maxDate: DateTime.now(),
   confirmText: '确定',
   cancelText: '取消',
+);
+
+// ✅ 推荐：快速日期选择使用短动画
+final date = await Pop.date(
+  title: '快速选择日期',
+  animationDuration: Duration(milliseconds: 150),
 );
 ```
 
@@ -297,6 +348,96 @@ final result = await Pop.menu<String>(
     ],
   ),
 );
+```
+
+## 动画时长配置
+
+### 1. 动画时长选择原则
+
+不同的弹窗类型和场景需要不同的动画时长，以提供最佳的用户体验：
+
+```dart
+// ✅ 推荐：Toast 使用短动画（100-200ms）
+Pop.toast('快速提示', animationDuration: Duration(milliseconds: 100));
+
+// ✅ 推荐：Loading 使用短动画（100-150ms）
+Pop.loading(message: '快速加载', animationDuration: Duration(milliseconds: 100));
+
+// ✅ 推荐：Menu 使用短动画（150-200ms）
+Pop.menu(anchorKey: key, builder: (dismiss) => ...);
+
+// ✅ 推荐：Confirm 使用适中动画（200-300ms）
+Pop.confirm(content: '确认操作', animationDuration: Duration(milliseconds: 250));
+
+// ✅ 推荐：Date 使用适中动画（200-300ms）
+Pop.date(title: '选择日期', animationDuration: Duration(milliseconds: 250));
+
+// ✅ 推荐：Sheet 使用较长动画（300-500ms）
+Pop.sheet(childBuilder: (dismiss) => ..., animationDuration: Duration(milliseconds: 400));
+```
+
+### 2. 场景化动画配置
+
+```dart
+// 快速反馈场景
+class QuickFeedback {
+  static void showSuccess(String message) {
+    Pop.toast(
+      message,
+      toastType: ToastType.success,
+      animationDuration: Duration(milliseconds: 100),
+    );
+  }
+  
+  static void showError(String message) {
+    Pop.toast(
+      message,
+      toastType: ToastType.error,
+      animationDuration: Duration(milliseconds: 150),
+    );
+  }
+  
+  static String showQuickLoading(String message) {
+    return Pop.loading(
+      message: message,
+      animationDuration: Duration(milliseconds: 100),
+    );
+  }
+}
+
+// 重要操作场景
+class ImportantOperation {
+  static Future<bool?> confirmDangerous(String content) async {
+    return await Pop.confirm(
+      title: '危险操作',
+      content: content,
+      confirmText: '确认删除',
+      confirmBgColor: Colors.red,
+      animationDuration: Duration(milliseconds: 300), // 稍慢，给用户思考时间
+    );
+  }
+  
+  static Future<T?> showComplexSheet<T>(Widget Function(void Function([T? result]) dismiss) builder) async {
+    return await Pop.sheet<T>(
+      title: '复杂操作',
+      animationDuration: Duration(milliseconds: 500), // 较长动画，适合复杂内容
+      childBuilder: builder,
+    );
+  }
+}
+```
+
+### 3. 性能考虑
+
+```dart
+// ✅ 推荐：避免过长的动画时长
+Pop.toast('消息', animationDuration: Duration(milliseconds: 1000)); // ❌ 太慢
+
+// ✅ 推荐：避免过短的动画时长
+Pop.toast('消息', animationDuration: Duration(milliseconds: 50)); // ❌ 太快，用户可能看不到
+
+// ✅ 推荐：合理的动画时长范围
+Pop.toast('消息', animationDuration: Duration(milliseconds: 100)); // ✅ 合适
 ```
 
 ## 性能优化

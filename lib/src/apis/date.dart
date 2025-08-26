@@ -13,6 +13,7 @@ Future<DateTime?> _dateImpl({
   Color? headerBg,
   double? height,
   double? radius,
+  Duration animationDuration = const Duration(milliseconds: 250),
 }) {
   final completer = Completer<DateTime?>();
   late String popupId;
@@ -48,6 +49,7 @@ Future<DateTime?> _dateImpl({
         onCancel: () => dismiss(null),
       ),
       animation: animation,
+      animationDuration: animationDuration,
       position: position,
       type: PopupType.date,
       barrierDismissible: true,

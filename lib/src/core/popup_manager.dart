@@ -87,12 +87,14 @@ class PopupManager {
     // 注意 onDismiss 回调现在调用 hide(popupId)
     final overlayEntry = OverlayEntry(
       builder: (context) {
-        return _PopupLayout(
-          config: config,
-          animation: animationController.drive(
-            CurveTween(curve: Curves.easeInOut),
+        return RepaintBoundary(
+          child: _PopupLayout(
+            config: config,
+            animation: animationController.drive(
+              CurveTween(curve: Curves.easeInOut),
+            ),
+            onDismiss: () => hide(popupId),
           ),
-          onDismiss: () => hide(popupId),
         );
       },
     );

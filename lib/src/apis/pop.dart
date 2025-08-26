@@ -35,6 +35,7 @@ abstract class Pop {
   /// - [showBarrier]：是否显示遮罩层，默认 `false`。通常 toast 不需要遮罩。
   /// - [barrierDismissible]：点击遮罩是否关闭，默认 `false`。
   /// - [toastType]：Toast 等级（success/warn/error/none），默认 `none`。可用于展示不同图标/配色。
+  /// - [animationDuration]：动画持续时间，默认 `200ms`。toast 需要快速显示。
   /// - [padding]/[margin]/[decoration]/[style]/[textAlign]：细粒度样式定制。
   ///
   /// 用法示例：
@@ -49,6 +50,7 @@ abstract class Pop {
     bool showBarrier = false,
     bool barrierDismissible = false,
     ToastType toastType = ToastType.none,
+    Duration animationDuration = const Duration(milliseconds: 200),
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
     Decoration? decoration,
@@ -62,6 +64,7 @@ abstract class Pop {
         showBarrier: showBarrier,
         barrierDismissible: barrierDismissible,
         toastType: toastType,
+        animationDuration: animationDuration,
         padding: padding,
         margin: margin,
         decoration: decoration,
@@ -81,6 +84,7 @@ abstract class Pop {
   /// - [showBarrier]：是否显示遮罩层，默认 `true`。
   /// - [barrierDismissible]：点击遮罩是否关闭，默认 `false`（避免误触导致加载中被关）。
   /// - [barrierColor]：遮罩层颜色，默认 `Colors.black54`。
+  /// - [animationDuration]：动画持续时间，默认 `150ms`。loading 需要快速显示。
   ///
   /// 返回：
   /// - `String`：此 Loading 的唯一 ID，用于后续关闭。
@@ -101,6 +105,7 @@ abstract class Pop {
     bool showBarrier = true,
     bool barrierDismissible = false,
     Color barrierColor = Colors.black54,
+    Duration animationDuration = const Duration(milliseconds: 150),
   }) =>
       _loadingImpl(
         message: message,
@@ -112,6 +117,7 @@ abstract class Pop {
         showBarrier: showBarrier,
         barrierDismissible: barrierDismissible,
         barrierColor: barrierColor,
+        animationDuration: animationDuration,
       );
 
   /// 隐藏 Loading。
@@ -130,8 +136,8 @@ abstract class Pop {
   /// 显示一个确认对话框。
   ///
   /// 返回值语义：
-  /// - 用户点击“确认”返回 `true`；
-  /// - 用户点击“取消”返回 `false`；
+  /// - 用户点击"确认"返回 `true`；
+  /// - 用户点击"取消"返回 `false`；
   /// - 点击遮罩或关闭按钮返回 `null`。
   ///
   /// 参数：
@@ -149,6 +155,7 @@ abstract class Pop {
   /// - [confirmBgColor]/[cancelBgColor]：按钮背景色。
   /// - [padding]/[margin]/[decoration]：外观与间距定制。
   /// - [confirmChild]：在内容与按钮之间插入的自定义组件，常用于放置输入框等交互元素。
+  /// - [animationDuration]：动画持续时间，默认 `250ms`。confirm 需要适中的动画时长。
   ///
   /// 用法示例：
   /// ```dart
@@ -184,6 +191,7 @@ abstract class Pop {
     EdgeInsetsGeometry? margin,
     Decoration? decoration,
     Widget? confirmChild,
+    Duration animationDuration = const Duration(milliseconds: 250),
   }) =>
       _confirmImpl(
         title: title,
@@ -208,6 +216,7 @@ abstract class Pop {
         margin: margin,
         decoration: decoration,
         confirmChild: confirmChild,
+        animationDuration: animationDuration,
       );
 
   /// 显示一个从指定方向滑出的 Sheet 面板。
@@ -230,6 +239,7 @@ abstract class Pop {
   /// - [imgPath]：可选顶部装饰图。
   /// - [backgroundColor]/[borderRadius]/[boxShadow]：容器外观定制。
   /// - [padding]/[titlePadding]/[titleStyle]/[titleAlign]：间距与标题样式。
+  /// - [animationDuration]：动画持续时间，默认 `400ms`。sheet 需要更长的动画时长。
   ///
   /// 用法示例：
   /// ```dart
@@ -263,6 +273,7 @@ abstract class Pop {
     EdgeInsetsGeometry? titlePadding,
     TextStyle? titleStyle,
     TextAlign? titleAlign,
+    Duration animationDuration = const Duration(milliseconds: 400),
   }) =>
       _sheetImpl<T>(
         childBuilder: childBuilder,
@@ -282,12 +293,13 @@ abstract class Pop {
         titlePadding: titlePadding,
         titleStyle: titleStyle,
         titleAlign: titleAlign,
+        animationDuration: animationDuration,
       );
 
   /// 显示一个日期选择弹窗。
   ///
   /// 返回：
-  /// - `Future<DateTime?>`：点击“确认”返回所选日期；取消或点击遮罩返回 `null`。
+  /// - `Future<DateTime?>`：点击"确认"返回所选日期；取消或点击遮罩返回 `null`。
   ///
   /// 参数：
   /// - [initialDate]：初始选中日期，默认当前时间。
@@ -300,6 +312,7 @@ abstract class Pop {
   /// - [headerBg]：头部背景色。
   /// - [height]：组件内容高度，默认 `180.0`。
   /// - [radius]：圆角，默认 `24.0`。
+  /// - [animationDuration]：动画持续时间，默认 `250ms`。date 需要适中的动画时长。
   ///
   /// 用法示例：
   /// ```dart
@@ -323,7 +336,8 @@ abstract class Pop {
     Color? noActiveColor = Colors.black38,
     Color? headerBg = Colors.blue,
     double? height = 180.0,
-    double? radius = 24.0
+    double? radius = 24.0,
+    Duration animationDuration = const Duration(milliseconds: 250),
   }) =>
     _dateImpl(
       initialDate: initialDate,
@@ -337,7 +351,8 @@ abstract class Pop {
       noActiveColor: noActiveColor,
       height: height,
       headerBg: headerBg,
-      radius: radius
+      radius: radius,
+      animationDuration: animationDuration,
     );
 
 
@@ -353,6 +368,7 @@ abstract class Pop {
   /// - [builder]：内容构建器。注入 `dismiss([T? result])` 用于关闭并回传。
   /// - [showBarrier]/[barrierDismissible]/[barrierColor]：遮罩设置，默认透明可点空白关闭。
   /// - [animation]/[animationDuration]：动效设置，默认 `fade/200ms`。
+  /// - [animationDuration]：动画持续时间，默认 `200ms`。menu 需要快速响应。
   static Future<T?> menu<T>({
     required GlobalKey anchorKey,
     Offset anchorOffset = Offset.zero,

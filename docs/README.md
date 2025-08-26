@@ -90,6 +90,7 @@ Pop.toast(
   bool showBarrier = false,
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
+  Duration animationDuration = const Duration(milliseconds: 200),
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
@@ -103,6 +104,7 @@ Pop.toast(
 - `position`：显示位置，支持 `top`、`center`、`bottom`、`left`、`right`
 - `duration`：显示时长，默认 1.2 秒
 - `toastType`：提示类型，支持 `success`、`warn`、`error`、`none`
+- `animationDuration`：动画持续时间，默认 200ms
 - `showBarrier`：是否显示遮罩层
 - `barrierDismissible`：点击遮罩是否关闭
 
@@ -123,6 +125,12 @@ Pop.toast(
   ),
   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
 );
+
+// 自定义动画时长
+Pop.toast(
+  '快速提示',
+  animationDuration: Duration(milliseconds: 100),
+);
 ```
 
 ### Loading 加载指示器
@@ -140,6 +148,7 @@ String loading({
   bool showBarrier = true,
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
+  Duration animationDuration = const Duration(milliseconds: 150),
 })
 ```
 
@@ -164,6 +173,12 @@ final loadingId = Pop.loading(
     fontSize: 16,
     fontWeight: FontWeight.bold,
   ),
+);
+
+// 快速显示 Loading
+final loadingId = Pop.loading(
+  message: '快速加载',
+  animationDuration: Duration(milliseconds: 100),
 );
 ```
 
@@ -195,6 +210,7 @@ Future<bool?> confirm({
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
   Widget? confirmChild,
+  Duration animationDuration = const Duration(milliseconds: 250),
 })
 ```
 
@@ -233,6 +249,13 @@ final result = await Pop.confirm(
   confirmBgColor: Colors.red,
   buttonLayout: ConfirmButtonLayout.column,
 );
+
+// 快速确认对话框
+final result = await Pop.confirm(
+  title: '快速确认',
+  content: '快速确认对话框',
+  animationDuration: Duration(milliseconds: 150),
+);
 ```
 
 ### Sheet 底部面板
@@ -258,6 +281,7 @@ Future<T?> sheet<T>({
   EdgeInsetsGeometry? titlePadding,
   TextStyle? titleStyle,
   TextAlign? titleAlign,
+  Duration animationDuration = const Duration(milliseconds: 400),
 })
 ```
 
@@ -266,6 +290,7 @@ Future<T?> sheet<T>({
 - `direction`：滑出方向，支持 `top`、`bottom`、`left`、`right`
 - `width`/`height`：尺寸，支持像素值和百分比
 - `useSafeArea`：是否使用安全区域
+- `animationDuration`：动画持续时间，默认 400ms
 
 **使用示例：**
 ```dart
@@ -314,6 +339,16 @@ await Pop.sheet<void>(
     child: Text('自定义内容'),
   ),
 );
+
+// 快速面板
+await Pop.sheet<void>(
+  title: '快速面板',
+  animationDuration: Duration(milliseconds: 200),
+  childBuilder: (dismiss) => Container(
+    padding: EdgeInsets.all(16),
+    child: Text('快速内容'),
+  ),
+);
 ```
 
 ### Date 日期选择器
@@ -333,7 +368,8 @@ Future<DateTime?> date({
   Color? noActiveColor = Colors.black38,
   Color? headerBg = Colors.blue,
   double? height = 180.0,
-  double? radius = 24.0
+  double? radius = 24.0,
+  Duration animationDuration = const Duration(milliseconds: 250),
 })
 ```
 
@@ -358,6 +394,12 @@ final date = await Pop.date(
   headerBg: Colors.green,
   height: 200,
   radius: 16,
+);
+
+// 快速日期选择
+final date = await Pop.date(
+  title: '快速选择日期',
+  animationDuration: Duration(milliseconds: 150),
 );
 ```
 
@@ -427,6 +469,38 @@ final result = await Pop.menu<String>(
 ```
 
 ## 🎨 样式定制
+
+### 动画时长配置
+
+每个弹窗API都支持自定义动画时长，为不同场景提供最佳的用户体验：
+
+```dart
+// 快速反馈场景
+Pop.toast('快速提示', animationDuration: Duration(milliseconds: 100));
+Pop.loading(message: '快速加载', animationDuration: Duration(milliseconds: 100));
+
+// 重要操作场景
+Pop.confirm(
+  title: '危险操作',
+  content: '此操作不可撤销！',
+  animationDuration: Duration(milliseconds: 300), // 稍慢，给用户思考时间
+);
+
+// 复杂内容场景
+Pop.sheet(
+  title: '复杂操作',
+  animationDuration: Duration(milliseconds: 500), // 较长动画，适合复杂内容
+  childBuilder: (dismiss) => ComplexWidget(),
+);
+```
+
+**默认动画时长：**
+- `Pop.toast()`: 200ms (快速显示)
+- `Pop.loading()`: 150ms (快速显示)
+- `Pop.confirm()`: 250ms (适中时长)
+- `Pop.date()`: 250ms (适中时长)
+- `Pop.menu()`: 200ms (快速响应)
+- `Pop.sheet()`: 400ms (较长动画，适合抽屉效果)
 
 ### 全局样式配置
 
@@ -806,7 +880,7 @@ Future<void> longOperation() async {
 1. **动画增强**
    - 支持更多动画类型（弹性、缓动等）
    - 自定义动画曲线
-   - 动画时长配置
+   - 动画时长配置 ✅ 已完成
 
 2. **主题系统**
    - 全局主题配置

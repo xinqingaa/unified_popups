@@ -12,6 +12,7 @@ String _loadingImpl({
   bool showBarrier = true,
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
+  Duration animationDuration = const Duration(milliseconds: 150),
 }) {
   return PopupManager.show(
     PopupConfig(
@@ -28,6 +29,7 @@ String _loadingImpl({
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor,
       duration: null,
+      animationDuration: animationDuration,
       type: PopupType.loading,
     ),
   );

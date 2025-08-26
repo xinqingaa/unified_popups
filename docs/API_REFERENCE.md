@@ -43,6 +43,7 @@ static void toast(
   bool showBarrier = false,
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
+  Duration animationDuration = const Duration(milliseconds: 200),
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
@@ -65,6 +66,7 @@ static void toast(
 | `margin` | `EdgeInsetsGeometry?` | `null` | ❌ | 外边距 |
 | `decoration` | `Decoration?` | `null` | ❌ | 装饰样式 |
 | `style` | `TextStyle?` | `null` | ❌ | 文本样式 |
+| `animationDuration` | `Duration` | `200ms` | ❌ | 动画持续时间 |
 | `textAlign` | `TextAlign?` | `null` | ❌ | 文本对齐方式 |
 
 ### 使用示例
@@ -104,6 +106,12 @@ Pop.toast(
   barrierDismissible: true,
   duration: Duration(seconds: 5),
 );
+
+// 自定义动画时长
+Pop.toast(
+  '快速提示',
+  animationDuration: Duration(milliseconds: 100),
+);
 ```
 
 ## Loading API
@@ -121,6 +129,7 @@ static String loading({
   bool showBarrier = true,
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
+  Duration animationDuration = const Duration(milliseconds: 150),
 })
 ```
 
@@ -137,6 +146,7 @@ static String loading({
 | `showBarrier` | `bool` | `true` | ❌ | 是否显示遮罩 |
 | `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
 | `barrierColor` | `Color` | `Colors.black54` | ❌ | 遮罩颜色 |
+| `animationDuration` | `Duration` | `150ms` | ❌ | 动画持续时间 |
 
 ### 返回值
 
@@ -170,6 +180,12 @@ final loadingId = Pop.loading(
   showBarrier: true,
   barrierDismissible: true,
   barrierColor: Colors.black26,
+);
+
+// 快速显示的 Loading
+final loadingId = Pop.loading(
+  message: '快速加载',
+  animationDuration: Duration(milliseconds: 100),
 );
 ```
 
@@ -209,6 +225,7 @@ static Future<bool?> confirm({
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
   Widget? confirmChild,
+  Duration animationDuration = const Duration(milliseconds: 250),
 })
 ```
 
@@ -238,6 +255,7 @@ static Future<bool?> confirm({
 | `margin` | `EdgeInsetsGeometry?` | `null` | ❌ | 外边距 |
 | `decoration` | `Decoration?` | `null` | ❌ | 装饰样式 |
 | `confirmChild` | `Widget?` | `null` | ❌ | 在内容与按钮之间插入的自定义组件 |
+| `animationDuration` | `Duration` | `250ms` | ❌ | 动画持续时间 |
 
 ### 返回值
 
@@ -305,6 +323,13 @@ final result = await Pop.confirm(
   confirmBgColor: Colors.green,
   cancelBgColor: Colors.pink,
 );
+
+// 自定义动画时长
+final result = await Pop.confirm(
+  title: '快速确认',
+  content: '快速确认对话框',
+  animationDuration: Duration(milliseconds: 150),
+);
 ```
 
 ## Sheet API
@@ -330,6 +355,7 @@ static Future<T?> sheet<T>({
   EdgeInsetsGeometry? titlePadding,
   TextStyle? titleStyle,
   TextAlign? titleAlign,
+  Duration animationDuration = const Duration(milliseconds: 400),
 })
 ```
 
@@ -354,6 +380,7 @@ static Future<T?> sheet<T>({
 | `titlePadding` | `EdgeInsetsGeometry?` | `null` | ❌ | 标题内边距 |
 | `titleStyle` | `TextStyle?` | `null` | ❌ | 标题样式 |
 | `titleAlign` | `TextAlign?` | `null` | ❌ | 标题对齐方式 |
+| `animationDuration` | `Duration` | `400ms` | ❌ | 动画持续时间 |
 
 ### 返回值
 
@@ -449,6 +476,18 @@ final result = await Pop.sheet<String>(
     ),
   ),
 );
+
+// 自定义动画时长
+final result = await Pop.sheet<String>(
+  title: '快速面板',
+  animationDuration: Duration(milliseconds: 200),
+  childBuilder: (dismiss) => ListView(
+    children: [
+      ListTile(title: Text('快速选项 1'), onTap: () => dismiss('option1')),
+      ListTile(title: Text('快速选项 2'), onTap: () => dismiss('option2')),
+    ],
+  ),
+);
 ```
 
 ## Date API
@@ -468,7 +507,8 @@ static Future<DateTime?> date({
   Color? noActiveColor = Colors.black38,
   Color? headerBg = Colors.blue,
   double? height = 180.0,
-  double? radius = 24.0
+  double? radius = 24.0,
+  Duration animationDuration = const Duration(milliseconds: 250),
 })
 ```
 
@@ -488,6 +528,7 @@ static Future<DateTime?> date({
 | `headerBg` | `Color?` | `Colors.blue` | ❌ | 头部背景色 |
 | `height` | `double?` | `180.0` | ❌ | 高度 |
 | `radius` | `double?` | `24.0` | ❌ | 圆角 |
+| `animationDuration` | `Duration` | `250ms` | ❌ | 动画持续时间 |
 
 ### 返回值
 
@@ -525,6 +566,12 @@ final date = await Pop.date(
   position: PopupPosition.center,
   activeColor: Colors.blue,
   headerBg: Colors.blue,
+);
+
+// 自定义动画时长
+final date = await Pop.date(
+  title: '快速选择日期',
+  animationDuration: Duration(milliseconds: 150),
 );
 ```
 

@@ -26,7 +26,7 @@ class ToastPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => Pop.toast('This is a warning toast.', toastType: ToastType.warn),
+                onPressed: () => Pop.toast('This is a warning toast.', toastType: ToastType.warn, ),
                 child: const Text('Show Warning Toast'),
               ),
               const SizedBox(height: 12),
