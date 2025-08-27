@@ -1,161 +1,50 @@
-# unified_popups 设计文档
+# unified_popups
 
-[![Pub Version](https://img.shields.io/pub/v/unified_popup.svg)](https://pub.dev/packages/unified_popups)
+[![Pub Version](https://img.shields.io/pub/v/unified_popups.svg)](https://pub.dev/packages/unified_popups)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 一、 Flutter 弹窗之“痛”：我们到底在烦恼什么？
+## 📖 概述
 
-在动手之前，我仔细梳理了那些在日常开发中让我们感到“不爽”的具体场景，总结为三大痛点：
+Unified Popups 是一个专为企业级 Flutter 应用设计的统一弹窗解决方案。它提供了简洁、易用的 API，覆盖了常见的弹窗场景，包括轻提示、加载指示器、确认对话框、底部面板、日期选择器和锚定菜单等。
 
-### 痛点一：API 的“碎片化”与“上下文”依赖
+### ✨ 核心特性
 
-Flutter 提供了多种显示弹窗的方式，但它们散落在各处，API 形态各异：
+- **统一 API**：所有弹窗通过 `Pop` 静态类调用，API 设计简洁一致
+- **类型安全**：完整的 TypeScript 类型支持，编译时错误检查
+- **多实例支持**：基于 Overlay 实现，支持同时显示多个弹窗
+- **动画时长配置**：每个API都支持自定义动画时长，为不同场景提供最佳体验
+- **键盘适配**：自动处理键盘弹出时的布局调整和焦点管理
+- **手势支持**：支持拖拽关闭、点击遮罩关闭等交互
+- **主题化**：支持自定义样式和主题配置
+- **无障碍支持**：内置可访问性支持，符合无障碍设计标准
+- **性能优化**：基于 Overlay 实现，性能优异，内存占用低
 
-*   **`showDialog` / `showGeneralDialog`**: 功能强大，但样板代码多。每次调用都需要传递 `context` 和 `builder`，并且返回一个 `Future`。
-*   **`showModalBottomSheet`**: 专用于底部面板，API 同样需要 `context` 和 `builder`。
-*   **`ScaffoldMessenger.of(context).showSnackBar`**: 主要用于 SnackBar，调用链路长，且强依赖 `Scaffold` 上下文。
-*   **直接操作 `Overlay`**: 终极武器，无比灵活，但也意味着一切都要自己管理：`OverlayEntry` 的创建与销毁、动画控制器的 `AnimationController` 的初始化与 `dispose`、弹窗位置的计算、状态管理... 任何一个环节处理不当，都可能导致 UI 异常或内存泄漏。
+### 🎯 适用场景
 
-这种碎片化导致我们在不同业务场景下需要记忆和使用不同的 API，增加了心智负担。而对 `context` 的强依赖，使得在一些非 Widget 类（如 Repository、BLoC）中直接调用弹窗变得非常棘手。
+- 企业级应用中的各种弹窗需求
+- 需要统一弹窗体验的大型项目
+- 对键盘适配和用户体验有高要求的应用
+- 需要支持多端（移动端、Web、桌面端）的项目
 
-### 痛点二：模态的“枷锁”——一次只能显示一个
+## 🚀 快速开始
 
-`showDialog` 和 `showModalBottomSheet` 本质上都是在路由栈中推入一个新页面，它们是**模态**的。这意味着当一个 Dialog 显示时，它会“锁死”下方的 UI，你无法再弹出另一个。
+### 安装
 
-想象一个常见的场景：用户提交一个重要表单，我们弹出一个全屏的 `Loading` 指示器。此时，如果网络请求发生错误，我们希望弹出一个 `Toast` 提示用户“网络异常”。在原生 Android/iOS 中这是常规操作，但在 Flutter 的默认体系下，模态的 `Loading` 会阻止 `Toast` 的显示。这个限制在复杂交互场景下是致命的。
-
-### 痛点三：状态管理的“黑洞”
-
-当弹窗多起来，状态管理就成了一场噩梦：
-
-*   **如何知道某个弹窗是否正在显示？**  我们需要自己维护一个布尔值状态吗？那多个弹窗怎么办？
-*   **如何手动关闭一个特定的弹窗？**  `showLoading` 后，业务逻辑可能在任何地方需要 `hideLoading`。我们如何精准地找到并关闭它？
-*   **如何实现“一键关闭所有弹ubs”或“关闭上一个弹窗”？**  这种产品需求并不少见，但官方 API 并没有提供直接的支持，需要我们自己构建一套复杂的管理机制。
-
-这些痛点，最终都指向了一个清晰的目标：我们需要一个**统一入口、支持多实例、自带状态管理、与业务逻辑解耦**的弹窗解决方案。
-
-## 二、 顶层设计：构建一个“分层解耦”的弹窗架构
-
-为了实现上述目标，我将整个库的架构分成了职责清晰的四层，这是一种典型的“关注点分离”思想：
-
-1.  **API 门面 (Facade Layer)** : 这是开发者唯一需要直接交互的层，即 `UnifiedPopups` 类。它提供简单明了的静态方法，如 `showToast()`、`showConfirm()`。它的职责是“意图表达”，将开发者的需求（如“显示一个内容为'Hello'的Toast”）转换为一个标准的配置对象。
-2.  **配置层 (Configuration Layer)** : 即 `PopupConfig` 类。这是一个纯粹的数据模型（Model），用于承载一个弹窗的所有配置信息，包括要显示的 `Widget`、位置、动画、是否显示蒙层、持续时间等等。它是 API 层与核心管理器之间沟通的“标准协议”。
-3.  **核心管理器 (Manager Layer)** : 这是整个库的“大脑”，即 `PopupManager`。它是一个单例，负责管理所有弹窗的生命周期。它接收 `PopupConfig` 对象，然后执行所有“脏活累活”：创建 `OverlayEntry`、管理 `AnimationController`、处理用户交互、维护弹窗队列、最终销毁并释放资源。
-4.  **UI 组件层 (Widget Layer)** : 即你看到的 `ToastWidget`、`ConfirmWidget` 等。它们是“哑组件”（Dumb Components），只负责根据传入的参数渲染 UI，并通过回调函数将用户事件（如点击按钮）通知给上层。它们不包含任何业务逻辑或弹窗管理逻辑。
-
-这个分层架构带来了巨大的好处：
-
-*   **高内聚，低耦合**：每一层都只做自己的事。我可以随时替换 `ConfirmWidget` 的 UI 实现，而不用修改任何 `PopupManager` 的代码。
-*   **清晰的调用链路**：`UnifiedPopups.show() -> PopupConfig -> PopupManager -> OverlayEntry(child: YourWidget)`，数据流和控制流一目了然。
-*   **易于扩展**：未来想增加一种新的弹窗类型，比如“评分弹窗”，我只需要创建一个 `RatingWidget`，然后在 `UnifiedPopups` 中增加一个 `showRating()` 的静态方法即可，核心逻辑无需改动。
-
-## 三、 核心原理：三大机制撑起整个框架
-
-在清晰的架构之下，是三个关键的技术实现，它们共同解决了前面提到的痛点。
-
-### 原理一：基于 ID 的多实例生命周期管理
-
-为了打破“一次只能显示一个”的模态枷锁，我选择基于 `Overlay` 来实现。而为了管理多个并存的 `OverlayEntry`，我引入了 **唯一 ID 机制**。
-
-`PopupManager` 内部维护着一个核心数据结构：
-
-    final Map<String, _PopupInfo> _popups = {};
-
-每当 `show()` 方法被调用，它都会：
-
-1.  生成一个时间戳+长度的唯一 `popupId`。
-2.  创建一个 `_PopupInfo` 对象，它像一个“档案袋”，封装了与这个 `popupId` 相关的所有资源：`OverlayEntry`（UI）、`AnimationController`（动画）、`Timer`（用于自动关闭）以及回调函数。
-3.  将 `popupId` 和 `_PopupInfo` 存入 `_popups` 这个 Map 中。
-
-当需要关闭弹窗时，`hide(popupId)` 方法就能通过 ID 精准地找到对应的“档案袋”，然后有条不紊地执行：取消 `Timer` -> 反转播放动画 -> 动画结束后移除 `OverlayEntry` -> 销毁 `AnimationController`。
-
-这套机制，不仅实现了多实例共存，还顺便解决了状态管理的“黑洞”问题。想知道弹窗是否可见？`_popups.containsKey(popupId)` 即可。想关闭所有？遍历 `_popups` 的 `keys` 逐个 `hide` 就行。
-
-### 原理二：用 `Completer` 优雅地处理异步交互
-
-对于 `showConfirm` 这类需要用户反馈的弹窗，我们最期望的调用方式是 `async/await`。为了将 UI 的回调事件（`onPressed`）转换成一个可 `await` 的 `Future`，`Completer` 是不二之选。
-
-`showConfirm` 的内部流程是这样的：
-
-1.  **创建 `Completer`**: 在函数开头 `final completer = Completer<bool?>();`，它持有一个未完成的 `Future`。
-2.  **定义 `dismiss` 函数**: 创建一个闭包函数 `dismiss(result)`，它的核心作用是调用 `completer.complete(result)`，并将弹窗从屏幕上移除。这个 `complete` 动作会立即让 `completer.future` 返回结果。
-3.  **传递 `dismiss`**: 将这个 `dismiss` 函数作为回调，传递给底层的 `ConfirmWidget`。比如，确认按钮的 `onPressed` 会调用 `() => dismiss(true)`，取消按钮调用 `() => dismiss(false)`。
-4.  **处理边缘情况**: 同时，`PopupConfig` 的 `onDismiss` 回调（当用户点击蒙层关闭时触发）也会调用 `dismiss(null)`。这样就保证了所有关闭路径都能让 `Future` 得到一个结果。
-5.  **返回 `Future`**: 最后，`showConfirm` 函数将 `completer.future` 返回给调用者。
-
-通过这个模式，我们将复杂的、基于回调的 UI 交互，在业务逻辑层转换成了极其清爽的、线性的同步代码，可读性和可维护性大大提升。
-
-### 原理三：配置驱动与智能默认
-
-所有的 `showXXX` 方法，其背后都收敛到 `PopupManager.show(PopupConfig config)`。这种**配置驱动**的设计，让 API 变得高度统一和可扩展。
-
-更重要的是，在 API 层 (`UnifiedPopups`)，我为每个弹窗类型都提供了**智能默认值**。比如 `showToast`，它会根据你设置的 `position` 自动选择一个更合适的默认动画，顶部弹出则向下滑入，底部则向上滑入。这让开发者可以用最少的代码获得最佳的默认体验，同时又保留了通过传递自定义参数进行深度定制的能力。
-
-## 四、 UI 组件的匠心：兼顾美观与灵活
-
-一个好的弹窗库，不仅要有强大的内核，也要有美观且灵活的“外壳”。我在设计这些 `Widget` 时，遵循了“**默认优先，定制兜底**”的原则。
-
-### 案例一：`ToastWidget` & `LoadingWidget` - “约定优于配置”
-
-这两个是简单的展示型组件。它们的核心设计思想是：**内置一套美观的默认样式，同时开放所有样式参数的覆盖能力**。
-
-```dart
-// ToastWidget build method
-final defaultDecoration = BoxDecoration(...);
-const defaultStyle = TextStyle(...);
-
-return Container(
-  decoration: decoration ?? defaultDecoration, // 用户不传，就用我的默认值
-  child: Text(
-    message,
-    style: style ?? defaultStyle, // 用户不传，就用我的默认值
-  ),
-);
-```
-
-这种使用空合并运算符 `??` 的模式贯穿所有组件，它让最简单的 `UnifiedPopups.showToast("Hi")` 也能得到一个不错的效果，而对于有特殊 UI 需求的用户，则可以通过 `decoration`、`style` 等参数完全接管样式。
-
-### 案例二：`ConfirmWidget` - 驾驭复杂的布局与状态
-
-`ConfirmWidget` 的设计则更复杂，它需要处理不同的按钮组合和交互回调。
-
-*   **条件化构建 UI**: `_buildButtons` 方法中，通过 `if (cancelText == null)` 来判断是渲染单个确认按钮，还是双按钮布局。这让 API 变得更智能，用户只需决定是否传入 `cancelText` 即可。
-*   **`Stack` 布局的应用**: 右上角的关闭按钮，是通过 `Stack` + `Positioned` 实现的，这是在 Flutter 中进行精确定位布局的经典技巧，能在不影响主内容流的情况下添加覆盖元素。
-*   **`assert` 契约式编程**: `assert(cancelText == null || onCancel != null)` 这一行代码，是在开发阶段就强制约束了 API 的正确使用：如果你提供了取消按钮的文本，那么必须提供对应的 `onCancel` 回调。这能有效避免运行时错误。
-
-### 案例三：`SheetWidget` - 动态适应与智能样式
-
-`SheetWidget` 的设计体现了对不同场景的适应性。
-
-*   **上下文感知样式**: `_getDefaultBorderRadius()` 方法会根据 `SheetDirection`（弹出方向）来返回不同的 `BorderRadius`。比如从底部滑出，则顶部是圆角；从左侧滑出，则右侧是圆角。这种细节让 UI 看起来更自然。
-*   **布局自适应**: `SheetWidget` 会判断是水平方向 (`left`/`right`) 还是垂直方向 (`top`/`bottom`)，然后为 `child` 选择不同的包裹组件 (`Expanded` 或 `Flexible`)，并设置不同的默认 `width`/`height`。这确保了无论从哪个方向弹出，内容布局都能表现得体。
-
-## 五、 实战演练：三行代码，优雅集成
-
-### 简单调用
-
-理论说尽，上代码才是硬道理。
-
-**第一步：初始化**
-
-在`pubspec.yaml`添加依赖
+在 `pubspec.yaml` 中添加依赖：
 
 ```yaml
 dependencies:
-  flutter:
-    sdk: flutter
-  unified_popups: ^1.0.3 # 稳定版本
+  unified_popups: ^1.1.0 # 选择最新版本
 ```
 
-在 `main.dart` 中，为你的 `MaterialApp` 配置 `navigatorKey` 并初始化管理器。
+### 初始化
+
+在 `main.dart` 中初始化：
 
 ```dart
-// main.dart
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+import 'package:unified_popups/unified_popups.dart';
 
 void main() {
-  // App 启动时只需初始化一次
-  PopupManager.initialize(navigatorKey: navigatorKey);
   runApp(MyApp());
 }
 
@@ -163,287 +52,960 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey, // 注入 Key
-      home: HomePage(),
+      navigatorKey: GlobalKey<NavigatorState>(), // 必须提供
+      home: PopScopeWidget( // 可选：用于处理返回键
+        child: HomePage(),
+      ),
     );
   }
 }
 ```
 
-**第二步：尽情调用**
-
-现在，你可以在 App 的任何地方，无需 `context`（除了 `showSheet` 需要计算尺寸），直接调用 API。
+### 基本使用
 
 ```dart
-// 显示一个简单的 Toast
-UnifiedPopups.showToast("操作成功");
+// 显示轻提示
+Pop.toast('操作成功', toastType: ToastType.success);
 
-// 显示一个带消息的 Loading，并在 2 秒后关闭
-void fetchData() async {
-  final loadingId = UnifiedPopups.showLoading(message: "加载中...");
-  await Future.delayed(const Duration(seconds: 2));
-  UnifiedPopups.hideLoading(loadingId);
-}
+// 显示加载指示器
+final loadingId = Pop.loading(message: '加载中...');
+// ... 异步操作
+Pop.hideLoading(loadingId);
 
-// 异步等待用户的确认操作
-void confirmDelete() async {
-  final confirmed = await UnifiedPopups.showConfirm(
-    title: "确认删除",
-    content: "此操作无法撤销，是否继续？",
-  );
-  if (confirmed == true) {
-    print("用户确认了删除");
-  }
-}
-
-// 从底部弹出一个可返回值的选择列表
-void selectItem() async {
-  final result = await UnifiedPopups.showSheet<String>(
-    context,
-    title: "选择你的语言",
-    childBuilder: (dismiss) => ListView(
-      children: [
-        ListTile(title: Text("Dart"), onTap: () => dismiss("dart")),
-        ListTile(title: Text("Kotlin"), onTap: () => dismiss("kotlin")),
-      ],
-    ),
-  );
-  if(result != null) {
-    UnifiedPopups.showToast("你选择了: $result");
-  }
-}
+// 显示确认对话框
+final result = await Pop.confirm(
+  title: '确认删除',
+  content: '此操作不可撤销，是否继续？',
+  confirmText: '删除',
+  cancelText: '取消',
+);
 ```
 
-### 项目中的应用
+## 📚 API 参考
 
-*   侧边全屏抽屉
+### Toast 轻提示
 
+用于显示临时性的消息提示。
 
 ```dart
-UnifiedPopups.showSheet(
-  context,
-  direction: SheetDirection.left,
-  width: MediaQuery.of(context).size.width * 0.82, // 定制高度
-  childBuilder: (dismiss) => AddCollectContent( // 子元素完全自定义，通过构造函数传参
-    adId: widget.adId,
-    phoneNumber: widget.tel,
-    clientId: widget.clientId,
+Pop.toast(
+  String message, {
+  PopupPosition position = PopupPosition.center,
+  Duration duration = const Duration(milliseconds: 1200),
+  bool showBarrier = false,
+  bool barrierDismissible = false,
+  ToastType toastType = ToastType.none,
+  Duration animationDuration = const Duration(milliseconds: 200),
+  EdgeInsetsGeometry? padding,
+  EdgeInsetsGeometry? margin,
+  Decoration? decoration,
+  TextStyle? style,
+  TextAlign? textAlign,
+})
+```
+
+**参数说明：**
+- `message`：消息文本（必填）
+- `position`：显示位置，支持 `top`、`center`、`bottom`、`left`、`right`
+- `duration`：显示时长，默认 1.2 秒
+- `toastType`：提示类型，支持 `success`、`warn`、`error`、`none`
+- `animationDuration`：动画持续时间，默认 200ms
+- `showBarrier`：是否显示遮罩层
+- `barrierDismissible`：点击遮罩是否关闭
+
+**使用示例：**
+```dart
+// 成功提示
+Pop.toast('保存成功', toastType: ToastType.success);
+
+// 错误提示
+Pop.toast('网络异常，请稍后重试', toastType: ToastType.error);
+
+// 自定义动画时长
+Pop.toast('快速提示', animationDuration: Duration(milliseconds: 100));
+
+// 自定义样式
+Pop.toast(
+  '自定义样式提示',
+  decoration: BoxDecoration(
+    gradient: LinearGradient(colors: [Colors.purple, Colors.blue]),
+    borderRadius: BorderRadius.circular(20),
+  ),
+  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+);
+```
+
+### Loading 加载指示器
+
+用于显示加载状态，支持自定义样式和交互。
+
+```dart
+String loading({
+  String? message,
+  Color? backgroundColor,
+  double? borderRadius,
+  Color? indicatorColor,
+  double? indicatorStrokeWidth,
+  TextStyle? textStyle,
+  bool showBarrier = true,
+  bool barrierDismissible = false,
+  Color barrierColor = Colors.black54,
+  Duration animationDuration = const Duration(milliseconds: 150),
+})
+```
+
+**返回值：** 返回 Loading 的唯一 ID，用于后续关闭
+
+**使用示例：**
+```dart
+// 基本使用
+final loadingId = Pop.loading(message: '提交中...');
+await submitData();
+Pop.hideLoading(loadingId);
+
+// 自定义样式
+final loadingId = Pop.loading(
+  message: '自定义样式 Loading',
+  backgroundColor: Colors.purple.withOpacity(0.9),
+  borderRadius: 20,
+  indicatorColor: Colors.white,
+  indicatorStrokeWidth: 3,
+  textStyle: TextStyle(
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
   ),
 );
+
+// 快速显示 Loading
+final loadingId = Pop.loading(
+  message: '快速加载',
+  animationDuration: Duration(milliseconds: 100),
+);
 ```
 
-*   多个弹框嵌套
+### Confirm 确认对话框
 
+用于需要用户确认的操作，支持丰富的自定义选项。
 
 ```dart
-PopupManager.show(
-  PopupConfig(
-    child: Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          child: CalendarView( // CalendarView 本身也是弹框
-            controller: controller,
-            showLunar: false,
-            locale: const Locale('en', 'EN'),
-            showSurroundingDays: true,
-          ),
-        ),
-        Positioned(
-          top: 0,
-          right: 20,
-          child: IconButton(
-            onPressed: (){
-              PopupManager.hideLast();
-            },
-            icon: Icon(Icons.close)
-          )
-        )
-      ],
-    ),
+Future<bool?> confirm({
+  String? title,
+  required String content,
+  PopupPosition position = PopupPosition.center,
+  String confirmText = 'confirm',
+  String? cancelText = 'cancel',
+  bool showCloseButton = true,
+  TextStyle? titleStyle,
+  TextStyle? contentStyle,
+  TextStyle? confirmStyle,
+  TextStyle? cancelStyle,
+  String? imagePath,
+  double? imageHeight = 80,
+  double? imageWidth,
+  TextAlign? textAlign = TextAlign.center,
+  ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
+  BorderRadiusGeometry? buttonBorderRadius,
+  Color? confirmBgColor,
+  Color? cancelBgColor,
+  EdgeInsetsGeometry? padding,
+  EdgeInsetsGeometry? margin,
+  Decoration? decoration,
+  Widget? confirmChild,
+  Duration animationDuration = const Duration(milliseconds: 250),
+})
+```
+
+**返回值：**
+- `true`：用户点击确认
+- `false`：用户点击取消
+- `null`：用户点击遮罩或关闭按钮
+
+**使用示例：**
+```dart
+// 基本确认对话框
+final result = await Pop.confirm(
+  title: '删除确认',
+  content: '删除后将不可恢复，是否继续？',
+  confirmText: '删除',
+  cancelText: '取消',
+);
+
+// 带输入框的确认对话框
+final result = await Pop.confirm(
+  title: '输入信息',
+  content: '请填写以下信息：',
+  confirmChild: Column(
+    children: [
+      TextField(decoration: InputDecoration(labelText: '姓名')),
+      TextField(decoration: InputDecoration(labelText: '邮箱')),
+    ],
   ),
 );
+
+// 危险操作确认
+final result = await Pop.confirm(
+  title: '危险操作',
+  content: '此操作不可撤销！',
+  confirmText: '删除',
+  confirmBgColor: Colors.red,
+  buttonLayout: ConfirmButtonLayout.column,
+);
+
+// 快速确认对话框
+final result = await Pop.confirm(
+  title: '快速确认',
+  content: '快速确认操作',
+  animationDuration: Duration(milliseconds: 150),
+);
 ```
 
-*   自定义弹框
+### Sheet 底部面板
 
+用于显示从指定方向滑出的面板，常用于列表选择、表单填写等场景。
 
 ```dart
-PopupManager.show(
-  PopupConfig(
-    child: _delAccountPop(),
-  )
+Future<T?> sheet<T>({
+  required Widget Function(void Function([T? result]) dismiss) childBuilder,
+  String? title,
+  SheetDirection direction = SheetDirection.bottom,
+  bool showCloseButton = false,
+  bool? useSafeArea,
+  SheetDimension? width,
+  SheetDimension? height,
+  SheetDimension? maxWidth,
+  SheetDimension? maxHeight,
+  String? imgPath,
+  Color? backgroundColor,
+  BorderRadius? borderRadius,
+  List<BoxShadow>? boxShadow,
+  EdgeInsetsGeometry? padding,
+  EdgeInsetsGeometry? titlePadding,
+  TextStyle? titleStyle,
+  TextAlign? titleAlign,
+  Duration animationDuration = const Duration(milliseconds: 400),
+})
+```
+
+**参数说明：**
+- `childBuilder`：内容构建器，接收 `dismiss` 函数用于关闭面板
+- `direction`：滑出方向，支持 `top`、`bottom`、`left`、`right`
+- `width`/`height`：尺寸，支持像素值和百分比
+- `useSafeArea`：是否使用安全区域
+- `animationDuration`：动画持续时间，默认 400ms
+
+**使用示例：**
+```dart
+// 底部选择面板
+final result = await Pop.sheet<String>(
+  title: '选择操作',
+  childBuilder: (dismiss) => ListView(
+    children: [
+      ListTile(
+        title: Text('复制'),
+        onTap: () => dismiss('copy'),
+      ),
+      ListTile(
+        title: Text('删除'),
+        onTap: () => dismiss('delete'),
+      ),
+    ],
+  ),
 );
-Widget _delAccountPop(){
-  return Container(
-    margin: EdgeInsets.symmetric(horizontal: 20),
-    padding: EdgeInsets.symmetric(horizontal: 16,vertical: 16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-    ),
+
+// 表单面板
+await Pop.sheet<void>(
+  title: '用户信息',
+  childBuilder: (dismiss) => Padding(
+    padding: EdgeInsets.all(16),
     child: Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset("assets/images/account_pop.png" , height: 60,),
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: Text(
-            "Are you sure to delete the account?",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold , color: Colors.black),
-          ),
+        TextField(decoration: InputDecoration(labelText: '姓名')),
+        TextField(decoration: InputDecoration(labelText: '邮箱')),
+        ElevatedButton(
+          onPressed: () => dismiss(),
+          child: Text('提交'),
         ),
-        Container(
-          padding: EdgeInsets.only(bottom: 16),
-          child: Text(
-            "Need to delete your account? Our support team is here to help.",
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500 , color: Colors.black)
-          ),
-        ),
-        GradientButton(
-          child: Center(
-            child: Text("ok", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold , color: Colors.white)),
-          ),
-          onTap: (){
-            PopupManager.hideLast();
-          },
-        )
       ],
-    )
-  );
-}
+    ),
+  ),
+);
 
-```
+// 自定义样式面板
+await Pop.sheet<void>(
+  title: '自定义样式',
+  backgroundColor: Colors.grey[100],
+  borderRadius: BorderRadius.circular(20),
+  childBuilder: (dismiss) => Container(
+    padding: EdgeInsets.all(16),
+    child: Text('自定义内容'),
+  ),
+);
 
-*   顶层toast
-
-
-```dart
-UnifiedPopups.showToast(
-  "Please select a repayment method",
-  position: PopupPosition.top,
-  duration: Duration(milliseconds: 800),
+// 快速面板
+await Pop.sheet<void>(
+  title: '快速面板',
+  animationDuration: Duration(milliseconds: 200),
+  childBuilder: (dismiss) => Container(
+    padding: EdgeInsets.all(16),
+    child: Text('快速内容'),
+  ),
 );
 ```
 
-## api参考
+### Date 日期选择器
 
-### `PopupManager`
+用于日期选择，支持自定义范围和样式。
 
-核心弹窗管理器，负责所有弹窗的底层生命周期控制。
+```dart
+Future<DateTime?> date({
+  DateTime? initialDate,
+  DateTime? minDate,
+  DateTime? maxDate,
+  String title = 'Date of Birth',
+  PopupPosition position = PopupPosition.bottom,
+  String confirmText = 'Confirm',
+  String? cancelText = 'Cancel',
+  Color? activeColor = Colors.black,
+  Color? noActiveColor = Colors.black38,
+  Color? headerBg = Colors.blue,
+  double? height = 180.0,
+  double? radius = 24.0,
+  Duration animationDuration = const Duration(milliseconds: 250),
+})
+```
 
-| 方法                                    | 描述                                           |
-| :------------------------------------ | :------------------------------------------- |
-| `initialize({required navigatorKey})` | **(必须)** 初始化管理器，在 `main()` 函数中调用。            |
-| `show(PopupConfig config)`            | **(核心)** 显示一个弹出层，返回一个唯一的 `String` ID 用于手动控制。 |
-| `hide(String popupId)`                | 根据提供的 `popupId` 隐藏指定的弹出层。                    |
-| `hideLast()`                          | 隐藏最后显示的一个弹出层。                                |
-| `hideAll()`                           | 隐藏当前所有正在显示的弹出层。                              |
-| `isVisible(String popupId)`           | 检查指定 `popupId` 的弹出层当前是否可见，返回 `bool`。         |
+**使用示例：**
+```dart
+// 基本日期选择
+final date = await Pop.date(
+  title: '选择生日',
+  minDate: DateTime(1900, 1, 1),
+  maxDate: DateTime.now(),
+);
 
-### `PopupConfig`
+// 自定义样式
+final date = await Pop.date(
+  title: '选择入职日期',
+  initialDate: DateTime.now(),
+  minDate: DateTime(2020, 1, 1),
+  maxDate: DateTime.now(),
+  confirmText: '确定',
+  cancelText: '取消',
+  activeColor: Colors.green,
+  headerBg: Colors.green,
+  height: 200,
+  radius: 16,
+);
 
-用于 `PopupManager.show()` 的配置对象，描述一个弹窗的所有属性。
+// 快速日期选择
+final date = await Pop.date(
+  title: '快速选择日期',
+  animationDuration: Duration(milliseconds: 150),
+);
+```
 
-| 参数                   | 类型               | 默认值              | 描述                                                                 |
-| :------------------- | :--------------- | :--------------- | :----------------------------------------------------------------- |
-| `child`              | `Widget`         | **(必填)**         | 你想要显示的任何 Widget。                                                   |
-| `position`           | `PopupPosition`  | `center`         | `top`, `center`, `bottom`, `left`, `right`。                        |
-| `anchorKey`          | `GlobalKey?`     | `null`           | 如果提供，弹出层会依附于此 `key` 对应的 Widget。                                    |
-| `anchorOffset`       | `Offset`         | `Offset.zero`    | 当使用 `anchorKey` 时的位置偏移量。                                           |
-| `animation`          | `PopupAnimation` | `fade`           | `none`, `fade`, `slideUp`, `slideDown`, `slideLeft`, `slideRight`。 |
-| `animationDuration`  | `Duration`       | `320ms`          | 动画的持续时间。                                                           |
-| `showBarrier`        | `bool`           | `true`           | 是否显示半透明的遮盖层。                                                       |
-| `barrierColor`       | `Color`          | `Colors.black54` | 遮盖层的颜色和透明度。                                                        |
-| `barrierDismissible` | `bool`           | `true`           | 点击遮盖层时是否关闭弹出层。                                                     |
-| `useSafeArea`        | `bool`           | `true`           | 内容是否应避开系统的安全区域（如刘海、底部导航条）。                                         |
-| `duration`           | `Duration?`      | `null`           | 弹出层自动关闭的时间。`null` 表示不自动关闭。                                         |
-| `onShow`             | `VoidCallback?`  | `null`           | 弹出层完全显示后的回调。                                                       |
-| `onDismiss`          | `VoidCallback?`  | `null`           | 弹出层完全关闭后的回调。                                                       |
+### Menu 锚定菜单
 
-### `UnifiedPopups`
+用于在指定组件附近显示菜单或气泡。
 
-封装好的高级 API，推荐日常使用。
+```dart
+Future<T?> menu<T>({
+  required GlobalKey anchorKey,
+  Offset anchorOffset = Offset.zero,
+  required Widget Function(void Function([T? result]) dismiss) builder,
+  bool showBarrier = true,
+  bool barrierDismissible = true,
+  Color barrierColor = Colors.transparent,
+  PopupAnimation animation = PopupAnimation.fade,
+  Duration animationDuration = const Duration(milliseconds: 200),
+})
+```
 
-#### `showToast()`
+**使用示例：**
+```dart
+// 基本菜单
+final GlobalKey buttonKey = GlobalKey();
 
-显示一个 Toast 消息。返回 `void`。
+ElevatedButton(
+  key: buttonKey,
+  onPressed: () async {
+    final result = await Pop.menu<String>(
+      anchorKey: buttonKey,
+      anchorOffset: Offset(0, 8),
+      builder: (dismiss) => Column(
+        children: [
+          ListTile(
+            title: Text('复制'),
+            onTap: () => dismiss('copy'),
+          ),
+          ListTile(
+            title: Text('删除'),
+            onTap: () => dismiss('delete'),
+          ),
+        ],
+      ),
+    );
+  },
+  child: Text('显示菜单'),
+);
 
-| 参数                   | 类型                    | 默认值                                            | 描述                |
-| :------------------- | :-------------------- | :--------------------------------------------- | :---------------- |
-| `message`            | `String`              | **(必填)**                                       | Toast 显示的文本内容。    |
-| `position`           | `PopupPosition`       | `bottom`                                       | Toast 显示的位置。      |
-| `duration`           | `Duration`            | `2 seconds`                                    | Toast 持续显示的时长。    |
-| `showBarrier`        | `bool`                | `false`                                        | 是否为 Toast 显示蒙层。   |
-| `barrierDismissible` | `bool`                | `false`                                        | 点击蒙层时是否关闭 Toast。  |
-| `padding`            | `EdgeInsetsGeometry?` | `EdgeInsets.symmetric(h: 24, v: 12)`           | 内容的内边距。           |
-| `margin`             | `EdgeInsetsGeometry?` | `EdgeInsets.symmetric(h: 20, v: 40)`           | 容器的外边距。           |
-| `decoration`         | `Decoration?`         | `BoxDecoration(...)`                           | 自定义容器样式（背景色、圆角等）。 |
-| `style`              | `TextStyle?`          | `TextStyle(color: Colors.white, fontSize: 16)` | 文本样式。             |
-| `textAlign`          | `TextAlign?`          | `center`                                       | 文本对齐方式。           |
+// 带图标的菜单
+final result = await Pop.menu<String>(
+  anchorKey: buttonKey,
+  builder: (dismiss) => Column(
+    children: [
+      ListTile(
+        leading: Icon(Icons.copy),
+        title: Text('复制'),
+        onTap: () => dismiss('copy'),
+      ),
+      ListTile(
+        leading: Icon(Icons.delete, color: Colors.red),
+        title: Text('删除', style: TextStyle(color: Colors.red)),
+        onTap: () => dismiss('delete'),
+      ),
+    ],
+  ),
+);
+```
 
-#### `showLoading()` & `hideLoading()`
+## 🎨 样式定制
 
-显示和隐藏一个加载指示器。
+### 动画时长配置
 
-| 方法/参数                  | 类型           | 默认值              | 描述                                      |
-| :--------------------- | :----------- | :--------------- | :-------------------------------------- |
-| **`showLoading()`**    | **`String`** | -                | **(方法)** 显示加载框，**返回其唯一 ID**。            |
-| `message`              | `String?`    | `null`           | 加载框下方显示的文本。                             |
-| `backgroundColor`      | `Color?`     | `Colors.white`   | 容器背景色。                                  |
-| `borderRadius`         | `double?`    | `12.0`           | 容器圆角半径。                                 |
-| `indicatorColor`       | `Color?`     | `Colors.black`   | 加载指示器的颜色。                               |
-| `indicatorStrokeWidth` | `double?`    | `2.0`            | 加载指示器的线条宽度。                             |
-| `textStyle`            | `TextStyle?` | `null`           | 文本样式。                                   |
-| `barrierDismissible`   | `bool`       | `false`          | 点击蒙层是否可关闭。                              |
-| `barrierColor`         | `Color`      | `Colors.black54` | 蒙层颜色。                                   |
-| **`hideLoading(id)`**  | **`void`**   | -                | **(方法)** 根据 `showLoading` 返回的 ID 关闭加载框。 |
-| `id`                   | `String`     | **(必填)**         | `showLoading` 返回的唯一 ID。                 |
+每个弹窗API都支持自定义动画时长，为不同场景提供最佳的用户体验：
 
-#### `showConfirm()`
+```dart
+// 快速反馈场景
+Pop.toast('快速提示', animationDuration: Duration(milliseconds: 100));
+Pop.loading(message: '快速加载', animationDuration: Duration(milliseconds: 100));
 
-显示一个确认对话框。返回 `Future<bool?>` (`true`: 确认, `false`: 取消, `null`: 点击蒙层或关闭按钮)。
+// 重要操作场景
+Pop.confirm(
+  title: '危险操作',
+  content: '此操作不可撤销！',
+  animationDuration: Duration(milliseconds: 300), // 稍慢，给用户思考时间
+);
 
-| 参数                | 类型                    | 默认值      | 描述                             |
-| :---------------- | :-------------------- | :------- | :----------------------------- |
-| `title`           | `String?`             | `null`   | 对话框标题。                         |
-| `content`         | `String`              | **(必填)** | 对话框的主要内容。                      |
-| `confirmText`     | `String`              | `'确认'`   | 确认按钮的文本。                       |
-| `cancelText`      | `String?`             | `'取消'`   | 取消按钮的文本。如果为 `null`，则只显示一个确认按钮。 |
-| `showCloseButton` | `bool`                | `true`   | 是否显示右上角的关闭图标按钮。                |
-| `titleStyle`      | `TextStyle?`          | `null`   | 自定义标题样式。                       |
-| `contentStyle`    | `TextStyle?`          | `null`   | 自定义内容样式。                       |
-| `confirmStyle`    | `TextStyle?`          | `null`   | 自定义确认按钮文本样式。                   |
-| `cancelStyle`     | `TextStyle?`          | `null`   | 自定义取消按钮文本样式。                   |
-| `confirmBgColor`  | `Color?`              | `null`   | 自定义确认按钮背景色。                    |
-| `cancelBgColor`   | `Color?`              | `null`   | 自定义取消按钮背景色。                    |
-| `padding`         | `EdgeInsetsGeometry?` | `null`   | 容器的内边距。                        |
-| `margin`          | `EdgeInsetsGeometry?` | `null`   | 容器的外边距。                        |
-| `decoration`      | `Decoration?`         | `null`   | 自定义容器样式（背景、圆角等）。               |
+// 复杂内容场景
+Pop.sheet(
+  title: '复杂操作',
+  animationDuration: Duration(milliseconds: 500), // 较长动画，适合复杂内容
+  childBuilder: (dismiss) => ComplexWidget(),
+);
+```
 
-#### `showSheet<T>()`
+**默认动画时长：**
+- `Pop.toast()`: 200ms (快速显示)
+- `Pop.loading()`: 150ms (快速显示)
+- `Pop.confirm()`: 250ms (适中时长)
+- `Pop.date()`: 250ms (适中时长)
+- `Pop.menu()`: 200ms (快速响应)
+- `Pop.sheet()`: 400ms (较长动画，适合抽屉效果)
 
-从指定方向滑出一个面板。返回 `Future<T?>`，其值由 `childBuilder` 中的 `dismiss` 函数决定。
+### 全局样式配置
 
-| 参数                | 类型                          | 默认值                          | 描述                                              |
-| :---------------- | :-------------------------- | :--------------------------- | :---------------------------------------------- |
-| `context`         | `BuildContext`              | **(必填)**                     | 用于获取屏幕尺寸等上下文信息。                                 |
-| `childBuilder`    | `Widget Function(Function)` | **(必填)**                     | 内容构建器。接收一个 `dismiss([T? result])` 函数用于关闭面板并返回值。 |
-| `title`           | `String?`                   | `null`                       | 面板的标题。                                          |
-| `direction`       | `SheetDirection`            | `bottom`                     | 面板滑出的方向 (`top`, `bottom`, `left`, `right`)。     |
-| `useSafeArea`     | `bool?`                     | `false`                      | 内容是否使用 `SafeArea`。                              |
-| `width`           | `double?`                   | `null`                       | 面板宽度。左右方向默认为屏幕宽度的 70%。                          |
-| `height`          | `double?`                   | `null`                       | 面板高度。上下方向默认由内容自适应。                              |
-| `backgroundColor` | `Color?`                    | `Colors.white`               | 面板背景色。                                          |
-| `borderRadius`    | `BorderRadius?`             | (智能默认)                       | 面板圆角。默认会根据 `direction` 自动设置。                    |
-| `boxShadow`       | `List<BoxShadow>?`          | (默认阴影)                       | 面板的阴影效果。                                        |
-| `padding`         | `EdgeInsetsGeometry?`       | `EdgeInsets.all(16)`         | 内容的内边距。                                         |
-| `titlePadding`    | `EdgeInsetsGeometry?`       | `EdgeInsets.only(bottom: 8)` | 标题的内边距。                                         |
-| `titleStyle`      | `TextStyle?`                | (主题默认)                       | 标题的文本样式。                                        |
-| `titleAlign`      | `TextAlign?`                | `center`                     | 标题的对齐方式。                                        |
-| `titleSpacing`    | `double?`                   | `16.0`                       | 标题和内容之间的间距。                                     |
+可以通过自定义主题来统一配置弹窗样式：
 
-# 总结
+```dart
+// 在 MaterialApp 中配置主题
+MaterialApp(
+  theme: ThemeData(
+    // 自定义弹窗样式
+    dialogTheme: DialogTheme(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+  ),
+)
+```
 
-`unified_popups` 的诞生，源于实际开发中的痛点，其核心在于通过**分层解耦的架构**和**基于 ID 的生命周期管理**，实现了一个统一、健壮且易于扩展的弹窗体系。它将开发者从繁琐的 `Overlay` 操作和混乱的状态管理中解放出来，回归到业务逻辑本身。
+### 局部样式定制
+
+每个弹窗 API 都支持局部样式定制：
+
+```dart
+// 自定义 Toast 样式
+Pop.toast(
+  '自定义样式',
+  decoration: BoxDecoration(
+    gradient: LinearGradient(colors: [Colors.purple, Colors.blue]),
+    borderRadius: BorderRadius.circular(20),
+  ),
+  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+);
+
+// 自定义 Confirm 样式
+Pop.confirm(
+  title: '自定义样式',
+  content: '内容',
+  decoration: BoxDecoration(
+    gradient: LinearGradient(colors: [Colors.teal, Colors.white]),
+    borderRadius: BorderRadius.circular(24),
+  ),
+  titleStyle: TextStyle(color: Colors.blue, fontSize: 20),
+  confirmBgColor: Colors.green,
+  cancelBgColor: Colors.pink,
+);
+```
+
+## 🔧 最佳实践
+
+### 1. 键盘适配
+
+当弹窗包含输入框时，库会自动处理键盘弹出：
+
+```dart
+// 推荐：使用 confirmChild 添加输入框
+Pop.confirm(
+  title: '输入信息',
+  content: '请填写以下信息：',
+  confirmChild: Column(
+    children: [
+      TextField(decoration: InputDecoration(labelText: '姓名')),
+      TextField(decoration: InputDecoration(labelText: '邮箱')),
+    ],
+  ),
+);
+
+// 推荐：在 Sheet 中使用 ListView 处理长内容
+Pop.sheet(
+  childBuilder: (dismiss) => ListView(
+    children: [
+      TextField(decoration: InputDecoration(labelText: '字段1')),
+      TextField(decoration: InputDecoration(labelText: '字段2')),
+      // ... 更多字段
+    ],
+  ),
+);
+```
+
+### 2. 错误处理
+
+```dart
+// 推荐：使用 try-catch 处理异步操作
+try {
+  final result = await Pop.confirm(
+    title: '确认操作',
+    content: '是否继续？',
+  );
+  
+  if (result == true) {
+    await performOperation();
+    Pop.toast('操作成功', toastType: ToastType.success);
+  }
+} catch (e) {
+  Pop.toast('操作失败: $e', toastType: ToastType.error);
+}
+```
+
+### 3. 加载状态管理
+
+```dart
+// 推荐：使用 Loading 包装异步操作
+Future<void> submitForm() async {
+  final loadingId = Pop.loading(message: '提交中...');
+  
+  try {
+    await api.submit(formData);
+    Pop.hideLoading(loadingId);
+    Pop.toast('提交成功', toastType: ToastType.success);
+  } catch (e) {
+    Pop.hideLoading(loadingId);
+    Pop.toast('提交失败: $e', toastType: ToastType.error);
+  }
+}
+```
+
+### 4. 返回键处理
+
+```dart
+// 推荐：使用 PopScopeWidget 包装应用
+MaterialApp(
+  home: PopScopeWidget(
+    child: HomePage(),
+  ),
+);
+
+// 或者手动处理返回键
+WillPopScope(
+  onWillPop: () async {
+    if (PopupManager.hasNonToastPopup) {
+      PopupManager.hideLastNonToast();
+      return false; // 阻止页面返回
+    }
+    return true; // 允许页面返回
+  },
+  child: HomePage(),
+)
+```
+
+## 🔧 PopupManager 原理与 popupId 使用规则
+
+### 核心原理
+
+PopupManager 是一个单例模式的弹窗管理器，基于 Flutter 的 `Overlay` 系统实现。它的核心工作原理如下：
+
+#### 1. 弹窗生命周期管理
+
+每个弹窗都有唯一的 `popupId`，用于标识和管理：
+
+```dart
+// 弹窗 ID 生成规则
+final popupId = 'popup_${DateTime.now().microsecondsSinceEpoch}_${_instance._popups.length}';
+```
+
+#### 2. 内部数据结构
+
+```dart
+class _PopupInfo {
+  final OverlayEntry entry;        // UI 组件
+  final AnimationController controller;  // 动画控制器
+  final VoidCallback? onDismissCallback; // 关闭回调
+  final PopupType type;            // 弹窗类型
+  Timer? dismissTimer;             // 自动关闭定时器
+}
+```
+
+#### 3. 弹窗显示流程
+
+1. **创建资源**：为每个弹窗创建独立的 `AnimationController` 和 `OverlayEntry`
+2. **存储信息**：将弹窗信息存储在 `_popups` Map 中，按显示顺序记录在 `_popupOrder` 列表中
+3. **插入 UI**：将 `OverlayEntry` 插入到 Flutter 的 Overlay 系统中
+4. **播放动画**：执行进入动画，完成后触发 `onShow` 回调
+5. **启动定时器**：如果设置了 `duration`，启动自动关闭定时器
+
+#### 4. 弹窗关闭流程
+
+1. **立即移除**：从管理器中移除弹窗信息，防止重复关闭
+2. **取消定时器**：取消可能存在的自动关闭定时器
+3. **播放退出动画**：执行退出动画
+4. **清理资源**：动画完成后移除 `OverlayEntry` 并释放 `AnimationController`
+5. **触发回调**：调用 `onDismiss` 回调
+
+### popupId 使用规则
+
+#### ✅ 可以通过 popupId 关闭的弹窗
+
+**1. Loading 弹窗**
+```dart
+// Loading 返回 popupId，可以精确控制关闭
+final loadingId = Pop.loading(message: '加载中...');
+// ... 异步操作
+Pop.hideLoading(loadingId); // ✅ 可以关闭
+```
+
+**2. 手动创建的弹窗**
+```dart
+// 通过 PopupManager.show() 直接创建的弹窗
+final popupId = PopupManager.show(PopupConfig(
+  child: CustomWidget(),
+  // ... 其他配置
+));
+PopupManager.hide(popupId); // ✅ 可以关闭
+```
+
+#### ❌ 不能通过 popupId 关闭的弹窗
+
+**1. Toast 弹窗**
+```dart
+// Toast 不返回 popupId，自动管理生命周期
+Pop.toast('消息'); // ❌ 无法通过 popupId 关闭
+```
+
+**2. Confirm 弹窗**
+```dart
+// Confirm 通过用户交互关闭，不返回 popupId
+await Pop.confirm(content: '确认？'); // ❌ 无法通过 popupId 关闭
+```
+
+**3. Sheet 弹窗**
+```dart
+// Sheet 通过 dismiss() 函数关闭，不返回 popupId
+await Pop.sheet(childBuilder: (dismiss) => ...); // ❌ 无法通过 popupId 关闭
+```
+
+**4. Date 弹窗**
+```dart
+// Date 通过用户选择关闭，不返回 popupId
+await Pop.date(); // ❌ 无法通过 popupId 关闭
+```
+
+**5. Menu 弹窗**
+```dart
+// Menu 通过 dismiss() 函数关闭，不返回 popupId
+await Pop.menu(builder: (dismiss) => ...); // ❌ 无法通过 popupId 关闭
+```
+
+### 全局管理方法
+
+#### 1. 隐藏最后一个弹窗
+```dart
+// 隐藏最新显示的弹窗（任何类型）
+PopupManager.hideLast();
+```
+
+#### 2. 隐藏所有弹窗
+```dart
+// 隐藏所有当前显示的弹窗
+PopupManager.hideAll();
+```
+
+#### 3. 隐藏最后一个非 Toast 弹窗
+```dart
+// 隐藏最后一个非 Toast 类型的弹窗
+PopupManager.hideLastNonToast();
+```
+
+#### 4. 检查弹窗状态
+```dart
+// 检查指定 ID 的弹窗是否可见
+bool isVisible = PopupManager.isVisible(popupId);
+
+// 检查是否有非 Toast 弹窗
+bool hasPopup = PopupManager.hasNonToastPopup;
+```
+
+#### 5. 智能返回处理
+```dart
+// 如果有弹窗则关闭弹窗，否则执行页面返回
+PopupManager.maybePop(context);
+```
+
+### 最佳实践
+
+#### 1. Loading 弹窗管理
+```dart
+class LoadingManager {
+  static String? _currentLoadingId;
+  
+  static void show(String message) {
+    hide(); // 先隐藏之前的 Loading
+    _currentLoadingId = Pop.loading(message: message);
+  }
+  
+  static void hide() {
+    if (_currentLoadingId != null) {
+      Pop.hideLoading(_currentLoadingId!);
+      _currentLoadingId = null;
+    }
+  }
+}
+```
+
+#### 2. 返回键处理
+```dart
+// 使用 PopScopeWidget 自动处理返回键
+MaterialApp(
+  home: PopScopeWidget(
+    child: HomePage(),
+  ),
+);
+
+// 或手动处理
+WillPopScope(
+  onWillPop: () async {
+    if (PopupManager.hasNonToastPopup) {
+      PopupManager.hideLastNonToast();
+      return false; // 阻止页面返回
+    }
+    return true; // 允许页面返回
+  },
+  child: HomePage(),
+)
+```
+
+#### 3. 错误处理
+```dart
+// 确保 Loading 在异常情况下也能被关闭
+Future<void> safeOperation() async {
+  String? loadingId;
+  try {
+    loadingId = Pop.loading(message: '处理中...');
+    await riskyOperation();
+    Pop.hideLoading(loadingId!);
+    Pop.toast('成功', toastType: ToastType.success);
+  } catch (e) {
+    if (loadingId != null) {
+      Pop.hideLoading(loadingId);
+    }
+    Pop.toast('失败: $e', toastType: ToastType.error);
+  }
+}
+```
+
+## 🚀 性能优化
+
+### 1. 避免频繁创建弹窗
+
+```dart
+// 不推荐：频繁创建相同弹窗
+for (int i = 0; i < 100; i++) {
+  Pop.toast('消息 $i');
+}
+
+// 推荐：批量处理或使用节流
+Timer? _toastTimer;
+void showToast(String message) {
+  _toastTimer?.cancel();
+  _toastTimer = Timer(Duration(milliseconds: 100), () {
+    Pop.toast(message);
+  });
+}
+```
+
+### 2. 合理使用 Loading
+
+```dart
+// 推荐：为长时间操作显示 Loading
+Future<void> longOperation() async {
+  final loadingId = Pop.loading(message: '处理中...');
+  
+  try {
+    await Future.delayed(Duration(seconds: 3)); // 模拟长时间操作
+    Pop.hideLoading(loadingId);
+    Pop.toast('操作完成', toastType: ToastType.success);
+  } catch (e) {
+    Pop.hideLoading(loadingId);
+    Pop.toast('操作失败', toastType: ToastType.error);
+  }
+}
+```
+
+## 🔮 更新建议
+
+### 短期计划
+
+1. **动画增强**
+   - 支持更多动画类型（弹性、缓动等）
+   - 自定义动画曲线
+   - 动画时长配置 ✅ 已完成
+
+2. **主题系统**
+   - 全局主题配置
+   - 暗色模式支持
+   - 主题切换动画
+
+3. **无障碍优化**
+   - 屏幕阅读器支持
+   - 键盘导航支持
+   - 焦点管理优化
+
+### 中期计划
+
+1. **新组件**
+   - 进度条弹窗
+   - 图片预览弹窗
+   - 文件选择弹窗
+   - 颜色选择器
+
+2. **交互增强**
+   - 拖拽排序
+   - 手势识别
+   - 多点触控支持
+
+3. **性能优化**
+   - 虚拟滚动支持
+   - 懒加载优化
+   - 内存使用优化
+
+### 长期计划
+
+1. **平台扩展**
+   - Web 端优化
+   - 桌面端支持
+   - 移动端原生体验
+
+2. **生态系统**
+   - 插件系统
+   - 第三方组件库
+   - 社区贡献指南
+
+3. **企业级功能**
+   - 多语言支持
+   - 权限控制
+   - 审计日志
+
+## 🐛 常见问题
+
+### Q: 如何自定义弹窗位置？
+
+A: 使用 `position` 参数或 `anchorKey` 进行定位：
+
+```dart
+// 使用预设位置
+Pop.toast('消息', position: PopupPosition.bottom);
+
+// 使用锚定定位
+final GlobalKey key = GlobalKey();
+Pop.menu(anchorKey: key, builder: (dismiss) => ...);
+```
+
+### Q: 如何处理键盘弹出？
+
+A: 库会自动处理键盘适配，但建议使用 `confirmChild` 或 `ListView`：
+
+```dart
+// 推荐方式
+Pop.confirm(
+  confirmChild: TextField(decoration: InputDecoration(labelText: '输入')),
+);
+
+// 或使用 Sheet
+Pop.sheet(
+  childBuilder: (dismiss) => ListView(
+    children: [TextField(...)],
+  ),
+);
+```
+
+### Q: 如何实现全局弹窗管理？
+
+A: 使用 `PopupManager` 进行全局管理：
+
+```dart
+// 隐藏所有弹窗
+PopupManager.hideAll();
+
+// 隐藏最后一个非 Toast 弹窗
+PopupManager.hideLastNonToast();
+
+// 检查是否有弹窗
+if (PopupManager.hasNonToastPopup) {
+  // 处理返回键
+}
+```
+
+### Q: 如何自定义动画时长？
+
+A: 使用 `animationDuration` 参数：
+
+```dart
+// 快速显示
+Pop.toast('快速提示', animationDuration: Duration(milliseconds: 100));
+
+// 慢速显示
+Pop.sheet(
+  childBuilder: (dismiss) => YourWidget(),
+  animationDuration: Duration(milliseconds: 600),
+);
+```
+
+## 📄 许可证
+
+本项目采用 MIT 许可证，详见 [LICENSE](LICENSE) 文件。
+
+
+## 📚 更多文档
+
+- [API 参考文档](docs/API_REFERENCE.md) - 详细的API说明和参数列表
+- [最佳实践指南](docs/BEST_PRACTICES.md) - 使用建议和最佳实践
+- [README 文档](docs/README.md) - 完整的用户指南
+
+---
+
+**Unified Popups** - 让弹窗开发更简单、更统一、更高效！
 

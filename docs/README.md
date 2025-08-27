@@ -981,22 +981,6 @@ if (PopupManager.hasNonToastPopup) {
 
 本项目采用 MIT 许可证，详见 [LICENSE](LICENSE) 文件。
 
-### 开发环境
-
-```bash
-# 克隆项目
-git clone https://github.com/your-username/unified_popups.git
-
-# 安装依赖
-flutter pub get
-
-# 运行测试
-flutter test
-
-# 运行示例
-flutter run -d chrome
-```
-
 
 
 **Unified Popups** - 让弹窗开发更简单、更统一、更高效！
