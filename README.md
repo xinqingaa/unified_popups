@@ -1001,9 +1001,9 @@ Pop.sheet(
 
 ## 📚 更多文档
 
-- [API 参考文档](docs/API_REFERENCE.md) - 详细的API说明和参数列表
-- [最佳实践指南](docs/BEST_PRACTICES.md) - 使用建议和最佳实践
-- [README 文档](docs/README.md) - 完整的用户指南
+- [API 参考文档](doc/API_REFERENCE.md) - 详细的API说明和参数列表
+- [最佳实践指南](doc/BEST_PRACTICES.md) - 使用建议和最佳实践
+- [README 文档](doc/README.md) - 完整的用户指南
 
 ---
 
