@@ -62,11 +62,15 @@ class ToastWidget extends StatelessWidget {
               padding: const EdgeInsets.only(right: 12),
               child: Image.asset(imgPath,  package: "unified_popups", height: 24,),
             ),
-          Text(
-            message,
-            style: style ?? defaultStyle,
-            textAlign: textAlign ?? TextAlign.center,
-          ),
+          Flexible(
+            child: Text(
+              message,
+              style: style ?? defaultStyle,
+              textAlign: textAlign ?? TextAlign.start,
+              maxLines: null,
+              overflow: TextOverflow.visible,
+            ),
+          )
         ],
       )
     );

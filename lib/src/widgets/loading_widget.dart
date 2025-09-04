@@ -40,6 +40,8 @@ class LoadingWidget extends StatelessWidget {
             Text(
               message!,
               style: textStyle ?? defaultStyle,
+              maxLines: null,
+              overflow: TextOverflow.visible,
             ),
           ],
         ],

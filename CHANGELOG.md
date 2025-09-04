@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.1] - 2024-12-19
+
+### Fixed
+- 修复了所有widget组件中的文本溢出问题
+- ToastWidget: 使用Flexible包裹文本，支持多行显示
+- ConfirmWidget: 为标题和内容文本添加maxLines和overflow处理
+- LoadingWidget: 为消息文本添加溢出处理
+- SheetWidget: 为标题文本添加溢出处理
+- 所有文本组件现在都支持长文本的多行显示，避免溢出错误
+
 ## [1.1.0] - 2024-12-19
 
 ### Added

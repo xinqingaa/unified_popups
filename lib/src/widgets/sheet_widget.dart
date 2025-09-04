@@ -240,6 +240,8 @@ class _SheetWidgetState extends State<SheetWidget> {
                 widget.title!,
                 style: widget.titleStyle ?? defaultTitleStyle,
                 textAlign: widget.titleAlign ?? defaultTitleAlign,
+                maxLines: null,
+                overflow: TextOverflow.visible,
               ),
             ) : const SizedBox.shrink(),
 

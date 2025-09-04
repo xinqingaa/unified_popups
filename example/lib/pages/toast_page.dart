@@ -36,7 +36,7 @@ class ToastPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => Pop.toast('This is an none toast.'),
+                onPressed: () => Pop.toast('This phone number is not registered. Please use the verification code to log in and register first.'),
                 child: const Text('Show None Toast'),
               ),
               const SizedBox(height: 12),

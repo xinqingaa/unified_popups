@@ -109,10 +109,10 @@ class ConfirmWidget extends StatelessWidget {
         ],
         if (title != null) ...[
           // ?? TextAlign.center
-          Text(title!, style: titleStyle ?? defaultTitleStyle, textAlign: textAlign ),
+          Text(title!, style: titleStyle ?? defaultTitleStyle, textAlign: textAlign, maxLines: null, overflow: TextOverflow.visible),
           const SizedBox(height: 12),
         ],
-        Text(content, style: contentStyle ?? defaultContentStyle, textAlign: textAlign ),
+        Text(content, style: contentStyle ?? defaultContentStyle, textAlign: textAlign, maxLines: null, overflow: TextOverflow.visible),
         if (confirmChild != null) ...[
           const SizedBox(height: 12),
           confirmChild!,
