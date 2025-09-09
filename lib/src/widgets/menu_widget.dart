@@ -36,7 +36,7 @@ class MenuWidget extends StatelessWidget {
           ),
       child: Container(
         decoration: decoration ?? defaultDecoration,
-        padding: padding ?? const EdgeInsets.symmetric(vertical: 8),
+        padding: padding ?? const EdgeInsets.all(0),
         child: child,
       ),
     );

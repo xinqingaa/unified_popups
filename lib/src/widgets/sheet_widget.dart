@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
 
-
-
 class SheetWidget extends StatefulWidget {
   final String? title;
   final Widget child;
@@ -320,7 +318,10 @@ class _SheetWidgetState extends State<SheetWidget> {
           child: SafeArea(
             // 键盘避让：使用 AnimatedPadding 根据键盘高度动态上移
             child: AnimatedPadding(
-              padding: MediaQuery.of(context).viewInsets,
+              // 仅当 Sheet 在底部时才应用键盘避让的内边距。
+              padding: widget.direction == SheetDirection.bottom
+                ? MediaQuery.of(context).viewInsets
+                : EdgeInsets.zero,
               duration: kThemeAnimationDuration,
               curve: Curves.easeOut,
               child: Padding(

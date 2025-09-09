@@ -1,6 +1,12 @@
 # Changelog
 
-## [1.1.1] - 2024-12-19
+## [1.1.2]
+
+### Fixed
+- 条件性地应用内边距
+ - 在 Sheet 位于底部时，才应用这个用于避让键盘的内边距.
+
+## [1.1.1]
 
 ### Fixed
 - 修复了所有widget组件中的文本溢出问题
@@ -10,7 +16,7 @@
 - SheetWidget: 为标题文本添加溢出处理
 - 所有文本组件现在都支持长文本的多行显示，避免溢出错误
 
-## [1.1.0] - 2024-12-19
+## [1.1.0]
 
 ### Added
 - 为所有API入口添加了`animationDuration`参数，支持外部传入不同的动画时长
@@ -31,7 +37,7 @@
 - 参数传递链路：API方法 → 实现方法 → PopupConfig → PopupManager
 - 不传参数时使用合理的默认值，传入自定义值时覆盖默认值
 
-## [1.0.3] - 2024-12-18
+## [1.0.3]
 
 ### Added
 - Submit Code, A unified popups SDK for Flutter, providing a flexible way to show toasts, dialogs, and other custom popups.
