@@ -6,7 +6,7 @@ Future<T?> _menuImpl<T>({
   required Widget Function(void Function([T? result]) dismiss) builder,
   bool showBarrier = true,
   bool barrierDismissible = true,
-  Color barrierColor = Colors.transparent,
+  Color? barrierColor,
   PopupAnimation animation = PopupAnimation.fade,
   Duration animationDuration = const Duration(milliseconds: 200),
 }) {
@@ -28,7 +28,7 @@ Future<T?> _menuImpl<T>({
       animationDuration: animationDuration,
       showBarrier: showBarrier,
       barrierDismissible: barrierDismissible,
-      barrierColor: barrierColor,
+      barrierColor: barrierColor ?? Colors.black54,
       // 锚定菜单不使用 SafeArea
       useSafeArea: false,
       type: PopupType.menu,

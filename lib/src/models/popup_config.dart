@@ -1,7 +1,24 @@
 // lib/src/models/popup_config.dart
 part of '../core/popup_manager.dart';
 
-/// 弹出层的配置类
+/// 弹出层配置类，用于配置弹出层的行为和样式。
+/// 参数：
+/// - [child]：弹出层要显示的子 Widget。
+/// - [position]：弹出位置，默认为 [PopupPosition.center]。
+/// - [anchorKey]：依附于某个 Widget 进行定位。
+/// - [anchorOffset]：当使用 [anchorKey] 定位时，提供的偏移量。
+/// - [animation]：弹出动画，默认为 [PopupAnimation.fade]。
+/// - [animationDuration]：动画持续时间，默认为 300 毫秒。
+/// - [showBarrier]：是否显示遮盖层，默认为 true。
+/// - [barrierColor]：遮盖层颜色，默认为 Colors.black54。
+/// - [barrierDismissible]：点击遮盖层是否关闭弹出层，默认为 true。
+/// - [duration]：自动关闭的倒计时。如果为 null，则不会自动关闭（例如 Confirm 场景）。
+/// - [onShow]：弹出层显示时的回调。
+/// - [onDismiss]：弹出层关闭时的回调。
+/// - [useSafeArea]：控制安全区域 默认在安全区域内
+/// - [type]：弹层类型，驱动系统返回键拦截等策略
+/// - [showBarrier]：是否显示遮盖层，默认为 true。
+/// - [barrierColor]：遮盖层颜色，默认为 Colors.black54。
 class PopupConfig {
   /// [必填] 弹出层要显示的子 Widget
   final Widget child;

@@ -23,6 +23,14 @@ class _PopupLayout extends StatefulWidget {
 class _PopupLayoutState extends State<_PopupLayout> {
   Offset? _anchorPosition;
   Size? _anchorSize;
+  // 用于获取菜单内容的实际大小
+  final GlobalKey _contentKey = GlobalKey();
+  // 智能计算后的位置
+  Offset? _smartPosition;
+  // 屏幕尺寸
+  Size? _screenSize;
+  // 最小边距
+  static const double _minMargin = 8.0;
 
   @override
   void initState() {
@@ -31,6 +39,26 @@ class _PopupLayoutState extends State<_PopupLayout> {
       // 在下一帧计算位置，确保 anchor widget 已经渲染
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _calculateAnchorPosition();
+        // 对于菜单类型，需要等待内容渲染后再计算智能位置
+        if (widget.config.type == PopupType.menu) {
+          _tryCalculateSmartPosition();
+        }
+      });
+    }
+  }
+
+  // 尝试计算智能位置，如果内容还未渲染则延迟重试
+  void _tryCalculateSmartPosition({int retryCount = 0}) {
+    if (_calculateSmartPosition()) {
+      // 计算成功，不需要重试
+      return;
+    }
+    // 内容还未渲染，延迟重试（最多重试5次，避免无限循环）
+    if (retryCount < 5 && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _tryCalculateSmartPosition(retryCount: retryCount + 1);
+        }
       });
     }
   }
@@ -50,8 +78,76 @@ class _PopupLayoutState extends State<_PopupLayout> {
     }
   }
 
+  // 计算智能位置，返回 true 表示计算成功，false 表示需要重试
+  bool _calculateSmartPosition() {
+    if (_anchorPosition == null || _anchorSize == null || _screenSize == null) {
+      return false;
+    }
+    
+    // 获取菜单内容的实际大小
+    final context = _contentKey.currentContext;
+    if (context == null) {
+      return false;
+    }
+    
+    final contentRenderBox = context.findRenderObject() as RenderBox?;
+    if (contentRenderBox == null || !contentRenderBox.hasSize) {
+      return false;
+    }
+    
+    final contentSize = contentRenderBox.size;
+    
+    // 计算初始位置（保持左对齐）
+    double left = _anchorPosition!.dx + widget.config.anchorOffset.dx;
+    double top = _anchorPosition!.dy + _anchorSize!.height + widget.config.anchorOffset.dy;
+    
+    // 检查右边缘是否溢出
+    if (left + contentSize.width > _screenSize!.width - _minMargin) {
+      // 右边缘会溢出，调整位置
+      // 优先尝试：将菜单向右移动到不溢出（保持左对齐）
+      final maxLeft = _screenSize!.width - contentSize.width - _minMargin;
+      if (maxLeft >= _minMargin) {
+        // 有足够空间，调整到不溢出的位置
+        left = maxLeft;
+      } else {
+        // 空间不足，保持最小边距
+        left = _minMargin;
+      }
+    } else if (left < _minMargin) {
+      // 左边缘太靠左，调整到最小边距
+      left = _minMargin;
+    }
+    
+    // 检查底部是否溢出
+    if (top + contentSize.height > _screenSize!.height - _minMargin) {
+      // 底部会溢出，向上调整
+      // 优先尝试：将菜单向上移动到不溢出
+      final maxTop = _screenSize!.height - contentSize.height - _minMargin;
+      if (maxTop >= _minMargin) {
+        top = maxTop;
+      } else {
+        // 空间不足，保持在顶部最小边距
+        top = _minMargin;
+      }
+    } else if (top < _minMargin) {
+      // 顶部太靠上，调整到最小边距
+      top = _minMargin;
+    }
+    
+    if (mounted) {
+      setState(() {
+        _smartPosition = Offset(left, top);
+      });
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
+    // 获取屏幕尺寸
+    final mediaQuery = MediaQuery.of(context);
+    _screenSize = mediaQuery.size;
+    
     return Stack(
       children: [
         // 遮盖层
@@ -87,10 +183,22 @@ class _PopupLayoutState extends State<_PopupLayout> {
         // 在计算出位置前，先不显示内容，避免闪烁
         return const SizedBox.shrink();
       }
+      
+      // 给内容添加 GlobalKey 用于获取实际大小（仅在锚定模式下）
+      final keyedContent = widget.config.type == PopupType.menu
+          ? KeyedSubtree(key: _contentKey, child: content)
+          : content;
+      
+      // 使用智能计算的位置，如果没有则使用原始位置
+      final position = _smartPosition ?? Offset(
+        _anchorPosition!.dx + widget.config.anchorOffset.dx,
+        _anchorPosition!.dy + _anchorSize!.height + widget.config.anchorOffset.dy,
+      );
+      
       return Positioned(
-        top: _anchorPosition!.dy + _anchorSize!.height + widget.config.anchorOffset.dy,
-        left: _anchorPosition!.dx + widget.config.anchorOffset.dx,
-        child: content,
+        top: position.dy,
+        left: position.dx,
+        child: keyedContent,
       );
     } else {
       // 先创建对齐后的内容

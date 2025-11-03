@@ -215,7 +215,7 @@ class _SheetWidgetState extends State<SheetWidget> {
     const defaultBackgroundColor = Colors.white;
     final defaultBoxShadow = [const BoxShadow(blurRadius: 10, color: Colors.black12, spreadRadius: 2)];
     const defaultPadding = EdgeInsets.symmetric(horizontal: 16.0 , vertical: 10);
-    const defaultTitlePadding = EdgeInsets.only(bottom: 8, top: 6);
+    const defaultTitlePadding = EdgeInsets.symmetric(vertical: 12);
     final defaultTitleStyle = Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold);
     const defaultTitleAlign = TextAlign.center;
 

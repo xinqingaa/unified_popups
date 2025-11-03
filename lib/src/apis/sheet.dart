@@ -10,7 +10,11 @@ Future<T?> _sheetImpl<T>({
   SheetDimension? height,
   SheetDimension? maxWidth,
   SheetDimension? maxHeight,
+  // 图片相关参数
   String? imgPath,
+  double? imageSize,
+  Offset? imageOffset,
+  
   bool showCloseButton = false,
   Color? backgroundColor,
   BorderRadius? borderRadius,
@@ -90,7 +94,11 @@ Future<T?> _sheetImpl<T>({
         height: resolvedHeight,
         maxWidth: resolvedMaxWidth,
         maxHeight: resolvedMaxHeight,
+        // 图片相关参数
         imgPath: imgPath,
+        imageSize: imageSize ?? 60.0,
+        imageOffset: imageOffset ?? const Offset(16, -40),
+        // 样式相关参数
         backgroundColor: backgroundColor,
         borderRadius: borderRadius,
         boxShadow: boxShadow,
