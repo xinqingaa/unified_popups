@@ -3,6 +3,8 @@
 [![Pub Version](https://img.shields.io/pub/v/unified_popups.svg)](https://pub.dev/packages/unified_popups)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+[英文](README_EN.md)
+
 ## 📖 概述
 
 Unified Popups 是一个专为企业级 Flutter 应用设计的统一弹窗解决方案。它提供了简洁、易用的 API，覆盖了常见的弹窗场景，包括轻提示、加载指示器、确认对话框、底部面板、日期选择器和锚定菜单等。
@@ -96,6 +98,9 @@ Pop.toast(
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
   Duration animationDuration = const Duration(milliseconds: 200),
+  String? customImagePath,
+  double? imageSize,
+  Axis layoutDirection = Axis.horizontal,
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
@@ -110,6 +115,9 @@ Pop.toast(
 - `duration`：显示时长，默认 1.2 秒
 - `toastType`：提示类型，支持 `success`、`warn`、`error`、`none`
 - `animationDuration`：动画持续时间，默认 200ms
+- `customImagePath`：自定义图片路径，如果提供则覆盖 toastType 的图标
+- `imageSize`：图片大小，默认 24.0
+- `layoutDirection`：布局方向，默认 `Axis.horizontal`（Row），`Axis.vertical` 为 Column（图片在上，文字在下）
 - `showBarrier`：是否显示遮罩层
 - `barrierDismissible`：点击遮罩是否关闭
 
@@ -120,6 +128,14 @@ Pop.toast('保存成功', toastType: ToastType.success);
 
 // 错误提示
 Pop.toast('网络异常，请稍后重试', toastType: ToastType.error);
+
+// 自定义图片
+Pop.toast(
+  '自定义图片提示',
+  customImagePath: 'assets/custom_icon.png',
+  imageSize: 32.0,
+  layoutDirection: Axis.vertical, // 图片在上，文字在下
+);
 
 // 自定义动画时长
 Pop.toast('快速提示', animationDuration: Duration(milliseconds: 100));
@@ -147,6 +163,8 @@ String loading({
   Color? indicatorColor,
   double? indicatorStrokeWidth,
   TextStyle? textStyle,
+  Widget? customIndicator,
+  Duration rotationDuration = const Duration(seconds: 1),
   bool showBarrier = true,
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
@@ -156,12 +174,23 @@ String loading({
 
 **返回值：** 返回 Loading 的唯一 ID，用于后续关闭
 
+**参数说明：**
+- `customIndicator`：自定义 Widget（通常是图片），如果提供则替代默认的 CircularProgressIndicator，并自动添加旋转动画
+- `rotationDuration`：旋转动画持续时间，默认 1 秒。仅在使用 customIndicator 时生效
+
 **使用示例：**
 ```dart
 // 基本使用
 final loadingId = Pop.loading(message: '提交中...');
 await submitData();
 Pop.hideLoading(loadingId);
+
+// 使用自定义图片作为 loading 图标
+final loadingId = Pop.loading(
+  message: '加载中',
+  customIndicator: Image.asset('assets/loading.png'),
+  rotationDuration: Duration(milliseconds: 800),
+);
 
 // 自定义样式
 final loadingId = Pop.loading(
@@ -1005,7 +1034,6 @@ Pop.sheet(
 - [最佳实践指南](doc/BEST_PRACTICES.md) - 使用建议和最佳实践
 - [README 文档](doc/README.md) - 完整的用户指南
 
----
 
 **Unified Popups** - 让弹窗开发更简单、更统一、更高效！
 

@@ -70,6 +70,16 @@ class ToastPage extends StatelessWidget {
                 ),
                 child: const Text('带遮罩 Toast'),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => Pop.toast(
+                  '自定义图片 Toast',
+                  customImagePath: 'assets/success.png',
+                  imageSize: 48,
+                  layoutDirection: Axis.vertical,
+                ),
+                child: const Text('自定义图片 Toast'),
+              ),
             ],
           ),
         ),

@@ -8,6 +8,9 @@ String _loadingImpl({
   Color? indicatorColor,
   double? indicatorStrokeWidth,
   TextStyle? textStyle,
+  // 自定义指示器参数
+  Widget? customIndicator,
+  Duration rotationDuration = const Duration(seconds: 1),
   // 遮罩层参数
   bool showBarrier = true,
   bool barrierDismissible = false,
@@ -23,6 +26,8 @@ String _loadingImpl({
         indicatorColor: indicatorColor,
         indicatorStrokeWidth: indicatorStrokeWidth,
         textStyle: textStyle,
+        customIndicator: customIndicator,
+        rotationDuration: rotationDuration,
       ),
       position: PopupPosition.center,
       showBarrier: showBarrier,

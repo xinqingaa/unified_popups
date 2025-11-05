@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.4]
+
+### Added
+- **Toast API Enhancement**
+  - Added `customImagePath` parameter to support custom local images
+  - Added `imageSize` parameter to customize image size (default: 24.0)
+  - Added `layoutDirection` parameter to support Row/Column layout switching (default: Row)
+  - Custom images will override toastType icons when provided
+  
+- **Loading API Enhancement**
+  - Added `customIndicator` parameter to support custom Widget (typically images) as loading indicator
+  - Added `rotationDuration` parameter to configure rotation animation speed (default: 1 second)
+  - Custom indicator automatically includes rotation animation
+  - When both message and customIndicator are present, Container maintains square aspect ratio with adaptive sizing (max 25% screen width, 100px)
+
+### Changed
+- LoadingWidget changed from StatelessWidget to StatefulWidget to support rotation animation
+- Loading container with message now maintains square aspect ratio for better visual consistency
+
 ## [1.1.3]
 
 ### Feat

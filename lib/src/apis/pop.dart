@@ -36,12 +36,16 @@ abstract class Pop {
   /// - [barrierDismissible]：点击遮罩是否关闭，默认 `false`。
   /// - [toastType]：Toast 等级（success/warn/error/none），默认 `none`。可用于展示不同图标/配色。
   /// - [animationDuration]：动画持续时间，默认 `200ms`。toast 需要快速显示。
+  /// - [customImagePath]：自定义图片路径，如果提供则覆盖 toastType 的图标。
+  /// - [imageSize]：图片大小，默认 `24.0`。
+  /// - [layoutDirection]：布局方向，默认 `Axis.horizontal`（Row），`Axis.vertical` 为 Column（图片在上，文字在下）。
   /// - [padding]/[margin]/[decoration]/[style]/[textAlign]：细粒度样式定制。
   ///
   /// 用法示例：
   /// ```dart
   /// Pop.toast('保存成功', toastType: ToastType.success);
   /// Pop.toast('网络异常，请稍后重试', position: PopupPosition.bottom, duration: Duration(seconds: 2));
+  /// Pop.toast('自定义图片', customImagePath: 'assets/custom.png', layoutDirection: Axis.vertical);
   /// ```
   static void toast(
     String message, {
@@ -51,6 +55,9 @@ abstract class Pop {
     bool barrierDismissible = false,
     ToastType toastType = ToastType.none,
     Duration animationDuration = const Duration(milliseconds: 200),
+    String? customImagePath,
+    double? imageSize,
+    Axis layoutDirection = Axis.horizontal,
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
     Decoration? decoration,
@@ -65,6 +72,9 @@ abstract class Pop {
         barrierDismissible: barrierDismissible,
         toastType: toastType,
         animationDuration: animationDuration,
+        customImagePath: customImagePath,
+        imageSize: imageSize,
+        layoutDirection: layoutDirection,
         padding: padding,
         margin: margin,
         decoration: decoration,
@@ -81,6 +91,8 @@ abstract class Pop {
   /// - [backgroundColor]/[borderRadius]：容器底色与圆角。
   /// - [indicatorColor]/[indicatorStrokeWidth]：指示器颜色与线宽。
   /// - [textStyle]：文案样式。
+  /// - [customIndicator]：自定义 Widget（通常是图片），如果提供则替代默认的 CircularProgressIndicator，并自动添加旋转动画。
+  /// - [rotationDuration]：旋转动画持续时间，默认 `Duration(seconds: 1)`。仅在使用 customIndicator 时生效。
   /// - [showBarrier]：是否显示遮罩层，默认 `true`。
   /// - [barrierDismissible]：点击遮罩是否关闭，默认 `false`（避免误触导致加载中被关）。
   /// - [barrierColor]：遮罩层颜色，默认 `Colors.black54`。
@@ -94,6 +106,13 @@ abstract class Pop {
   /// final id = Pop.loading(message: '提交中...');
   /// // ... 异步操作完成后
   /// Pop.hideLoading(id);
+  /// 
+  /// // 使用自定义图片作为 loading 图标
+  /// final id2 = Pop.loading(
+  ///   message: '加载中',
+  ///   customIndicator: Image.asset('assets/loading.png'),
+  ///   rotationDuration: Duration(milliseconds: 800),
+  /// );
   /// ```
   static String loading({
     String? message,
@@ -102,6 +121,8 @@ abstract class Pop {
     Color? indicatorColor,
     double? indicatorStrokeWidth,
     TextStyle? textStyle,
+    Widget? customIndicator,
+    Duration rotationDuration = const Duration(seconds: 1),
     bool showBarrier = true,
     bool barrierDismissible = false,
     Color barrierColor = Colors.black54,
@@ -114,6 +135,8 @@ abstract class Pop {
         indicatorColor: indicatorColor,
         indicatorStrokeWidth: indicatorStrokeWidth,
         textStyle: textStyle,
+        customIndicator: customIndicator,
+        rotationDuration: rotationDuration,
         showBarrier: showBarrier,
         barrierDismissible: barrierDismissible,
         barrierColor: barrierColor,

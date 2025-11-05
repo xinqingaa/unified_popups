@@ -28,7 +28,7 @@ class LoadingPage extends StatelessWidget {
                 onPressed: () async {
                   final loadingId = Pop.loading(
                     message: '自定义样式 Loading',
-                    backgroundColor: Colors.purple.withOpacity(0.9),
+                    backgroundColor: Colors.purple.withValues(alpha: 0.9),
                     borderRadius: 20,
                     indicatorColor: Colors.white,
                     indicatorStrokeWidth: 3,
@@ -56,6 +56,18 @@ class LoadingPage extends StatelessWidget {
                   Pop.hideLoading(loadingId);
                 },
                 child: const Text('可关闭 Loading'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () async {
+                  final loadingId = Pop.loading(
+                    message: 'loading',
+                    customIndicator: Image.asset('assets/loading.png' , width: 48, height: 48),
+                  );
+                  await Future.delayed(const Duration(seconds: 5));
+                  Pop.hideLoading(loadingId);
+                },
+                child: const Text('自定义图片 Loading'),
               ),
             ],
           ),

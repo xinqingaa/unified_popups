@@ -10,6 +10,9 @@ void _toastImpl(
   ToastType toastType = ToastType.none,
   Duration animationDuration = const Duration(milliseconds: 200),
   // Widget 级别的样式配置
+  String? customImagePath,
+  double? imageSize,
+  Axis layoutDirection = Axis.horizontal,
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
@@ -28,6 +31,9 @@ void _toastImpl(
       child: ToastWidget(
         toastType: toastType,
         message: message,
+        customImagePath: customImagePath,
+        imageSize: imageSize,
+        layoutDirection: layoutDirection,
         padding: padding,
         margin: margin,
         decoration: decoration,

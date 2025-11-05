@@ -44,6 +44,9 @@ static void toast(
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
   Duration animationDuration = const Duration(milliseconds: 200),
+  String? customImagePath,
+  double? imageSize,
+  Axis layoutDirection = Axis.horizontal,
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
@@ -62,6 +65,9 @@ static void toast(
 | `showBarrier` | `bool` | `false` | ❌ | 是否显示遮罩层 |
 | `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
 | `toastType` | `ToastType` | `none` | ❌ | 提示类型 |
+| `customImagePath` | `String?` | `null` | ❌ | 自定义图片路径，如果提供则覆盖 toastType 的图标 |
+| `imageSize` | `double?` | `24.0` | ❌ | 图片大小 |
+| `layoutDirection` | `Axis` | `Axis.horizontal` | ❌ | 布局方向，`horizontal` 为 Row（图片在左，文字在右），`vertical` 为 Column（图片在上，文字在下） |
 | `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
 | `margin` | `EdgeInsetsGeometry?` | `null` | ❌ | 外边距 |
 | `decoration` | `Decoration?` | `null` | ❌ | 装饰样式 |
@@ -107,6 +113,14 @@ Pop.toast(
   duration: Duration(seconds: 5),
 );
 
+// 自定义图片
+Pop.toast(
+  '自定义图片提示',
+  customImagePath: 'assets/custom_icon.png',
+  imageSize: 32.0,
+  layoutDirection: Axis.vertical, // 图片在上，文字在下
+);
+
 // 自定义动画时长
 Pop.toast(
   '快速提示',
@@ -126,6 +140,8 @@ static String loading({
   Color? indicatorColor,
   double? indicatorStrokeWidth,
   TextStyle? textStyle,
+  Widget? customIndicator,
+  Duration rotationDuration = const Duration(seconds: 1),
   bool showBarrier = true,
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
@@ -143,6 +159,8 @@ static String loading({
 | `indicatorColor` | `Color?` | `null` | ❌ | 指示器颜色 |
 | `indicatorStrokeWidth` | `double?` | `null` | ❌ | 指示器线宽 |
 | `textStyle` | `TextStyle?` | `null` | ❌ | 文本样式 |
+| `customIndicator` | `Widget?` | `null` | ❌ | 自定义 Widget（通常是图片），如果提供则替代默认的 CircularProgressIndicator，并自动添加旋转动画 |
+| `rotationDuration` | `Duration` | `1秒` | ❌ | 旋转动画持续时间，仅在使用 customIndicator 时生效 |
 | `showBarrier` | `bool` | `true` | ❌ | 是否显示遮罩 |
 | `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
 | `barrierColor` | `Color` | `Colors.black54` | ❌ | 遮罩颜色 |
@@ -180,6 +198,13 @@ final loadingId = Pop.loading(
   showBarrier: true,
   barrierDismissible: true,
   barrierColor: Colors.black26,
+);
+
+// 使用自定义图片作为 loading 图标
+final loadingId = Pop.loading(
+  message: '加载中',
+  customIndicator: Image.asset('assets/loading.png'),
+  rotationDuration: Duration(milliseconds: 800),
 );
 
 // 快速显示的 Loading
