@@ -63,6 +63,8 @@ class DialogPage extends StatelessWidget {
                     title: 'Confirm Deletion',
                     content: 'Are you sure you want to delete this item?',
                     imagePath: "assets/img.png",
+                    cancelBorder: Border.all(color: Colors.blue , width: 2),
+                    confirmBorder: Border.all(color: Colors.black),
                   );
                   print('Confirm result: $result');
                 },

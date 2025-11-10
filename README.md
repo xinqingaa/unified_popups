@@ -45,10 +45,16 @@ dependencies:
 
 ```dart
 import 'package:unified_popups/unified_popups.dart';
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
+  // 确保 MaterialApp 构建完毕后，再初始化 PopupManager
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    PopupManager.initialize(navigatorKey: navigatorKey);
+  });
 }
+
 
 class MyApp extends StatelessWidget {
   @override

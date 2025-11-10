@@ -175,6 +175,7 @@ abstract class Pop {
   /// - [textAlign]：内容对齐方式，默认 `TextAlign.center`。
   /// - [buttonLayout]：按钮布局，`row` 或 `column`，默认 `row`。
   /// - [buttonBorderRadius]：按钮圆角。
+  /// - [confirmBorder]/[cancelBorder]：按钮边框，如需取消边框传 `null`。
   /// - [confirmBgColor]/[cancelBgColor]：按钮背景色。
   /// - [padding]/[margin]/[decoration]：外观与间距定制。
   /// - [confirmChild]：在内容与按钮之间插入的自定义组件，常用于放置输入框等交互元素。
@@ -208,6 +209,8 @@ abstract class Pop {
     TextAlign? textAlign = TextAlign.center,
     ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
     BorderRadiusGeometry? buttonBorderRadius,
+    BoxBorder? confirmBorder,
+    BoxBorder? cancelBorder,
     Color? confirmBgColor,
     Color? cancelBgColor,
     EdgeInsetsGeometry? padding,
@@ -228,6 +231,8 @@ abstract class Pop {
         textAlign: textAlign,
         buttonLayout: buttonLayout,
         buttonBorderRadius: buttonBorderRadius,
+        confirmBorder: confirmBorder,
+        cancelBorder: cancelBorder,
         showCloseButton: showCloseButton,
         titleStyle: titleStyle,
         contentStyle: contentStyle,

@@ -36,7 +36,7 @@ Add the dependency to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  unified_popups: ^1.1.4 # Use the latest version
+  unified_popups:  # Use the latest version
 ```
 
 ### Initialization
@@ -44,10 +44,12 @@ dependencies:
 Initialize in `main.dart`:
 
 ```dart
-import 'package:unified_popups/unified_popups.dart';
-
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
+  // Make sure to initialize the PopupManager only after the MaterialApp has been built.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    PopupManager.initialize(navigatorKey: navigatorKey);
+  });
 }
 
 class MyApp extends StatelessWidget {

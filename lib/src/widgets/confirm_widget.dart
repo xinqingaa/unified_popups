@@ -28,6 +28,8 @@ class ConfirmWidget extends StatelessWidget {
   final TextStyle? cancelStyle;
   final Color? confirmBgColor;
   final Color? cancelBgColor;
+  final BoxBorder? confirmBorder;
+  final BoxBorder? cancelBorder;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Decoration? decoration;
@@ -62,6 +64,8 @@ class ConfirmWidget extends StatelessWidget {
     this.confirmStyle,
     this.cancelBgColor,
     this.confirmBgColor,
+    this.confirmBorder,
+    this.cancelBorder,
     this.confirmChild
   }) : assert(cancelText == null || onCancel != null,
   'onCancel must be provided if cancelText is not null.');
@@ -118,7 +122,10 @@ class ConfirmWidget extends StatelessWidget {
           confirmChild!,
         ],
         const SizedBox(height: 28),
-        _buildButtons(onConfirmTap: handleConfirm, onCancelTap: handleCancel),
+        _buildButtons(
+          onConfirmTap: handleConfirm,
+          onCancelTap: handleCancel,
+        ),
       ],
     );
 
@@ -166,6 +173,20 @@ class ConfirmWidget extends StatelessWidget {
     // 取消按钮文字颜色默认为确认按钮的背景色
     final defaultCancelTextStyle = TextStyle(color: effectiveConfirmBgColor, fontSize: 14, fontWeight: FontWeight.w500);
 
+    // 包裹按钮并添加边框
+    Widget wrapWithBorder(Widget button, BoxBorder? border) {
+      if (border == null) {
+        return button;
+      }
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          border: border,
+          borderRadius: effectiveBorderRadius,
+        ),
+        child: button,
+      );
+    }
+
     final confirmButton = TextButton(
       onPressed: onConfirmTap,
       style: TextButton.styleFrom(
@@ -178,7 +199,7 @@ class ConfirmWidget extends StatelessWidget {
 
 
     if (cancelText == null) {
-      return confirmButton;
+      return wrapWithBorder(confirmButton, confirmBorder);
     }
 
     final cancelButton = TextButton(
@@ -196,17 +217,17 @@ class ConfirmWidget extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          confirmButton,
+          wrapWithBorder(confirmButton, confirmBorder),
           const SizedBox(height: 12),
-          cancelButton,
+          wrapWithBorder(cancelButton, cancelBorder),
         ],
       );
     } else { // 默认为 Row 布局
       return Row(
         children: [
-          Expanded(child: cancelButton),
+          Expanded(child: wrapWithBorder(cancelButton, cancelBorder)),
           const SizedBox(width: 12),
-          Expanded(child: confirmButton),
+          Expanded(child: wrapWithBorder(confirmButton, confirmBorder)),
         ],
       );
     }

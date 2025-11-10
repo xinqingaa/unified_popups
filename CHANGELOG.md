@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.5]
+
+### Added
+- **Confirm API Enhancement**
+  - Added `confirmBorder` and `cancelBorder` parameters to allow custom `BoxBorder` for confirm/cancel buttons
+  - Preserves the original borderless style when a border is not provided
+
+### Changed
+- `ConfirmWidget` now wraps buttons based on the provided border configuration, ensuring border radius matches the button radius
+
 ## [1.1.4]
 
 ### Added

@@ -12,6 +12,8 @@ Future<bool?> _confirmImpl({
   TextAlign? textAlign,
   ConfirmButtonLayout? buttonLayout,
   BorderRadiusGeometry? buttonBorderRadius,
+  BoxBorder? confirmBorder,
+  BoxBorder? cancelBorder,
   bool showCloseButton = true,
   TextStyle? titleStyle,
   TextStyle? contentStyle,
@@ -55,6 +57,8 @@ Future<bool?> _confirmImpl({
         textAlign: textAlign,
         buttonLayout: buttonLayout,
         buttonBorderRadius: buttonBorderRadius,
+        confirmBorder: confirmBorder,
+        cancelBorder: cancelBorder,
         onConfirm: () => dismiss(true),
         onCancel: () => dismiss(false),
         onClose: () => dismiss(null), // 关闭按钮的回调
