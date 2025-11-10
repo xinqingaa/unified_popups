@@ -107,6 +107,10 @@ Pop.toast(
 - `animationDuration`：动画持续时间，默认 200ms
 - `showBarrier`：是否显示遮罩层
 - `barrierDismissible`：点击遮罩是否关闭
+- `customImagePath`：自定义图片路径，提供后会替换默认图标
+- `imageSize`：图片尺寸，默认 24.0
+- `imgColor`：自定义图片的着色，仅在提供 `customImagePath` 时生效
+- `layoutDirection`：布局方向，支持 `Axis.horizontal` 与 `Axis.vertical`
 
 **使用示例：**
 ```dart
@@ -124,6 +128,14 @@ Pop.toast(
     borderRadius: BorderRadius.circular(20),
   ),
   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+);
+
+// 自定义图片 + 着色
+Pop.toast(
+  '品牌色提示',
+  customImagePath: 'assets/custom_icon.png',
+  imageSize: 32.0,
+  imgColor: Colors.orange,
 );
 
 // 自定义动画时长
@@ -204,6 +216,8 @@ Future<bool?> confirm({
   TextAlign? textAlign = TextAlign.center,
   ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
   BorderRadiusGeometry? buttonBorderRadius,
+  BoxBorder? confirmBorder,
+  BoxBorder? cancelBorder,
   Color? confirmBgColor,
   Color? cancelBgColor,
   EdgeInsetsGeometry? padding,
@@ -213,6 +227,9 @@ Future<bool?> confirm({
   Duration animationDuration = const Duration(milliseconds: 250),
 })
 ```
+
+**新增能力：**
+- `confirmBorder` / `cancelBorder`：为按钮添加边框，更易与品牌样式统一
 
 **返回值：**
 - `true`：用户点击确认
@@ -247,6 +264,8 @@ final result = await Pop.confirm(
   content: '此操作不可撤销！',
   confirmText: '删除',
   confirmBgColor: Colors.red,
+  confirmBorder: Border.all(color: Colors.redAccent),
+  cancelBorder: Border.all(color: Colors.redAccent.withOpacity(0.3)),
   buttonLayout: ConfirmButtonLayout.column,
 );
 

@@ -12,6 +12,7 @@ void _toastImpl(
   // Widget 级别的样式配置
   String? customImagePath,
   double? imageSize,
+  Color? imgColor,
   Axis layoutDirection = Axis.horizontal,
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
@@ -33,6 +34,7 @@ void _toastImpl(
         message: message,
         customImagePath: customImagePath,
         imageSize: imageSize,
+        imgColor: imgColor,
         layoutDirection: layoutDirection,
         padding: padding,
         margin: margin,

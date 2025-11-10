@@ -82,6 +82,7 @@ final result = await Pop.confirm(
   content: 'This operation cannot be undone. Continue?',
   confirmText: 'Delete',
   cancelText: 'Cancel',
+  confirmBorder: Border.all(color: Colors.redAccent),
 );
 ```
 
@@ -102,6 +103,7 @@ Pop.toast(
   Duration animationDuration = const Duration(milliseconds: 200),
   String? customImagePath,
   double? imageSize,
+  Color? imgColor,
   Axis layoutDirection = Axis.horizontal,
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
@@ -119,6 +121,7 @@ Pop.toast(
 - `animationDuration`: Animation duration, default 200ms
 - `customImagePath`: Custom image path, if provided will override toastType icon
 - `imageSize`: Image size, default 24.0
+- `imgColor`: Tint color for the custom image (only applied when `customImagePath` is provided)
 - `layoutDirection`: Layout direction, default `Axis.horizontal` (Row), `Axis.vertical` for Column (image above, text below)
 - `showBarrier`: Whether to show barrier
 - `barrierDismissible`: Whether tapping barrier closes the popup
@@ -136,6 +139,7 @@ Pop.toast(
   'Custom image toast',
   customImagePath: 'assets/custom_icon.png',
   imageSize: 32.0,
+  imgColor: Colors.orange,
   layoutDirection: Axis.vertical, // Image above, text below
 );
 
@@ -228,6 +232,15 @@ final loadingId = Pop.loading(
 - Added `rotationDuration` parameter to configure rotation animation speed
 - Custom indicator automatically includes rotation animation
 - Container maintains square aspect ratio when both message and customIndicator are present (max 25% screen width, 100px)
+
+## 🔧 What's New in v1.1.6
+
+### Toast Enhancements
+- Added `imgColor` parameter so custom images can be tinted directly from `Pop.toast`
+
+### Confirm Enhancements
+- Added `confirmBorder` and `cancelBorder` parameters for custom button borders
+- Confirm buttons now use container-based styling, making it easier to match background colors and borders
 
 ## 📄 License
 

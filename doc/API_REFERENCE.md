@@ -67,6 +67,7 @@ static void toast(
 | `toastType` | `ToastType` | `none` | ❌ | 提示类型 |
 | `customImagePath` | `String?` | `null` | ❌ | 自定义图片路径，如果提供则覆盖 toastType 的图标 |
 | `imageSize` | `double?` | `24.0` | ❌ | 图片大小 |
+| `imgColor` | `Color?` | `null` | ❌ | 自定义图片的着色，仅在提供 `customImagePath` 时生效 |
 | `layoutDirection` | `Axis` | `Axis.horizontal` | ❌ | 布局方向，`horizontal` 为 Row（图片在左，文字在右），`vertical` 为 Column（图片在上，文字在下） |
 | `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
 | `margin` | `EdgeInsetsGeometry?` | `null` | ❌ | 外边距 |
@@ -118,6 +119,7 @@ Pop.toast(
   '自定义图片提示',
   customImagePath: 'assets/custom_icon.png',
   imageSize: 32.0,
+  imgColor: Colors.orange,
   layoutDirection: Axis.vertical, // 图片在上，文字在下
 );
 
@@ -244,6 +246,8 @@ static Future<bool?> confirm({
   TextAlign? textAlign = TextAlign.center,
   ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
   BorderRadiusGeometry? buttonBorderRadius,
+  BoxBorder? confirmBorder,
+  BoxBorder? cancelBorder,
   Color? confirmBgColor,
   Color? cancelBgColor,
   EdgeInsetsGeometry? padding,
@@ -274,6 +278,8 @@ static Future<bool?> confirm({
 | `textAlign` | `TextAlign` | `center` | ❌ | 文本对齐方式 |
 | `buttonLayout` | `ConfirmButtonLayout` | `row` | ❌ | 按钮布局方式 |
 | `buttonBorderRadius` | `BorderRadiusGeometry?` | `null` | ❌ | 按钮圆角 |
+| `confirmBorder` | `BoxBorder?` | `null` | ❌ | 确认按钮边框样式 |
+| `cancelBorder` | `BoxBorder?` | `null` | ❌ | 取消按钮边框样式 |
 | `confirmBgColor` | `Color?` | `null` | ❌ | 确认按钮背景色 |
 | `cancelBgColor` | `Color?` | `null` | ❌ | 取消按钮背景色 |
 | `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
@@ -281,6 +287,8 @@ static Future<bool?> confirm({
 | `decoration` | `Decoration?` | `null` | ❌ | 装饰样式 |
 | `confirmChild` | `Widget?` | `null` | ❌ | 在内容与按钮之间插入的自定义组件 |
 | `animationDuration` | `Duration` | `250ms` | ❌ | 动画持续时间 |
+
+> 提示：确认与取消按钮现使用容器进行渲染，可同时定制背景色与边框，便于保持样式一致性。
 
 ### 返回值
 
@@ -332,6 +340,8 @@ final result = await Pop.confirm(
   content: '此操作不可撤销！',
   confirmText: '删除',
   confirmBgColor: Colors.red,
+  confirmBorder: Border.all(color: Colors.redAccent),
+  cancelBorder: Border.all(color: Colors.redAccent.withOpacity(0.3)),
   buttonLayout: ConfirmButtonLayout.column,
   showCloseButton: true,
 );

@@ -74,6 +74,7 @@ class ToastPage extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => Pop.toast(
                   '自定义图片 Toast',
+                  imgColor: Colors.red,
                   customImagePath: 'assets/success.png',
                   imageSize: 48,
                   layoutDirection: Axis.vertical,

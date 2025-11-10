@@ -173,43 +173,46 @@ class ConfirmWidget extends StatelessWidget {
     // 取消按钮文字颜色默认为确认按钮的背景色
     final defaultCancelTextStyle = TextStyle(color: effectiveConfirmBgColor, fontSize: 14, fontWeight: FontWeight.w500);
 
-    // 包裹按钮并添加边框
-    Widget wrapWithBorder(Widget button, BoxBorder? border) {
-      if (border == null) {
-        return button;
-      }
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          border: border,
-          borderRadius: effectiveBorderRadius,
+    Widget buildButton({
+      required String text,
+      VoidCallback? onTap,
+      Color? backgroundColor,
+      required TextStyle textStyle,
+      BoxBorder? border,
+    }) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            border: border,
+            borderRadius: effectiveBorderRadius,
+          ),
+          alignment: Alignment.center,
+          child: Text(text, style: textStyle),
         ),
-        child: button,
       );
     }
 
-    final confirmButton = TextButton(
-      onPressed: onConfirmTap,
-      style: TextButton.styleFrom(
-        backgroundColor: effectiveConfirmBgColor,
-        shape: RoundedRectangleBorder(borderRadius: effectiveBorderRadius),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-      ),
-      child: Text(confirmText!, style: confirmStyle ?? defaultConfirmTextStyle),
+    final confirmButton = buildButton(
+      text: confirmText!,
+      onTap: onConfirmTap,
+      backgroundColor: effectiveConfirmBgColor,
+      textStyle: confirmStyle ?? defaultConfirmTextStyle,
+      border: confirmBorder,
     );
 
-
     if (cancelText == null) {
-      return wrapWithBorder(confirmButton, confirmBorder);
+      return confirmButton;
     }
 
-    final cancelButton = TextButton(
-      onPressed: onCancelTap,
-      style: TextButton.styleFrom(
-        backgroundColor: cancelBgColor ?? Colors.black12,
-        shape: RoundedRectangleBorder(borderRadius: effectiveBorderRadius),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-      ),
-      child: Text(cancelText!, style: cancelStyle ?? defaultCancelTextStyle),
+    final cancelButton = buildButton(
+      text: cancelText!,
+      onTap: onCancelTap,
+      backgroundColor: cancelBgColor ?? Colors.black12,
+      textStyle: cancelStyle ?? defaultCancelTextStyle,
+      border: cancelBorder,
     );
 
     // 根据 buttonLayout 返回不同的布局
@@ -217,17 +220,17 @@ class ConfirmWidget extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          wrapWithBorder(confirmButton, confirmBorder),
+          confirmButton,
           const SizedBox(height: 12),
-          wrapWithBorder(cancelButton, cancelBorder),
+          cancelButton,
         ],
       );
     } else { // 默认为 Row 布局
       return Row(
         children: [
-          Expanded(child: wrapWithBorder(cancelButton, cancelBorder)),
+          Expanded(child: cancelButton),
           const SizedBox(width: 12),
-          Expanded(child: wrapWithBorder(confirmButton, confirmBorder)),
+          Expanded(child: confirmButton),
         ],
       );
     }

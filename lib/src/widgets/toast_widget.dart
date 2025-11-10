@@ -12,6 +12,7 @@ class ToastWidget extends StatelessWidget {
   final ToastType? toastType;
   final String? customImagePath;
   final double? imageSize;
+  final Color? imgColor;
   final Axis layoutDirection;
 
   const ToastWidget({
@@ -20,6 +21,7 @@ class ToastWidget extends StatelessWidget {
     this.toastType,
     this.customImagePath,
     this.imageSize,
+    this.imgColor,
     this.layoutDirection = Axis.horizontal,
     this.padding,
     this.margin,
@@ -81,6 +83,7 @@ class ToastWidget extends StatelessWidget {
         package: customImagePath != null ? null : "unified_popups",
         height: effectiveImageSize,
         width: effectiveImageSize,
+        color: customImagePath != null ? imgColor : null,
       );
     }
     

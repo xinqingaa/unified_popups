@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.6]
+
+- **Toast API Enhancement**
+  - Added `imgColor` parameter so custom images can be tinted directly from `Pop.toast`
+
 ## [1.1.5]
 
 ### Added
@@ -7,8 +12,9 @@
   - Added `confirmBorder` and `cancelBorder` parameters to allow custom `BoxBorder` for confirm/cancel buttons
   - Preserves the original borderless style when a border is not provided
 
+
 ### Changed
-- `ConfirmWidget` now wraps buttons based on the provided border configuration, ensuring border radius matches the button radius
+- `ConfirmWidget` buttons now use `GestureDetector + Container`, maintaining border radius, custom borders, and background colors consistently
 
 ## [1.1.4]
 

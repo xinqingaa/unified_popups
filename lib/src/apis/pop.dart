@@ -38,6 +38,7 @@ abstract class Pop {
   /// - [animationDuration]：动画持续时间，默认 `200ms`。toast 需要快速显示。
   /// - [customImagePath]：自定义图片路径，如果提供则覆盖 toastType 的图标。
   /// - [imageSize]：图片大小，默认 `24.0`。
+  /// - [imgColor]：自定义图片的着色（仅在 `customImagePath` 时生效）。
   /// - [layoutDirection]：布局方向，默认 `Axis.horizontal`（Row），`Axis.vertical` 为 Column（图片在上，文字在下）。
   /// - [padding]/[margin]/[decoration]/[style]/[textAlign]：细粒度样式定制。
   ///
@@ -57,6 +58,7 @@ abstract class Pop {
     Duration animationDuration = const Duration(milliseconds: 200),
     String? customImagePath,
     double? imageSize,
+    Color? imgColor,
     Axis layoutDirection = Axis.horizontal,
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
@@ -74,6 +76,7 @@ abstract class Pop {
         animationDuration: animationDuration,
         customImagePath: customImagePath,
         imageSize: imageSize,
+        imgColor: imgColor,
         layoutDirection: layoutDirection,
         padding: padding,
         margin: margin,

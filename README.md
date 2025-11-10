@@ -86,6 +86,7 @@ final result = await Pop.confirm(
   content: '此操作不可撤销，是否继续？',
   confirmText: '删除',
   cancelText: '取消',
+  confirmBorder: Border.all(color: Colors.redAccent),
 );
 ```
 
@@ -106,6 +107,7 @@ Pop.toast(
   Duration animationDuration = const Duration(milliseconds: 200),
   String? customImagePath,
   double? imageSize,
+  Color? imgColor,
   Axis layoutDirection = Axis.horizontal,
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
@@ -123,6 +125,7 @@ Pop.toast(
 - `animationDuration`：动画持续时间，默认 200ms
 - `customImagePath`：自定义图片路径，如果提供则覆盖 toastType 的图标
 - `imageSize`：图片大小，默认 24.0
+- `imgColor`：自定义图片的着色，仅在提供 `customImagePath` 时生效
 - `layoutDirection`：布局方向，默认 `Axis.horizontal`（Row），`Axis.vertical` 为 Column（图片在上，文字在下）
 - `showBarrier`：是否显示遮罩层
 - `barrierDismissible`：点击遮罩是否关闭
@@ -140,6 +143,7 @@ Pop.toast(
   '自定义图片提示',
   customImagePath: 'assets/custom_icon.png',
   imageSize: 32.0,
+  imgColor: Colors.orange,
   layoutDirection: Axis.vertical, // 图片在上，文字在下
 );
 
@@ -241,6 +245,8 @@ Future<bool?> confirm({
   TextAlign? textAlign = TextAlign.center,
   ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
   BorderRadiusGeometry? buttonBorderRadius,
+  BoxBorder? confirmBorder,
+  BoxBorder? cancelBorder,
   Color? confirmBgColor,
   Color? cancelBgColor,
   EdgeInsetsGeometry? padding,
@@ -250,6 +256,9 @@ Future<bool?> confirm({
   Duration animationDuration = const Duration(milliseconds: 250),
 })
 ```
+
+**新增参数亮点：**
+- `confirmBorder` / `cancelBorder`：允许自定义按钮边框样式
 
 **返回值：**
 - `true`：用户点击确认
@@ -284,6 +293,8 @@ final result = await Pop.confirm(
   content: '此操作不可撤销！',
   confirmText: '删除',
   confirmBgColor: Colors.red,
+  confirmBorder: Border.all(color: Colors.redAccent),
+  cancelBorder: Border.all(color: Colors.redAccent.withOpacity(0.3)),
   buttonLayout: ConfirmButtonLayout.column,
 );
 
@@ -677,6 +688,15 @@ WillPopScope(
   child: HomePage(),
 )
 ```
+
+## 🔧 v1.1.6 更新
+
+### Toast 增强
+- 新增 `imgColor` 参数，可在调用 `Pop.toast` 时为自定义图片着色
+
+### Confirm 增强
+- 新增 `confirmBorder`、`cancelBorder` 参数，支持为按钮定制边框
+- Confirm 按钮改用容器结构渲染，背景色与边框自定义更直观一致
 
 ## 🔧 PopupManager 原理与 popupId 使用规则
 
