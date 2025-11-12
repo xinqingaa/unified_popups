@@ -16,6 +16,14 @@ class SheetPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 输入框
+              TextField(
+                decoration: InputDecoration(
+                  labelText: '请输入',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: _showBottomSheet,
                 child: const Text('Show Bottom Sheet'),
@@ -77,6 +85,7 @@ class SheetPage extends StatelessWidget {
     final result = await Pop.sheet<String>(
       title: '选择操作',
       useSafeArea: true,
+      showBarrier: false,
       showCloseButton: true,
       childBuilder: (dismiss) => ListView(
         shrinkWrap: true,

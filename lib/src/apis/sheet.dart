@@ -15,6 +15,12 @@ Future<T?> _sheetImpl<T>({
   double? imageSize,
   Offset? imageOffset,
   
+  // 遮罩相关参数
+  bool? showBarrier,
+  bool? barrierDismissible,
+  Color? barrierColor,
+
+
   bool showCloseButton = false,
   Color? backgroundColor,
   BorderRadius? borderRadius,
@@ -113,8 +119,9 @@ Future<T?> _sheetImpl<T>({
       animation: animation,
       animationDuration: animationDuration,
       useSafeArea: applySafeArea,
-      showBarrier: true,
-      barrierDismissible: true,
+      showBarrier: showBarrier ?? true,
+      barrierDismissible: barrierDismissible ?? true,
+      barrierColor: barrierColor ?? Colors.black54,
       type: PopupType.sheet,
       onDismiss: () {
         // 点击蒙层关闭

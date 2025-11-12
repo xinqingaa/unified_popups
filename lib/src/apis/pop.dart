@@ -267,6 +267,7 @@ abstract class Pop {
   /// - [useSafeArea]：是否使用安全区域（刘海/圆角屏适配）。默认遵循内部策略。
   /// - [width]/[height]：尺寸，支持 `SheetDimension` 百分比/固定值等。左右方向默认为屏宽的 75%。
   /// - [maxWidth]/[maxHeight]：最大尺寸。
+  /// - [showBarrier]/[barrierDismissible]/[barrierColor]：遮罩设置，默认透明可点空白关闭。
   /// - [imgPath]：可选顶部装饰图。
   /// - [backgroundColor]/[borderRadius]/[boxShadow]：容器外观定制。
   /// - [padding]/[titlePadding]/[titleStyle]/[titleAlign]：间距与标题样式。
@@ -296,6 +297,9 @@ abstract class Pop {
     SheetDimension? height,
     SheetDimension? maxWidth,
     SheetDimension? maxHeight,
+    bool? showBarrier,
+    bool? barrierDismissible,
+    Color? barrierColor,
     String? imgPath,
     Color? backgroundColor,
     BorderRadius? borderRadius,
@@ -313,6 +317,9 @@ abstract class Pop {
         imgPath: imgPath,
         showCloseButton: showCloseButton,
         useSafeArea: useSafeArea,
+        showBarrier: showBarrier,
+        barrierDismissible: barrierDismissible,
+        barrierColor: barrierColor,
         width: width,
         height: height,
         maxWidth: maxWidth,

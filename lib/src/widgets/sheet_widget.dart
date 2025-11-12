@@ -30,6 +30,11 @@ class SheetWidget extends StatefulWidget {
   final double? maxWidth;
   final double? maxHeight;
 
+  // 遮罩相关参数
+  final bool showBarrier;
+  final bool barrierDismissible;
+  final Color barrierColor;
+
   const SheetWidget({
     super.key,
     this.title,
@@ -51,6 +56,9 @@ class SheetWidget extends StatefulWidget {
     this.titlePadding,
     this.titleStyle,
     this.titleAlign,
+    this.showBarrier = true,
+    this.barrierDismissible = true,
+    this.barrierColor = Colors.black54,
   });
 
   @override
