@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
 
@@ -35,6 +37,10 @@ class SheetWidget extends StatefulWidget {
   final bool barrierDismissible;
   final Color barrierColor;
 
+  /// 是否在弹出方向上保留边缘空间
+  final bool dockToEdge;
+  final double? edgeGap;
+
   const SheetWidget({
     super.key,
     this.title,
@@ -59,6 +65,8 @@ class SheetWidget extends StatefulWidget {
     this.showBarrier = true,
     this.barrierDismissible = true,
     this.barrierColor = Colors.black54,
+    this.dockToEdge = false,
+    this.edgeGap,
   });
 
   @override
@@ -367,7 +375,7 @@ class _SheetWidgetState extends State<SheetWidget> {
 
     final animatedLayout = AnimatedPadding(
       padding: widget.direction == SheetDirection.bottom
-          ? EdgeInsets.only(bottom: viewInsets.bottom)
+          ? EdgeInsets.only(bottom: math.max(0, viewInsets.bottom))
           : EdgeInsets.zero,
       duration: kThemeAnimationDuration,
       curve: Curves.easeOut,

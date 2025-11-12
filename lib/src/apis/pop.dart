@@ -271,6 +271,7 @@ abstract class Pop {
   /// - [imgPath]：可选顶部装饰图。
   /// - [backgroundColor]/[borderRadius]/[boxShadow]：容器外观定制。
   /// - [padding]/[titlePadding]/[titleStyle]/[titleAlign]：间距与标题样式。
+  /// - [dockToEdge] / [edgeGap]：保留弹窗所在边缘的交互区域及其间距。
   /// - [animationDuration]：动画持续时间，默认 `400ms`。sheet 需要更长的动画时长。
   ///
   /// 用法示例：
@@ -308,6 +309,8 @@ abstract class Pop {
     EdgeInsetsGeometry? titlePadding,
     TextStyle? titleStyle,
     TextAlign? titleAlign,
+    bool dockToEdge = false,
+    double? edgeGap,
     Duration animationDuration = const Duration(milliseconds: 400),
   }) =>
       _sheetImpl<T>(
@@ -331,6 +334,8 @@ abstract class Pop {
         titlePadding: titlePadding,
         titleStyle: titleStyle,
         titleAlign: titleAlign,
+        dockToEdge: dockToEdge,
+        edgeGap: edgeGap,
         animationDuration: animationDuration,
       );
 

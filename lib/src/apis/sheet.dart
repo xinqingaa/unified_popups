@@ -29,6 +29,8 @@ Future<T?> _sheetImpl<T>({
   EdgeInsetsGeometry? titlePadding,
   TextStyle? titleStyle,
   TextAlign? titleAlign,
+  bool dockToEdge = false,
+  double? edgeGap,
   Duration animationDuration = const Duration(milliseconds: 400),
 }) {
   final completer = Completer<T?>();
@@ -112,6 +114,8 @@ Future<T?> _sheetImpl<T>({
         titlePadding: titlePadding,
         titleStyle: titleStyle,
         titleAlign: titleAlign,
+        dockToEdge: dockToEdge,
+        edgeGap: edgeGap,
         // 使用 childBuilder 构建子 Widget，并传入 dismiss 函数
         child: childBuilder(dismiss),
       ),
@@ -119,6 +123,7 @@ Future<T?> _sheetImpl<T>({
       animation: animation,
       animationDuration: animationDuration,
       useSafeArea: applySafeArea,
+      dockToEdge: dockToEdge,
       showBarrier: showBarrier ?? true,
       barrierDismissible: barrierDismissible ?? true,
       barrierColor: barrierColor ?? Colors.black54,

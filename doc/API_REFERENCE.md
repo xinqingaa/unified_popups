@@ -390,6 +390,11 @@ static Future<T?> sheet<T>({
   EdgeInsetsGeometry? titlePadding,
   TextStyle? titleStyle,
   TextAlign? titleAlign,
+  bool? showBarrier,
+  bool? barrierDismissible,
+  Color? barrierColor,
+  bool dockToEdge = false,
+  double? edgeGap,
   Duration animationDuration = const Duration(milliseconds: 400),
 })
 ```
@@ -415,7 +420,14 @@ static Future<T?> sheet<T>({
 | `titlePadding` | `EdgeInsetsGeometry?` | `null` | ❌ | 标题内边距 |
 | `titleStyle` | `TextStyle?` | `null` | ❌ | 标题样式 |
 | `titleAlign` | `TextAlign?` | `null` | ❌ | 标题对齐方式 |
+| `showBarrier` | `bool?` | `true` | ❌ | 是否显示遮罩 |
+| `barrierDismissible` | `bool?` | `true` | ❌ | 点击遮罩是否关闭 |
+| `barrierColor` | `Color?` | `Colors.black54` | ❌ | 遮罩颜色 |
+| `dockToEdge` | `bool` | `false` | ❌ | bottom/left/right 时是否保留边缘交互区域 |
+| `edgeGap` | `double?` | `kBottomNavigationBarHeight + 4` | ❌ | 预留边缘尺寸 |
 | `animationDuration` | `Duration` | `400ms` | ❌ | 动画持续时间 |
+
+> `dockToEdge` 仅在 `bottom` / `left` / `right` 方向生效，启用后预留区域可透传点击。
 
 ### 返回值
 
@@ -478,6 +490,20 @@ await Pop.sheet<void>(
         ),
       ],
     ),
+  ),
+);
+
+// TabBar 顶部弹出，保留底部导航点击
+await Pop.sheet<void>(
+  title: 'TabBar 顶部弹出',
+  dockToEdge: true,
+  edgeGap: 64,
+  childBuilder: (dismiss) => ListView(
+    shrinkWrap: true,
+    children: [
+      ListTile(title: Text('收藏'), onTap: () => dismiss()),
+      ListTile(title: Text('分享'), onTap: () => dismiss()),
+    ],
   ),
 );
 

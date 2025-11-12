@@ -148,20 +148,34 @@ class _PopupLayoutState extends State<_PopupLayout> {
     final mediaQuery = MediaQuery.of(context);
     _screenSize = mediaQuery.size;
     
+    final bool dockToEdge = widget.config.dockToEdge;
+    final bool allowDock = dockToEdge && widget.config.position != PopupPosition.top;
+    final double edgeGap = allowDock ? widget.config.edgeGap : 0;
+
+    final bool reserveBottom = allowDock && widget.config.position == PopupPosition.bottom;
+    final bool reserveLeft = allowDock && widget.config.position == PopupPosition.left;
+    final bool reserveRight = allowDock && widget.config.position == PopupPosition.right;
+
     return Stack(
       children: [
         // 遮盖层
         if (widget.config.showBarrier)
-          GestureDetector(
-            onTap: () {
-              if (widget.config.barrierDismissible) {
-                widget.onDismiss();
-              }
-            },
-            child: FadeTransition(
-              opacity: widget.animation,
-              child: Container(
-                color: widget.config.barrierColor,
+          Positioned.fill(
+            top: 0,
+            bottom: reserveBottom ? edgeGap : 0,
+            left: reserveLeft ? edgeGap : 0,
+            right: reserveRight ? edgeGap : 0,
+            child: GestureDetector(
+              onTap: () {
+                if (widget.config.barrierDismissible) {
+                  widget.onDismiss();
+                }
+              },
+              child: FadeTransition(
+                opacity: widget.animation,
+                child: Container(
+                  color: widget.config.barrierColor,
+                ),
               ),
             ),
           ),
@@ -173,10 +187,39 @@ class _PopupLayoutState extends State<_PopupLayout> {
   }
 
   Widget _buildPopupContent() {
+    final config = widget.config;
+    final bool dockToEdge = config.dockToEdge && config.position != PopupPosition.top;
+    final double edgeGap = dockToEdge ? config.edgeGap : 0;
+
     Widget content = Material(
       color: Colors.transparent,
       child: _buildAnimatedChild(widget.config.child),
     );
+
+    EdgeInsets edgePadding = EdgeInsets.zero;
+    if (dockToEdge) {
+      switch (config.position) {
+        case PopupPosition.bottom:
+          edgePadding = EdgeInsets.only(bottom: edgeGap);
+          break;
+        case PopupPosition.left:
+          edgePadding = EdgeInsets.only(left: edgeGap);
+          break;
+        case PopupPosition.right:
+          edgePadding = EdgeInsets.only(right: edgeGap);
+          break;
+        case PopupPosition.top:
+        case PopupPosition.center:
+          break;
+      }
+    }
+
+    if (edgePadding != EdgeInsets.zero) {
+      content = Padding(
+        padding: edgePadding,
+        child: content,
+      );
+    }
 
     if (widget.config.anchorKey != null) {
       if (_anchorPosition == null || _anchorSize == null) {

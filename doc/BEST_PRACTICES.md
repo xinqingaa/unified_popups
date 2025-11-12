@@ -271,6 +271,21 @@ await Pop.sheet(
     ),
   ),
 );
+
+// ✅ 推荐：底部/侧边导航场景启用 dockToEdge，避免遮挡 TabBar 或 Drawer
+await Pop.sheet(
+  title: '底部操作',
+  dockToEdge: true,
+  childBuilder: (dismiss) => ListView(
+    shrinkWrap: true,
+    children: [
+      ListTile(title: Text('收藏'), onTap: () => dismiss('favorite')),
+      ListTile(title: Text('分享'), onTap: () => dismiss('share')),
+    ],
+  ),
+);
+
+// ❌ 避免：在 top 方向启用 dockToEdge（该方向不支持自动留白）
 ```
 
 ### 5. Date 使用建议

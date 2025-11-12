@@ -339,7 +339,11 @@ Future<T?> sheet<T>({
 - `width`/`height`：尺寸，支持像素值和百分比
 - `useSafeArea`：是否使用安全区域
 - `showBarrier` / `barrierDismissible` / `barrierColor`：控制遮罩层是否显示、是否可点击关闭以及遮罩颜色
+- `dockToEdge`：在 `bottom` / `left` / `right` 方向弹出时，是否保留原边缘的交互区域（遮罩和内容都会避开该区域）
+- `edgeGap`：保留边缘区域的尺寸，默认 `kBottomNavigationBarHeight + 4`
 - `animationDuration`：动画持续时间，默认 400ms
+
+> `dockToEdge` 不支持 `top` 方向，启用后留白区域可透传到底部/侧边的 TabBar 或导航组件。
 
 **使用示例：**
 ```dart
@@ -403,6 +407,21 @@ await Pop.sheet<void>(
     ),
   ),
 );
+
+// TabBar 顶部弹出，保留底部导航
+await Pop.sheet<void>(
+  title: 'TabBar 顶部弹出',
+  dockToEdge: true,
+  edgeGap: 64, // 可选：自定义保留高度 / 宽度
+  childBuilder: (dismiss) => ListView(
+    shrinkWrap: true,
+    children: [
+      ListTile(title: Text('收藏'), onTap: () => dismiss()),
+      ListTile(title: Text('分享'), onTap: () => dismiss()),
+    ],
+  ),
+);
+// TabBar 保持可点，遮罩和内容都会停在 TabBar 顶部
 
 // 快速面板
 await Pop.sheet<void>(

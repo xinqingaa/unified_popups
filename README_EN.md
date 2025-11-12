@@ -254,7 +254,11 @@ Future<T?> sheet<T>({
 - `width`/`height`: Dimensions, supports pixels or percentages
 - `useSafeArea`: Whether to respect safe area
 - `showBarrier` / `barrierDismissible` / `barrierColor`: Control whether the barrier is shown, whether taps dismiss it, and the barrier color
+- `dockToEdge`: When sliding from the `bottom` / `left` / `right`, keep the originating edge interactive (sheet and barrier both avoid it)
+- `edgeGap`: Size of the reserved edge region, defaults to `kBottomNavigationBarHeight + 4`
 - `animationDuration`: Animation duration, default 400ms
+
+> `dockToEdge` is not available for the `top` position. When enabled, the reserved edge stays fully interactive (e.g. TabBar or navigation bar taps go through).
 
 **Usage Examples:**
 ```dart
@@ -284,6 +288,21 @@ await Pop.sheet<void>(
     ),
   ),
 );
+
+// Anchor above TabBar
+await Pop.sheet<void>(
+  title: 'Anchor above TabBar',
+  dockToEdge: true,
+  edgeGap: 64, // Optional: customise the reserved height/width
+  childBuilder: (dismiss) => ListView(
+    shrinkWrap: true,
+    children: [
+      ListTile(title: const Text('Favorite'), onTap: () => dismiss()),
+      ListTile(title: const Text('Share'), onTap: () => dismiss()),
+    ],
+  ),
+);
+// The TabBar stays visible and tappable because the barrier stops above it
 ```
 
 ## 🔧 What's New in v1.1.4

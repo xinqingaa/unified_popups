@@ -64,6 +64,14 @@ class PopupConfig {
   /// [必填] 弹层类型，驱动系统返回键拦截等策略
   final PopupType type;
 
+  /// [可选] 是否在弹窗方向上为底部/侧边导航留白
+  final bool dockToEdge;
+
+  /// [可选] 预留的边缘间距
+  final double edgeGap;
+
+  static const double defaultEdgeGap = kBottomNavigationBarHeight + 4;
+
   PopupConfig({
     required this.child,
     this.position = PopupPosition.center,
@@ -79,5 +87,7 @@ class PopupConfig {
     this.onShow,
     this.onDismiss,
     this.type = PopupType.other,
+    this.dockToEdge = false,
+    this.edgeGap = defaultEdgeGap,
   });
 }

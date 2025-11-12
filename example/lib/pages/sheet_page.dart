@@ -6,18 +6,20 @@ class SheetPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopScopeWidget(
-      child: Scaffold(
-      appBar: AppBar(title: const Text('Sheet & Drawer Demo')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+    return DefaultTabController(
+      length: 3,
+      child: PopScopeWidget(
+        child: Scaffold(
+          appBar: AppBar(title: const Text('Sheet & Drawer Demo')),
+          body: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
               // 输入框
-              TextField(
+              const TextField(
                 decoration: InputDecoration(
                   labelText: '请输入',
                   border: OutlineInputBorder(),
@@ -73,11 +75,30 @@ class SheetPage extends StatelessWidget {
                 onPressed: _showBottomSheetWithCustomStyle,
                 child: const Text('自定义样式 Sheet'),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _showAnchoredBottomSheet,
+                child: const Text('TabBar 顶部 Sheet'),
+              ),
             ],
+              ),
+            ),
+          ),
+          bottomNavigationBar: Material(
+            color: Theme.of(context).colorScheme.surface,
+            elevation: 4,
+            child: const TabBar(
+              labelColor: Colors.blue,
+              unselectedLabelColor: Colors.grey,
+              tabs: [
+                Tab(icon: Icon(Icons.home), text: '首页'),
+                Tab(icon: Icon(Icons.list), text: '列表'),
+                Tab(icon: Icon(Icons.settings), text: '设置'),
+              ],
+            ),
           ),
         ),
       ),
-      )
     );
   }
 
@@ -265,6 +286,26 @@ class SheetPage extends StatelessWidget {
 
   void _handleSheetResult(String? result) {
     print("result: $result");
+  }
+
+  void _showAnchoredBottomSheet() async {
+    final result = await Pop.sheet<String>(
+      title: 'TabBar 顶部弹出',
+      direction: SheetDirection.bottom,
+      
+      dockToEdge: true,
+      // edgeGap: ,
+      showBarrier: false,
+      childBuilder: (dismiss) => ListView(
+        shrinkWrap: true,
+        children: [
+          _buildItem(onTap: () => dismiss('pay'), title: "支付"),
+          _buildItem(onTap: () => dismiss('share'), title: "分享"),
+          _buildItem(onTap: () => dismiss(), title: "关闭"),
+        ],
+      ),
+    );
+    _handleSheetResult(result);
   }
 
   void _showBottomSheetWithForm() async {

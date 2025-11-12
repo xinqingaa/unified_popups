@@ -309,7 +309,12 @@ Future<T?> sheet<T>({
 - `direction`：滑出方向，支持 `top`、`bottom`、`left`、`right`
 - `width`/`height`：尺寸，支持像素值和百分比
 - `useSafeArea`：是否使用安全区域
+- `showBarrier` / `barrierDismissible` / `barrierColor`：遮罩相关控制
+- `dockToEdge`：在 `bottom` / `left` / `right` 方向弹出时保留原边缘的交互区域
+- `edgeGap`：预留的边缘尺寸，默认 `kBottomNavigationBarHeight + 4`
 - `animationDuration`：动画持续时间，默认 400ms
+
+> `dockToEdge` 不支持 `top` 方向，启用后预留区域可正常接收点击（如 TabBar、导航栏）。
 
 **使用示例：**
 ```dart
@@ -356,6 +361,19 @@ await Pop.sheet<void>(
   childBuilder: (dismiss) => Container(
     padding: EdgeInsets.all(16),
     child: Text('自定义内容'),
+  ),
+);
+
+// TabBar 顶部弹出，保留底部导航点击
+await Pop.sheet<void>(
+  title: 'TabBar 顶部弹出',
+  dockToEdge: true,
+  childBuilder: (dismiss) => ListView(
+    shrinkWrap: true,
+    children: [
+      ListTile(title: Text('收藏'), onTap: () => dismiss()),
+      ListTile(title: Text('分享'), onTap: () => dismiss()),
+    ],
   ),
 );
 

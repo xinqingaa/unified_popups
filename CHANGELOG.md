@@ -1,6 +1,20 @@
 # Changelog
 
 
+## [1.1.8]
+
+### Added
+- Introduced sheet barrier options (`showBarrier`, `barrierDismissible`, `barrierColor`) for finer control.
+- Added `dockToEdge` to reserve space for system/tab/navigation bars when sliding from the bottom/left/right edges.
+- Added `edgeGap` with a default of `kBottomNavigationBarHeight + 4`, allowing custom edge spacing.
+
+### Changed
+- When `dockToEdge` is enabled, the barrier now uses clipping instead of margin so the reserved edge remains interactive.
+
+### Fixed
+- Improved sheet keyboard handling so bottom sheets lift with the keyboard without compressing content.
+
+
 ## [1.1.7]
 
 ### Added
