@@ -338,6 +338,7 @@ Future<T?> sheet<T>({
 - `direction`：滑出方向，支持 `top`、`bottom`、`left`、`right`
 - `width`/`height`：尺寸，支持像素值和百分比
 - `useSafeArea`：是否使用安全区域
+- `showBarrier` / `barrierDismissible` / `barrierColor`：控制遮罩层是否显示、是否可点击关闭以及遮罩颜色
 - `animationDuration`：动画持续时间，默认 400ms
 
 **使用示例：**
@@ -385,6 +386,21 @@ await Pop.sheet<void>(
   childBuilder: (dismiss) => Container(
     padding: EdgeInsets.all(16),
     child: Text('自定义内容'),
+  ),
+);
+
+// 自定义遮罩交互
+await Pop.sheet<void>(
+  title: '不可点击关闭',
+  showBarrier: true,
+  barrierDismissible: false,
+  barrierColor: Colors.black87.withOpacity(0.6),
+  childBuilder: (dismiss) => Container(
+    padding: EdgeInsets.all(16),
+    child: ElevatedButton(
+      onPressed: () => dismiss(),
+      child: Text('关闭'),
+    ),
   ),
 );
 

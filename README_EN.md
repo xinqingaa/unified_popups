@@ -219,6 +219,73 @@ final loadingId = Pop.loading(
 );
 ```
 
+### Bottom Sheet
+
+Displays a panel sliding out from a specific direction. Commonly used for list selections or lightweight forms.
+
+```dart
+Future<T?> sheet<T>({
+  required Widget Function(void Function([T? result]) dismiss) childBuilder,
+  String? title,
+  SheetDirection direction = SheetDirection.bottom,
+  bool showCloseButton = false,
+  bool? useSafeArea,
+  SheetDimension? width,
+  SheetDimension? height,
+  SheetDimension? maxWidth,
+  SheetDimension? maxHeight,
+  String? imgPath,
+  Color? backgroundColor,
+  BorderRadius? borderRadius,
+  List<BoxShadow>? boxShadow,
+  EdgeInsetsGeometry? padding,
+  EdgeInsetsGeometry? titlePadding,
+  TextStyle? titleStyle,
+  TextAlign? titleAlign,
+  bool? showBarrier,
+  bool? barrierDismissible,
+  Color? barrierColor,
+  Duration animationDuration = const Duration(milliseconds: 400),
+})
+```
+
+**Parameters:**
+- `direction`: Slide-in direction, supports `top`, `bottom`, `left`, `right`
+- `width`/`height`: Dimensions, supports pixels or percentages
+- `useSafeArea`: Whether to respect safe area
+- `showBarrier` / `barrierDismissible` / `barrierColor`: Control whether the barrier is shown, whether taps dismiss it, and the barrier color
+- `animationDuration`: Animation duration, default 400ms
+
+**Usage Examples:**
+```dart
+// Basic bottom sheet
+final result = await Pop.sheet<String>(
+  title: 'Pick an option',
+  childBuilder: (dismiss) => ListView(
+    shrinkWrap: true,
+    children: [
+      ListTile(title: Text('Share'), onTap: () => dismiss('share')),
+      ListTile(title: Text('Edit'), onTap: () => dismiss('edit')),
+    ],
+  ),
+);
+
+// Custom barrier behavior
+await Pop.sheet<void>(
+  title: 'Barrier example',
+  showBarrier: true,
+  barrierDismissible: false,
+  barrierColor: Colors.black87.withOpacity(0.6),
+  childBuilder: (dismiss) => Padding(
+    padding: const EdgeInsets.all(16),
+    child: ElevatedButton(
+      onPressed: () => dismiss(),
+      child: const Text('Close'),
+    ),
+  ),
+);
+```
+
 ## 🔧 What's New in v1.1.4
 
 ### Toast Enhancements

@@ -232,6 +232,7 @@ class _SheetWidgetState extends State<SheetWidget> {
         widget.child is GridView ||
         widget.child is CustomScrollView ||
         widget.child is SingleChildScrollView;
+    final viewInsets = MediaQuery.of(context).viewInsets;
 
     // 标题和关闭按钮的组合
     Widget? titleBar;
@@ -285,7 +286,10 @@ class _SheetWidgetState extends State<SheetWidget> {
           if (isHorizontal)
             Expanded(child: widget.child)
           else
-            Flexible(child: widget.child),
+            Flexible(
+              fit: isChildScrollable && widget.maxHeight != null ? FlexFit.tight : FlexFit.loose,
+              child: widget.child,
+            ),
         ],
       );
 
@@ -324,21 +328,12 @@ class _SheetWidgetState extends State<SheetWidget> {
         child: Material(
           color: Colors.transparent,
           child: SafeArea(
-            // 键盘避让：使用 AnimatedPadding 根据键盘高度动态上移
-            child: AnimatedPadding(
-              // 仅当 Sheet 在底部时才应用键盘避让的内边距。
-              padding: widget.direction == SheetDirection.bottom
-                ? MediaQuery.of(context).viewInsets
-                : EdgeInsets.zero,
-              duration: kThemeAnimationDuration,
-              curve: Curves.easeOut,
-              child: Padding(
-                padding: widget.padding ?? defaultPadding,
-                child: buildChild()
-              ),
+            child: Padding(
+              padding: widget.padding ?? defaultPadding,
+              child: buildChild(),
             ),
-          )
-        ),
+          ),
+        )
       ),
     );
 
@@ -370,6 +365,15 @@ class _SheetWidgetState extends State<SheetWidget> {
       ],
     );
 
+    final animatedLayout = AnimatedPadding(
+      padding: widget.direction == SheetDirection.bottom
+          ? EdgeInsets.only(bottom: viewInsets.bottom)
+          : EdgeInsets.zero,
+      duration: kThemeAnimationDuration,
+      curve: Curves.easeOut,
+      child: mainLayout,
+    );
+
     // 使用 GestureDetector 包裹整个内容以捕获拖动手势
     return GestureDetector(
     // 当子组件是可滚动时，不处理这里的拖动，交由 NotificationListener
@@ -384,7 +388,7 @@ class _SheetWidgetState extends State<SheetWidget> {
       // 使用 Transform.translate 来根据拖动偏移量移动 Widget
       child: Transform.translate(
         offset: _dragOffset,
-        child: mainLayout,
+        child: animatedLayout,
       ),
     );
   }

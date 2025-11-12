@@ -1,5 +1,15 @@
 # Changelog
 
+
+## [1.1.7]
+
+### Added
+- `Pop.sheet` introduces barrier parameters (`showBarrier`, `barrierDismissible`, `barrierColor`) for more flexible interaction control.
+
+### Fixed
+- Improved sheet keyboard handling: bottom sheets now move with the keyboard, preventing content compression or overflow.
+
+
 ## [1.1.6]
 
 - **Toast API Enhancement**
