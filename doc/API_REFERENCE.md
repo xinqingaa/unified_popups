@@ -135,7 +135,7 @@ Pop.toast(
 ### 方法签名
 
 ```dart
-static String loading({
+static void loading({
   String? message,
   Color? backgroundColor,
   double? borderRadius,
@@ -170,18 +170,18 @@ static String loading({
 
 ### 返回值
 
-返回 `String` 类型的唯一 ID，用于后续关闭 Loading。
+返回 `void`。整个应用同时只能有一个 loading，调用此方法会自动关闭之前的 loading（如果存在）。不需要手动管理 loading ID。
 
 ### 使用示例
 
 ```dart
 // 基本使用
-final loadingId = Pop.loading(message: '加载中...');
+Pop.loading(message: '加载中...');
 await someAsyncOperation();
-Pop.hideLoading(loadingId);
+Pop.hideLoading();
 
 // 自定义样式
-final loadingId = Pop.loading(
+Pop.loading(
   message: '自定义样式 Loading',
   backgroundColor: Colors.purple.withOpacity(0.9),
   borderRadius: 20,
@@ -195,7 +195,7 @@ final loadingId = Pop.loading(
 );
 
 // 可关闭的 Loading
-final loadingId = Pop.loading(
+Pop.loading(
   message: '可点击遮罩关闭',
   showBarrier: true,
   barrierDismissible: true,
@@ -203,14 +203,14 @@ final loadingId = Pop.loading(
 );
 
 // 使用自定义图片作为 loading 图标
-final loadingId = Pop.loading(
+Pop.loading(
   message: '加载中',
   customIndicator: Image.asset('assets/loading.png'),
   rotationDuration: Duration(milliseconds: 800),
 );
 
 // 快速显示的 Loading
-final loadingId = Pop.loading(
+Pop.loading(
   message: '快速加载',
   animationDuration: Duration(milliseconds: 100),
 );
@@ -219,10 +219,10 @@ final loadingId = Pop.loading(
 ### hideLoading 方法
 
 ```dart
-static void hideLoading(String id)
+static void hideLoading()
 ```
 
-用于关闭指定的 Loading 弹窗。
+用于关闭当前显示的 Loading 弹窗。不需要参数，会自动关闭当前显示的 loading（如果存在）。
 
 ## Confirm API
 
@@ -909,6 +909,30 @@ if (PopupManager.hideLastNonToast()) {
 }
 ```
 
+#### 根据类型隐藏弹窗
+
+```dart
+static bool hideByType(PopupType type)
+```
+
+**说明：** 根据类型隐藏指定类型的弹窗。从最新的弹窗开始查找，找到第一个匹配类型的弹窗并关闭。主要用于单一实例的弹窗类型，如 loading。
+
+**参数：**
+- `type`：要关闭的弹窗类型（`PopupType.loading`、`PopupType.toast` 等）
+
+**返回值：** 如果找到并关闭了弹窗返回 `true`，否则返回 `false`
+
+**使用示例：**
+```dart
+// 关闭当前的 loading
+if (PopupManager.hideByType(PopupType.loading)) {
+  print('成功关闭了 loading');
+}
+
+// 关闭当前的 toast
+PopupManager.hideByType(PopupType.toast);
+```
+
 #### 智能返回
 
 ```dart
@@ -935,7 +959,7 @@ AppBar(
 
 #### ✅ 可以通过 popupId 关闭的弹窗
 
-1. **Loading 弹窗**：`Pop.loading()` 返回 popupId
+1. **Loading 弹窗**：`Pop.loading()` 现在不需要返回 popupId，内部自动管理
 2. **手动创建的弹窗**：通过 `PopupManager.show()` 直接创建
 
 #### ❌ 不能通过 popupId 关闭的弹窗

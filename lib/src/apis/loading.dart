@@ -1,6 +1,6 @@
 part of 'pop.dart';
 
-String _loadingImpl({
+void _loadingImpl({
   String? message,
   // 样式参数
   Color? backgroundColor,
@@ -17,7 +17,10 @@ String _loadingImpl({
   Color barrierColor = Colors.black54,
   Duration animationDuration = const Duration(milliseconds: 150),
 }) {
-  return PopupManager.show(
+  // 显示新 loading 前，先关闭旧的（如果存在）
+  PopupManager.hideByType(PopupType.loading);
+  
+  PopupManager.show(
     PopupConfig(
       child: LoadingWidget(
         message: message,
@@ -40,6 +43,6 @@ String _loadingImpl({
   );
 }
 
-void _hideLoadingImpl(String id) {
-  PopupManager.hide(id);
+void _hideLoadingImpl() {
+  PopupManager.hideByType(PopupType.loading);
 }

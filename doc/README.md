@@ -63,9 +63,9 @@ class MyApp extends StatelessWidget {
 Pop.toast('操作成功', toastType: ToastType.success);
 
 // 显示加载指示器
-final loadingId = Pop.loading(message: '加载中...');
+Pop.loading(message: '加载中...');
 // ... 异步操作
-Pop.hideLoading(loadingId);
+Pop.hideLoading();
 
 // 显示确认对话框
 final result = await Pop.confirm(
@@ -164,17 +164,17 @@ String loading({
 })
 ```
 
-**返回值：** 返回 Loading 的唯一 ID，用于后续关闭
+**返回值：** 返回 `void`。整个应用同时只能有一个 loading，调用此方法会自动关闭之前的 loading（如果存在）。不需要手动管理 loading ID。
 
 **使用示例：**
 ```dart
 // 基本使用
-final loadingId = Pop.loading(message: '提交中...');
+Pop.loading(message: '提交中...');
 await submitData();
-Pop.hideLoading(loadingId);
+Pop.hideLoading();
 
 // 自定义样式
-final loadingId = Pop.loading(
+Pop.loading(
   message: '自定义样式 Loading',
   backgroundColor: Colors.purple.withOpacity(0.9),
   borderRadius: 20,
@@ -188,7 +188,7 @@ final loadingId = Pop.loading(
 );
 
 // 快速显示 Loading
-final loadingId = Pop.loading(
+Pop.loading(
   message: '快速加载',
   animationDuration: Duration(milliseconds: 100),
 );
@@ -642,14 +642,14 @@ try {
 ```dart
 // 推荐：使用 Loading 包装异步操作
 Future<void> submitForm() async {
-  final loadingId = Pop.loading(message: '提交中...');
+  Pop.loading(message: '提交中...');
   
   try {
     await api.submit(formData);
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('提交成功', toastType: ToastType.success);
   } catch (e) {
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('提交失败: $e', toastType: ToastType.error);
   }
 }
@@ -727,10 +727,10 @@ class _PopupInfo {
 
 **1. Loading 弹窗**
 ```dart
-// Loading 返回 popupId，可以精确控制关闭
-final loadingId = Pop.loading(message: '加载中...');
+// Loading 现在不需要 ID，内部自动管理
+Pop.loading(message: '加载中...');
 // ... 异步操作
-Pop.hideLoading(loadingId); // ✅ 可以关闭
+Pop.hideLoading(); // ✅ 可以关闭，不需要参数
 ```
 
 **2. 手动创建的弹窗**
@@ -795,7 +795,15 @@ PopupManager.hideAll();
 PopupManager.hideLastNonToast();
 ```
 
-#### 4. 检查弹窗状态
+#### 4. 根据类型隐藏弹窗
+```dart
+// 隐藏指定类型的弹窗（从最新的开始查找）
+PopupManager.hideByType(PopupType.loading);
+PopupManager.hideByType(PopupType.toast);
+// 主要用于单一实例的弹窗类型，如 loading
+```
+
+#### 5. 检查弹窗状态
 ```dart
 // 检查指定 ID 的弹窗是否可见
 bool isVisible = PopupManager.isVisible(popupId);
@@ -815,18 +823,12 @@ PopupManager.maybePop(context);
 #### 1. Loading 弹窗管理
 ```dart
 class LoadingManager {
-  static String? _currentLoadingId;
-  
   static void show(String message) {
-    hide(); // 先隐藏之前的 Loading
-    _currentLoadingId = Pop.loading(message: message);
+    Pop.loading(message: message);
   }
   
   static void hide() {
-    if (_currentLoadingId != null) {
-      Pop.hideLoading(_currentLoadingId!);
-      _currentLoadingId = null;
-    }
+    Pop.hideLoading();
   }
 }
 ```
@@ -857,16 +859,13 @@ WillPopScope(
 ```dart
 // 确保 Loading 在异常情况下也能被关闭
 Future<void> safeOperation() async {
-  String? loadingId;
   try {
-    loadingId = Pop.loading(message: '处理中...');
+    Pop.loading(message: '处理中...');
     await riskyOperation();
-    Pop.hideLoading(loadingId!);
+    Pop.hideLoading();
     Pop.toast('成功', toastType: ToastType.success);
   } catch (e) {
-    if (loadingId != null) {
-      Pop.hideLoading(loadingId);
-    }
+    Pop.hideLoading();
     Pop.toast('失败: $e', toastType: ToastType.error);
   }
 }
@@ -897,14 +896,14 @@ void showToast(String message) {
 ```dart
 // 推荐：为长时间操作显示 Loading
 Future<void> longOperation() async {
-  final loadingId = Pop.loading(message: '处理中...');
+  Pop.loading(message: '处理中...');
   
   try {
     await Future.delayed(Duration(seconds: 3)); // 模拟长时间操作
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('操作完成', toastType: ToastType.success);
   } catch (e) {
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('操作失败', toastType: ToastType.error);
   }
 }

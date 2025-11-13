@@ -2,6 +2,7 @@ import 'package:example/pages/date_page.dart';
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 import 'pages/anchored_page.dart';
+import 'pages/async_page.dart';
 import 'pages/dialog_page.dart';
 import 'pages/home_page.dart';
 import 'pages/loading_page.dart';
@@ -41,7 +42,8 @@ class MyApp extends StatelessWidget {
         '/loading': (context) => const LoadingPage(),
         '/sheet': (context) => const SheetPage(),
         '/anchored': (context) => const AnchoredPage(),
-        '/date': (context) => const DatePage()
+        '/date': (context) => const DatePage(),
+        '/async': (context) => const AsyncPage(),
       },
     );
   }

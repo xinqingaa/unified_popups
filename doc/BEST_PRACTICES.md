@@ -106,49 +106,48 @@ Pop.toast(
 ```dart
 // ✅ 推荐：为异步操作提供反馈
 Future<void> submitForm() async {
-  final loadingId = Pop.loading(message: '提交中...');
+  Pop.loading(message: '提交中...');
   
   try {
     await api.submit(formData);
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('提交成功', toastType: ToastType.success);
   } catch (e) {
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('提交失败: $e', toastType: ToastType.error);
   }
 }
 
 // ✅ 推荐：长时间操作提供进度信息
 Future<void> uploadFile() async {
-  final loadingId = Pop.loading(message: '上传中...');
+  Pop.loading(message: '上传中...');
   
   try {
     await uploadWithProgress((progress) {
       // 可以更新 loading 消息显示进度
-      Pop.hideLoading(loadingId);
       Pop.loading(message: '上传中... ${(progress * 100).toInt()}%');
     });
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('上传成功', toastType: ToastType.success);
   } catch (e) {
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('上传失败', toastType: ToastType.error);
   }
 }
 
 // ✅ 推荐：快速操作使用短动画
 Future<void> quickOperation() async {
-  final loadingId = Pop.loading(
+  Pop.loading(
     message: '快速处理中...',
     animationDuration: Duration(milliseconds: 100),
   );
   
   try {
     await quickTask();
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('处理完成', toastType: ToastType.success);
   } catch (e) {
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('处理失败', toastType: ToastType.error);
   }
 }
@@ -489,23 +488,23 @@ void showBatchToasts(List<String> messages) {
 ```dart
 // ✅ 推荐：为长时间操作显示 Loading
 Future<void> longOperation() async {
-  final loadingId = Pop.loading(message: '处理中...');
+  Pop.loading(message: '处理中...');
   
   try {
     await Future.delayed(Duration(seconds: 3)); // 模拟长时间操作
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('操作完成', toastType: ToastType.success);
   } catch (e) {
-    Pop.hideLoading(loadingId);
+    Pop.hideLoading();
     Pop.toast('操作失败', toastType: ToastType.error);
   }
 }
 
 // ❌ 避免：为快速操作显示 Loading
 Future<void> quickOperation() async {
-  final loadingId = Pop.loading(message: '处理中...'); // 不必要的 Loading
+  Pop.loading(message: '处理中...'); // 不必要的 Loading
   await Future.delayed(Duration(milliseconds: 100)); // 快速操作
-  Pop.hideLoading(loadingId);
+  Pop.hideLoading();
 }
 ```
 
@@ -603,18 +602,12 @@ WillPopScope(
 ```dart
 // ✅ 推荐：使用全局管理
 class PopupService {
-  static String? _currentLoadingId;
-  
   static void showLoading(String message) {
-    hideLoading(); // 先隐藏之前的 Loading
-    _currentLoadingId = Pop.loading(message: message);
+    Pop.loading(message: message);
   }
   
   static void hideLoading() {
-    if (_currentLoadingId != null) {
-      Pop.hideLoading(_currentLoadingId!);
-      _currentLoadingId = null;
-    }
+    Pop.hideLoading();
   }
 }
 
@@ -631,10 +624,10 @@ PopupService.hideLoading();
 **解决方案：**
 
 ```dart
-// ✅ 正确：Loading 弹窗可以通过 popupId 关闭
-final loadingId = Pop.loading(message: '加载中...');
+// ✅ 正确：Loading 弹窗现在不需要 ID，直接调用即可
+Pop.loading(message: '加载中...');
 // ... 异步操作
-Pop.hideLoading(loadingId); // 可以关闭
+Pop.hideLoading(); // 可以关闭，不需要参数
 
 // ❌ 错误：Toast 弹窗不能通过 popupId 关闭
 Pop.toast('消息'); // 不返回 popupId，无法手动关闭
@@ -661,28 +654,20 @@ class MyPage extends StatefulWidget {
 }
 
 class _MyPageState extends State<MyPage> {
-  String? _loadingId;
-  
   @override
   void dispose() {
     // 页面销毁时清理弹窗
-    if (_loadingId != null) {
-      Pop.hideLoading(_loadingId!);
-    }
+    Pop.hideLoading();
     super.dispose();
   }
   
   Future<void> _performOperation() async {
-    _loadingId = Pop.loading(message: '处理中...');
+    Pop.loading(message: '处理中...');
     try {
       await someAsyncOperation();
-      Pop.hideLoading(_loadingId!);
-      _loadingId = null;
+      Pop.hideLoading();
     } catch (e) {
-      if (_loadingId != null) {
-        Pop.hideLoading(_loadingId!);
-        _loadingId = null;
-      }
+      Pop.hideLoading();
       Pop.toast('操作失败', toastType: ToastType.error);
     }
   }
@@ -744,14 +729,14 @@ Pop.confirm(
 class FormService {
   static Future<bool> submitForm(Map<String, dynamic> formData) async {
     // 1. 显示加载状态
-    final loadingId = Pop.loading(message: '提交中...');
+    Pop.loading(message: '提交中...');
     
     try {
       // 2. 执行提交操作
       await api.submit(formData);
       
       // 3. 隐藏加载状态
-      Pop.hideLoading(loadingId);
+      Pop.hideLoading();
       
       // 4. 显示成功提示
       Pop.toast('提交成功', toastType: ToastType.success);
@@ -759,7 +744,7 @@ class FormService {
       return true;
     } catch (e) {
       // 5. 隐藏加载状态
-      Pop.hideLoading(loadingId);
+      Pop.hideLoading();
       
       // 6. 显示错误提示
       Pop.toast('提交失败: $e', toastType: ToastType.error);

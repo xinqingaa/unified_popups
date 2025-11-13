@@ -17,16 +17,16 @@ class LoadingPage extends StatelessWidget {
             children: [
               ElevatedButton(
                 onPressed: () async {
-                  final loadingId = Pop.loading(message: 'loading');
+                  Pop.loading(message: 'loading');
                   await Future.delayed(const Duration(seconds: 3));
-                  Pop.hideLoading(loadingId);
+                  Pop.hideLoading();
                 },
                 child: const Text('Show Loading for 3 seconds'),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () async {
-                  final loadingId = Pop.loading(
+                  Pop.loading(
                     message: '自定义样式 Loading',
                     backgroundColor: Colors.purple.withValues(alpha: 0.9),
                     borderRadius: 20,
@@ -39,33 +39,33 @@ class LoadingPage extends StatelessWidget {
                     ),
                   );
                   await Future.delayed(const Duration(seconds: 2));
-                  Pop.hideLoading(loadingId);
+                  Pop.hideLoading();
                 },
                 child: const Text('自定义样式 Loading'),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () async {
-                  final loadingId = Pop.loading(
+                  Pop.loading(
                     message: '可点击遮罩关闭的 Loading',
                     showBarrier: true,
                     barrierDismissible: true,
                     barrierColor: Colors.black26,
                   );
                   await Future.delayed(const Duration(seconds: 5));
-                  Pop.hideLoading(loadingId);
+                  Pop.hideLoading();
                 },
                 child: const Text('可关闭 Loading'),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () async {
-                  final loadingId = Pop.loading(
+                  Pop.loading(
                     message: 'loading',
                     customIndicator: Image.asset('assets/loading.png' , width: 48, height: 48),
                   );
                   await Future.delayed(const Duration(seconds: 5));
-                  Pop.hideLoading(loadingId);
+                  Pop.hideLoading();
                 },
                 child: const Text('自定义图片 Loading'),
               ),

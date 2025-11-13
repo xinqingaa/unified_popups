@@ -11,6 +11,7 @@ Unified Popups is a unified popup solution designed for enterprise-level Flutter
 
 ### ✨ Key Features
 
+- **🆕 Async Popup Support**: All popup types now fully support async calls! No more build phase errors. Based on `SafeOverlayEntry` implementation, automatically detects build phase and defers execution. Perfect support for `Future.then()`, `async/await`, `Stream`, `Timer`, and other async scenarios
 - **Unified API**: All popups are called through the `Pop` static class with a consistent API design
 - **Type Safety**: Full type support with compile-time error checking
 - **Multi-instance Support**: Based on Overlay implementation, supports displaying multiple popups simultaneously
@@ -72,9 +73,9 @@ class MyApp extends StatelessWidget {
 Pop.toast('Operation successful', toastType: ToastType.success);
 
 // Show loading indicator
-final loadingId = Pop.loading(message: 'Loading...');
+Pop.loading(message: 'Loading...');
 // ... async operation
-Pop.hideLoading(loadingId);
+Pop.hideLoading();
 
 // Show confirmation dialog
 final result = await Pop.confirm(
@@ -162,7 +163,7 @@ Pop.toast(
 Used to display loading state with support for custom styles and interactions.
 
 ```dart
-String loading({
+void loading({
   String? message,
   Color? backgroundColor,
   double? borderRadius,
@@ -178,7 +179,7 @@ String loading({
 })
 ```
 
-**Returns:** Returns the unique ID of the Loading for subsequent closing
+**Note:** The entire application can only have one loading instance at a time, managed internally. When showing a new loading, any existing loading is automatically closed. No need to manually manage loading IDs.
 
 **Parameters:**
 - `customIndicator`: Custom Widget (typically an image), if provided will replace the default CircularProgressIndicator and automatically add rotation animation
@@ -187,19 +188,19 @@ String loading({
 **Usage Examples:**
 ```dart
 // Basic usage
-final loadingId = Pop.loading(message: 'Submitting...');
+Pop.loading(message: 'Submitting...');
 await submitData();
-Pop.hideLoading(loadingId);
+Pop.hideLoading();
 
 // Use custom image as loading indicator
-final loadingId = Pop.loading(
+Pop.loading(
   message: 'Loading',
   customIndicator: Image.asset('assets/loading.png'),
   rotationDuration: Duration(milliseconds: 800),
 );
 
 // Custom style
-final loadingId = Pop.loading(
+Pop.loading(
   message: 'Custom style Loading',
   backgroundColor: Colors.purple.withOpacity(0.9),
   borderRadius: 20,
@@ -213,7 +214,7 @@ final loadingId = Pop.loading(
 );
 
 // Quick loading display
-final loadingId = Pop.loading(
+Pop.loading(
   message: 'Quick loading',
   animationDuration: Duration(milliseconds: 100),
 );
@@ -318,6 +319,65 @@ await Pop.sheet<void>(
 - Added `rotationDuration` parameter to configure rotation animation speed
 - Custom indicator automatically includes rotation animation
 - Container maintains square aspect ratio when both message and customIndicator are present (max 25% screen width, 100px)
+
+## 🎉 What's New in v1.1.10 - Major Update
+
+### ⚡ Async Popup Support (Core Feature)
+
+**All popup types now fully support async calls!**
+
+- ✅ Support calling in `Future.then()` callbacks
+- ✅ Support calling in `async/await` async methods
+- ✅ Support calling in `Stream` listener callbacks
+- ✅ Support calling in `Timer` callbacks
+- ✅ Support calling in `postFrameCallback`
+- ✅ Support async calling in `initState`
+
+**Technical Implementation:**
+- Based on `SafeOverlayEntry` implementation, automatically detects build phase
+- If called during build phase, automatically defers to `postFrameCallback` execution
+- Completely solves "setState() called during build" errors
+- All popup types (Toast, Loading, Confirm, Sheet, Date, Menu) are supported
+
+**Usage Examples:**
+```dart
+// ✅ Call in Future.then()
+Future.delayed(Duration(seconds: 1)).then((_) {
+  Pop.loading(message: 'Processing...');
+});
+
+// ✅ Call in async/await
+Future<void> fetchData() async {
+  await Future.delayed(Duration(milliseconds: 100));
+  Pop.loading(message: 'Loading...');
+  await api.fetch();
+  Pop.hideLoading();
+}
+
+// ✅ Call in Stream listener
+stream.listen((data) {
+  Pop.toast('Received data: $data');
+});
+
+// ✅ Call in Timer callback
+Timer(Duration(seconds: 1), () {
+  Pop.confirm(content: 'Confirm operation?');
+});
+
+// ✅ Call in postFrameCallback
+WidgetsBinding.instance.addPostFrameCallback((_) {
+  Pop.loading(message: 'Initializing...');
+});
+```
+
+### Loading API Simplification
+- `Pop.loading()` no longer returns ID, now returns `void`
+- `Pop.hideLoading()` no longer requires a parameter
+- Only one loading instance allowed at a time, managed internally
+
+### PopupManager Enhancement
+- Added `PopupManager.hideByType(PopupType type)` method
+- Support finding and closing popups by type
 
 ## 🔧 What's New in v1.1.6
 

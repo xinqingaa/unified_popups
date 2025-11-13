@@ -1,10 +1,38 @@
 // lib/src/core/popup_manager.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 part '../models/popup_config.dart';
 part '../models/popup_enums.dart';
 part '../widgets/popup_layout.dart';
+
+// https://docs.flutter.dev/development/tools/sdk/release-notes/release-notes-3.0.0
+T? _ambiguate<T>(T? value) => value;
+
+/// 安全的 OverlayEntry，避免在构建阶段调用 setState 导致的错误。
+/// 
+/// 重写 markNeedsBuild() 方法，检查当前是否在构建阶段。
+/// 如果在构建阶段（SchedulerPhase.persistentCallbacks），则延迟到 postFrameCallback 执行。
+class SafeOverlayEntry extends OverlayEntry {
+  SafeOverlayEntry({
+    required super.builder,
+    super.opaque,
+    super.maintainState,
+  });
+
+  @override
+  void markNeedsBuild() {
+    if (_ambiguate(SchedulerBinding.instance)!.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      _ambiguate(SchedulerBinding.instance)!.addPostFrameCallback((_) {
+        super.markNeedsBuild();
+      });
+    } else {
+      super.markNeedsBuild();
+    }
+  }
+}
 
 /// 一个用于管理 OverlayEntry 的辅助类，存储每个弹窗的独立状态。
 class _PopupInfo {
@@ -83,9 +111,9 @@ class PopupManager {
       duration: config.animationDuration,
     );
 
-    // 2. 创建 OverlayEntry
+    // 2. 创建 SafeOverlayEntry（避免在构建阶段调用 setState 导致的错误）
     // 注意 onDismiss 回调现在调用 hide(popupId)
-    final overlayEntry = OverlayEntry(
+    final overlayEntry = SafeOverlayEntry(
       builder: (context) {
         return RepaintBoundary(
           child: _PopupLayout(
@@ -169,6 +197,26 @@ class PopupManager {
     for (final id in allPopupIds) {
       hide(id);
     }
+  }
+
+  /// 根据类型隐藏指定类型的弹出层
+  /// 
+  /// 从最新的弹窗开始查找，找到第一个匹配类型的弹窗并关闭。
+  /// 主要用于 loading 等单一实例的弹窗类型。
+  /// 
+  /// [type] 要关闭的弹窗类型
+  /// 返回 true 如果找到并关闭了弹窗，否则返回 false
+  static bool hideByType(PopupType type) {
+    // 从最新的弹窗开始查找（倒序）
+    for (int i = _instance._popupOrder.length - 1; i >= 0; i--) {
+      final id = _instance._popupOrder[i];
+      final info = _instance._popups[id];
+      if (info != null && info.type == type) {
+        hide(id);
+        return true;
+      }
+    }
+    return false;
   }
 
   /// 检查指定ID的弹窗是否仍然可见

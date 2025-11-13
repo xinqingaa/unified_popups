@@ -89,6 +89,8 @@ abstract class Pop {
   ///
   /// 常用于发起网络请求或较耗时操作的过程反馈。
   ///
+  /// 注意：整个应用同时只能有一个 loading，调用此方法会自动关闭之前的 loading（如果存在）。
+  ///
   /// 参数：
   /// - [message]：加载文案，可选。
   /// - [backgroundColor]/[borderRadius]：容器底色与圆角。
@@ -101,23 +103,20 @@ abstract class Pop {
   /// - [barrierColor]：遮罩层颜色，默认 `Colors.black54`。
   /// - [animationDuration]：动画持续时间，默认 `150ms`。loading 需要快速显示。
   ///
-  /// 返回：
-  /// - `String`：此 Loading 的唯一 ID，用于后续关闭。
-  ///
   /// 用法示例：
   /// ```dart
-  /// final id = Pop.loading(message: '提交中...');
+  /// Pop.loading(message: '提交中...');
   /// // ... 异步操作完成后
-  /// Pop.hideLoading(id);
+  /// Pop.hideLoading();
   /// 
   /// // 使用自定义图片作为 loading 图标
-  /// final id2 = Pop.loading(
+  /// Pop.loading(
   ///   message: '加载中',
   ///   customIndicator: Image.asset('assets/loading.png'),
   ///   rotationDuration: Duration(milliseconds: 800),
   /// );
   /// ```
-  static String loading({
+  static void loading({
     String? message,
     Color? backgroundColor,
     double? borderRadius,
@@ -148,16 +147,15 @@ abstract class Pop {
 
   /// 隐藏 Loading。
   ///
-  /// 参数：
-  /// - [id]：`loading` 返回的唯一 ID。
+  /// 不需要参数，会自动关闭当前显示的 loading（如果存在）。
   ///
   /// 用法示例：
   /// ```dart
-  /// final id = Pop.loading();
+  /// Pop.loading();
   /// // ... 任务完成
-  /// Pop.hideLoading(id);
+  /// Pop.hideLoading();
   /// ```
-  static void hideLoading(String id) => _hideLoadingImpl(id);
+  static void hideLoading() => _hideLoadingImpl();
 
   /// 显示一个确认对话框。
   ///

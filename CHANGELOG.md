@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.10]
+
+### Changed
+- **Loading API Simplification**
+  - `Pop.loading()` now returns `void` instead of `String` (loading ID)
+  - `Pop.hideLoading()` no longer requires a parameter
+  - The entire application can only have one loading instance at a time, managed internally
+  - When showing a new loading, any existing loading is automatically closed
+
+### Added
+- **PopupManager Enhancement**
+  - Added `PopupManager.hideByType(PopupType type)` method to hide popups by type
+  - Useful for managing single-instance popup types like loading
+
+### Fixed
+- Fixed "setState() called during build" error when calling `Pop.loading()` during build phase
+  - Implemented `SafeOverlayEntry` that delays overlay insertion if called during build phase
+  - Uses `SchedulerBinding` to check build phase and defer overlay operations
+
 ## [1.1.9]
 - Added `padding constraints decoration` for `Pop.menu`
 

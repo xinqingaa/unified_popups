@@ -55,6 +55,12 @@ class HomePage extends StatelessWidget {
             subtitle: '时间选择器，用于选择生日',
             routeName: '/date',
           ),
+          _buildMenuItem(
+            context,
+            title: 'Async Scenarios',
+            subtitle: '异步场景测试（验证 SafeOverlayEntry 修复）',
+            routeName: '/async',
+          ),
           const Divider(),
           // 你之前的日历页面入口
           // _buildMenuItem(
