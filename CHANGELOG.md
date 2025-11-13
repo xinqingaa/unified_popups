@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.1.9]
+- Added `padding constraints decoration` for `Pop.menu`
 
 ## [1.1.8]
 

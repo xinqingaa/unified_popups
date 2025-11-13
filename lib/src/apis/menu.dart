@@ -7,6 +7,9 @@ Future<T?> _menuImpl<T>({
   bool showBarrier = true,
   bool barrierDismissible = true,
   Color? barrierColor,
+  EdgeInsetsGeometry? padding,
+  BoxConstraints? constraints,
+  BoxDecoration? decoration,
   PopupAnimation animation = PopupAnimation.fade,
   Duration animationDuration = const Duration(milliseconds: 200),
 }) {
@@ -34,6 +37,9 @@ Future<T?> _menuImpl<T>({
       type: PopupType.menu,
       // 传入菜单内容
       child: MenuWidget(
+        padding: padding,
+        decoration: decoration,
+        constraints: constraints,
         child: builder(dismiss),
       ),
       // 其他字段（position/duration）在锚定模式下不会生效

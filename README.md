@@ -500,6 +500,9 @@ Future<T?> menu<T>({
   Color barrierColor = Colors.transparent,
   PopupAnimation animation = PopupAnimation.fade,
   Duration animationDuration = const Duration(milliseconds: 200),
+  BoxDecoration? decoration,
+  EdgeInsetsGeometry? padding,
+  BoxConstraints? constraints,
 })
 ```
 

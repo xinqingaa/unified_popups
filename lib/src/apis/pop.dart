@@ -273,6 +273,7 @@ abstract class Pop {
   /// - [padding]/[titlePadding]/[titleStyle]/[titleAlign]：间距与标题样式。
   /// - [dockToEdge] / [edgeGap]：保留弹窗所在边缘的交互区域及其间距。
   /// - [animationDuration]：动画持续时间，默认 `400ms`。sheet 需要更长的动画时长。
+  /// - [dockToEdge]/[edgeGap]：保留弹窗所在边缘的交互区域及其间距。
   ///
   /// 用法示例：
   /// ```dart
@@ -412,15 +413,21 @@ abstract class Pop {
   /// - [showBarrier]/[barrierDismissible]/[barrierColor]：遮罩设置，默认透明可点空白关闭。
   /// - [animation]/[animationDuration]：动效设置，默认 `fade/200ms`。
   /// - [animationDuration]：动画持续时间，默认 `200ms`。menu 需要快速响应。
+  /// - [padding]/[constraints]：内边距和约束。
+  /// - [decoration]：容器装饰。
+  /// - [constraints]：容器约束。
   static Future<T?> menu<T>({
     required GlobalKey anchorKey,
     Offset anchorOffset = Offset.zero,
     required Widget Function(void Function([T? result]) dismiss) builder,
     bool showBarrier = true,
     bool barrierDismissible = true,
+    BoxDecoration? decoration,
     Color? barrierColor,
     PopupAnimation animation = PopupAnimation.fade,
     Duration animationDuration = const Duration(milliseconds: 200),
+    EdgeInsetsGeometry? padding,
+    BoxConstraints? constraints,
   }) =>
       _menuImpl<T>(
         anchorKey: anchorKey,
@@ -428,8 +435,11 @@ abstract class Pop {
         builder: builder,
         showBarrier: showBarrier,
         barrierDismissible: barrierDismissible,
+        decoration: decoration,
         barrierColor: barrierColor ?? Colors.black54,
         animation: animation,
         animationDuration: animationDuration,
+        padding: padding,
+        constraints: constraints,
       );
 }

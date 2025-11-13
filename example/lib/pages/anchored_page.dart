@@ -134,6 +134,17 @@ class AnchoredPage extends StatelessWidget {
 
   void _showMenu(GlobalKey anchorKey) async {
     final selected = await Pop.menu<String>(
+      decoration: BoxDecoration(
+        color: Colors.orange.shade400,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ) ,
+        ],
+      ),
       anchorKey: anchorKey,
       anchorOffset: const Offset(0, 8),
       builder: (dismiss) => Column(

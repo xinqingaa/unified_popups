@@ -650,6 +650,9 @@ static Future<T?> menu<T>({
   Color barrierColor = Colors.transparent,
   PopupAnimation animation = PopupAnimation.fade,
   Duration animationDuration = const Duration(milliseconds: 200),
+  BoxDecoration? decoration,
+  EdgeInsetsGeometry? padding,
+  BoxConstraints? constraints,
 })
 ```
 
@@ -665,6 +668,9 @@ static Future<T?> menu<T>({
 | `barrierColor` | `Color` | `Colors.transparent` | ❌ | 遮罩颜色 |
 | `animation` | `PopupAnimation` | `fade` | ❌ | 动画类型 |
 | `animationDuration` | `Duration` | `200ms` | ❌ | 动画时长 |
+| `decoration` | `BoxDecoration` | `defaultDecoration` | ❌ | 容器装饰 |
+| `padding` | `EdgeInsetsGeometry` | `0` | ❌ | 内边距 |
+| `constraints` | `BoxConstraints` | `120-280` | ❌ | 容器约束 |
 
 ### 返回值
 
