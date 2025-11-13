@@ -91,6 +91,28 @@ class PopupManager {
     // debugPrint('[PopupManager] Notifier: $hasNonToastPopup');
   }
 
+  /// 私有方法：执行实际的插入和动画操作
+  /// 
+  /// 将 overlay.insert() 和动画启动逻辑提取到独立方法，
+  /// 以便在构建阶段时可以延迟执行。
+  static void _insertPopup(
+    OverlayState overlay,
+    OverlayEntry overlayEntry,
+    AnimationController animationController,
+    PopupConfig config,
+    String popupId,
+    _PopupInfo popupInfo,
+  ) {
+    overlay.insert(overlayEntry);
+    animationController.forward().whenComplete(() {
+      config.onShow?.call();
+      // 如果设置了 duration，则启动倒计时关闭
+      if (config.duration != null) {
+        popupInfo.dismissTimer = Timer(config.duration!, () => hide(popupId));
+      }
+    });
+  }
+
   /// 显示弹出层，并返回一个唯一的 ID 用于后续控制。
   ///
   /// [config] 弹出层的详细配置
@@ -139,15 +161,18 @@ class PopupManager {
 
     _updateNotifier();
 
-    // 4. 插入并播放动画
-    overlay.insert(overlayEntry);
-    animationController.forward().whenComplete(() {
-      config.onShow?.call();
-      // 如果设置了 duration，则启动倒计时关闭
-      if (config.duration != null) {
-        popupInfo.dismissTimer = Timer(config.duration!, () => hide(popupId));
-      }
-    });
+    // 4. 检查构建阶段，如果在构建阶段则延迟执行插入操作
+    // 这避免了在路由构建过程中（如 Get.put() 立即初始化 Controller）调用时触发 setState 错误
+    final schedulerPhase = _ambiguate(SchedulerBinding.instance)?.schedulerPhase;
+    if (schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      // 在构建阶段，延迟到下一帧执行
+      _ambiguate(SchedulerBinding.instance)!.addPostFrameCallback((_) {
+        _insertPopup(overlay, overlayEntry, animationController, config, popupId, popupInfo);
+      });
+    } else {
+      // 不在构建阶段，立即执行
+      _insertPopup(overlay, overlayEntry, animationController, config, popupId, popupInfo);
+    }
 
     return popupId;
   }

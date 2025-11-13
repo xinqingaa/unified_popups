@@ -91,6 +91,13 @@ class _AsyncPageState extends State<AsyncPage> {
                 subtitle: '在 StatefulWidget 初始化时异步调用 loading',
                 onPressed: _testInitStateAsync,
               ),
+              const SizedBox(height: 12),
+              _buildTestButton(
+                title: '场景7: build() 中直接调用',
+                subtitle: '模拟路由构建过程中（如 Get.put() 立即初始化）调用 loading',
+                onPressed: _testBuildDirect,
+                isCritical: true,
+              ),
             ],
           ),
         ),
@@ -264,6 +271,28 @@ class _AsyncPageState extends State<AsyncPage> {
       Pop.toast('场景6测试失败: $e', toastType: ToastType.error);
     }
   }
+
+  /// 场景7: build() 中直接调用 loading（模拟 Get.put() 立即初始化场景）
+  void _testBuildDirect() {
+    _updateResult('');
+    try {
+      // 创建一个新的 StatefulWidget，在 build() 方法中直接调用 loading
+      // 这模拟了路由构建过程中通过 Get.put() 立即初始化 Controller 的场景
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const _TestBuildDirectWidget(),
+        ),
+      ).then((result) {
+        if (result == true) {
+          _updateResult('场景7: 成功 - build() 中直接调用 loading 正常（关键修复测试）');
+          Pop.toast('场景7测试成功（关键修复测试）', toastType: ToastType.success);
+        }
+      });
+    } catch (e) {
+      _updateResult('场景7: 失败 - $e');
+      Pop.toast('场景7测试失败: $e', toastType: ToastType.error);
+    }
+  }
 }
 
 /// 用于测试 initState 中异步调用 loading 的 Widget
@@ -298,6 +327,62 @@ class _TestInitStateWidgetState extends State<_TestInitStateWidget> {
       ),
       body: const Center(
         child: Text('这个页面在 initState 中异步调用了 loading'),
+      ),
+    );
+  }
+}
+
+/// 用于测试 build() 中直接调用 loading 的 Widget
+/// 模拟路由构建过程中（如 Get.put() 立即初始化 Controller）的场景
+class _TestBuildDirectWidget extends StatefulWidget {
+  const _TestBuildDirectWidget();
+
+  @override
+  State<_TestBuildDirectWidget> createState() => _TestBuildDirectWidgetState();
+}
+
+class _TestBuildDirectWidgetState extends State<_TestBuildDirectWidget> {
+  bool _hasCalledLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // 模拟 Get.put() 立即初始化 Controller 的场景
+    // 在 build() 方法中直接调用 loading，此时仍在构建阶段
+    if (!_hasCalledLoading) {
+      _hasCalledLoading = true;
+      // 直接调用，模拟在路由构建过程中立即初始化并调用 loading
+      // 这会在构建阶段触发 overlay.insert()，需要延迟执行
+      Pop.loading(message: 'build() 中直接调用 loading...');
+      // 延迟关闭，验证弹窗是否正常显示
+      Future.delayed(const Duration(seconds: 2)).then((_) {
+        Pop.hideLoading();
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
+      });
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('build() 直接调用测试'),
+      ),
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '这个页面在 build() 方法中直接调用了 loading',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '模拟 Get.put() 立即初始化 Controller 的场景',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }

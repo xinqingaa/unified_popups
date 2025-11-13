@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.11]
+
+### Fixed
+- **Enhanced Build Phase Error Handling**
+  - Fixed `overlay.insert()` setState error when called during build phase
+  - Extracted `_insertPopup` private method to handle overlay insertion logic
+  - Added build phase detection in `PopupManager.show()` method
+  - If called during build phase (`SchedulerPhase.persistentCallbacks`), automatically defers to `postFrameCallback` execution
+  - Now fully supports calling popups in async operations and during build phase without errors
+  - Perfect support for scenarios like `Get.put()` immediate initialization in route building process
+
 ## [1.1.10]
 
 ### Changed

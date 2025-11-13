@@ -11,7 +11,7 @@ Unified Popups 是一个专为企业级 Flutter 应用设计的统一弹窗解�
 
 ### ✨ 核心特性
 
-- **🆕 异步弹框支持**：所有弹窗类型均支持在异步方法中调用，无需担心构建阶段错误。基于 `SafeOverlayEntry` 实现，自动检测构建阶段并延迟执行，完美支持 `Future.then()`、`async/await`、`Stream`、`Timer` 等异步场景
+- **🆕 异步弹框支持**：所有弹窗类型均支持在异步方法中调用，无需担心构建阶段错误。基于 `SafeOverlayEntry` 和构建阶段检测机制，自动检测构建阶段并延迟执行，完美支持 `Future.then()`、`async/await`、`Stream`、`Timer`、`build()` 方法中直接调用等所有场景
 - **统一 API**：所有弹窗通过 `Pop` 静态类调用，API 设计简洁一致
 - **类型安全**：完整的 TypeScript 类型支持，编译时错误检查
 - **多实例支持**：基于 Overlay 实现，支持同时显示多个弹窗
@@ -728,6 +728,23 @@ WillPopScope(
 )
 ```
 
+## 🎉 v1.1.11 增强更新
+
+### 🔧 构建阶段错误处理增强
+
+**完全支持在构建过程中调用弹框，不会报错！**
+
+- ✅ 修复了 `overlay.insert()` 在构建阶段调用时的 setState 错误
+- ✅ 增强了构建阶段检测机制，自动延迟执行
+- ✅ 完美支持 `Get.put()` 立即初始化等路由构建过程中的调用场景
+- ✅ 所有弹窗类型在异步、构建过程中调用均不会报错
+
+**技术实现：**
+- 提取 `_insertPopup` 私有方法处理 overlay 插入逻辑
+- 在 `PopupManager.show()` 中添加构建阶段检测
+- 如果在构建阶段（`SchedulerPhase.persistentCallbacks`）调用，自动延迟到 `postFrameCallback` 执行
+- 与 `SafeOverlayEntry` 配合，双重保护确保构建阶段安全
+
 ## 🎉 v1.1.10 重大更新
 
 ### ⚡ 异步弹框支持（核心特性）
@@ -740,6 +757,7 @@ WillPopScope(
 - ✅ 支持在 `Timer` 回调中调用
 - ✅ 支持在 `postFrameCallback` 中调用
 - ✅ 支持在 `initState` 中异步调用
+- ✅ **新增：支持在 `build()` 方法中直接调用（v1.1.11）**
 
 **技术实现：**
 - 基于 `SafeOverlayEntry` 实现，自动检测构建阶段
@@ -776,6 +794,17 @@ Timer(Duration(seconds: 1), () {
 WidgetsBinding.instance.addPostFrameCallback((_) {
   Pop.loading(message: '初始化中...');
 });
+
+// ✅ 在 build() 方法中直接调用（v1.1.11 新增支持）
+@override
+Widget build(BuildContext context) {
+  // 模拟 Get.put() 立即初始化场景
+  if (!_hasInitialized) {
+    _hasInitialized = true;
+    Pop.loading(message: '构建中调用 loading...');
+  }
+  return Scaffold(...);
+}
 ```
 
 ### Loading API 简化

@@ -11,7 +11,7 @@ Unified Popups is a unified popup solution designed for enterprise-level Flutter
 
 ### ✨ Key Features
 
-- **🆕 Async Popup Support**: All popup types now fully support async calls! No more build phase errors. Based on `SafeOverlayEntry` implementation, automatically detects build phase and defers execution. Perfect support for `Future.then()`, `async/await`, `Stream`, `Timer`, and other async scenarios
+- **🆕 Async Popup Support**: All popup types now fully support async calls! No more build phase errors. Based on `SafeOverlayEntry` and build phase detection mechanism, automatically detects build phase and defers execution. Perfect support for `Future.then()`, `async/await`, `Stream`, `Timer`, direct calls in `build()` method, and all other scenarios
 - **Unified API**: All popups are called through the `Pop` static class with a consistent API design
 - **Type Safety**: Full type support with compile-time error checking
 - **Multi-instance Support**: Based on Overlay implementation, supports displaying multiple popups simultaneously
@@ -320,6 +320,23 @@ await Pop.sheet<void>(
 - Custom indicator automatically includes rotation animation
 - Container maintains square aspect ratio when both message and customIndicator are present (max 25% screen width, 100px)
 
+## 🎉 What's New in v1.1.11 - Enhanced Update
+
+### 🔧 Enhanced Build Phase Error Handling
+
+**Fully supports calling popups during build phase without errors!**
+
+- ✅ Fixed `overlay.insert()` setState error when called during build phase
+- ✅ Enhanced build phase detection mechanism with automatic deferred execution
+- ✅ Perfect support for scenarios like `Get.put()` immediate initialization in route building process
+- ✅ All popup types can be called in async operations and during build phase without errors
+
+**Technical Implementation:**
+- Extracted `_insertPopup` private method to handle overlay insertion logic
+- Added build phase detection in `PopupManager.show()` method
+- If called during build phase (`SchedulerPhase.persistentCallbacks`), automatically defers to `postFrameCallback` execution
+- Works together with `SafeOverlayEntry` for double protection ensuring build phase safety
+
 ## 🎉 What's New in v1.1.10 - Major Update
 
 ### ⚡ Async Popup Support (Core Feature)
@@ -332,6 +349,7 @@ await Pop.sheet<void>(
 - ✅ Support calling in `Timer` callbacks
 - ✅ Support calling in `postFrameCallback`
 - ✅ Support async calling in `initState`
+- ✅ **New: Support calling directly in `build()` method (v1.1.11)**
 
 **Technical Implementation:**
 - Based on `SafeOverlayEntry` implementation, automatically detects build phase
@@ -368,6 +386,17 @@ Timer(Duration(seconds: 1), () {
 WidgetsBinding.instance.addPostFrameCallback((_) {
   Pop.loading(message: 'Initializing...');
 });
+
+// ✅ Call directly in build() method (v1.1.11 new support)
+@override
+Widget build(BuildContext context) {
+  // Simulate Get.put() immediate initialization scenario
+  if (!_hasInitialized) {
+    _hasInitialized = true;
+    Pop.loading(message: 'Calling loading during build...');
+  }
+  return Scaffold(...);
+}
 ```
 
 ### Loading API Simplification
