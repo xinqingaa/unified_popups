@@ -27,6 +27,8 @@ class _PopupLayoutState extends State<_PopupLayout> {
   final GlobalKey _contentKey = GlobalKey();
   // 智能计算后的位置
   Offset? _smartPosition;
+  // 原始计算的初始位置（未调整前）
+  Offset? _originalPosition;
   // 屏幕尺寸
   Size? _screenSize;
   // 最小边距
@@ -100,6 +102,9 @@ class _PopupLayoutState extends State<_PopupLayout> {
     // 计算初始位置（保持左对齐）
     double left = _anchorPosition!.dx + widget.config.anchorOffset.dx;
     double top = _anchorPosition!.dy + _anchorSize!.height + widget.config.anchorOffset.dy;
+    
+    // 保存原始位置，用于后续动画方向计算
+    _originalPosition = Offset(left, top);
     
     // 检查右边缘是否溢出
     if (left + contentSize.width > _screenSize!.width - _minMargin) {
@@ -272,27 +277,61 @@ class _PopupLayoutState extends State<_PopupLayout> {
   }
 
   Widget _buildAnimatedChild(Widget child) {
+    // 计算动态动画偏移（仅在锚定模式且有智能位置调整时）
+    Offset? dynamicOffset;
+    if (widget.config.anchorKey != null && 
+        _smartPosition != null && 
+        _originalPosition != null) {
+      // 计算最终位置相对于原始位置的偏移
+      final offsetDelta = _smartPosition! - _originalPosition!;
+      dynamicOffset = offsetDelta;
+    }
+
     switch (widget.config.animation) {
       case PopupAnimation.fade:
         return FadeTransition(opacity: widget.animation, child: child);
       case PopupAnimation.slideUp:
+        // 如果有动态偏移，根据垂直方向调整
+        Offset beginOffset = const Offset(0, 1);
+        if (dynamicOffset != null && dynamicOffset.dy < 0) {
+          // 最终位置在原始位置上方，从上方滑入
+          beginOffset = const Offset(0, -1);
+        }
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(widget.animation),
+          position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
           child: child,
         );
       case PopupAnimation.slideDown:
+        // 如果有动态偏移，根据垂直方向调整
+        Offset beginOffset = const Offset(0, -1);
+        if (dynamicOffset != null && dynamicOffset.dy > 0) {
+          // 最终位置在原始位置下方，从下方滑入
+          beginOffset = const Offset(0, 1);
+        }
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(widget.animation),
+          position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
           child: child,
         );
       case PopupAnimation.slideLeft:
+        // 如果有动态偏移，根据水平方向调整
+        Offset beginOffset = const Offset(-1, 0);
+        if (dynamicOffset != null && dynamicOffset.dx > 0) {
+          // 最终位置在原始位置右侧，从右侧滑入
+          beginOffset = const Offset(1, 0);
+        }
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(-1, 0), end: Offset.zero).animate(widget.animation),
+          position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
           child: child,
         );
       case PopupAnimation.slideRight:
+        // 如果有动态偏移，根据水平方向调整
+        Offset beginOffset = const Offset(1, 0);
+        if (dynamicOffset != null && dynamicOffset.dx < 0) {
+          // 最终位置在原始位置左侧，从左侧滑入
+          beginOffset = const Offset(-1, 0);
+        }
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(widget.animation),
+          position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
           child: child,
         );
       case PopupAnimation.none:

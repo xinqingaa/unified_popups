@@ -52,6 +52,11 @@ class AnchoredPage extends StatelessWidget {
                     onPressed: () => _showAnchoredMenuWithCustomStyle(anchorButtonKey),
                     child: const Text('行内菜单'),
                   ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () => _showAnimationDirectionTest(topAnchorKey),
+                    child: const Text('验证动画方向'),
+                  ),
                 ],
               ),
             ),
@@ -308,6 +313,91 @@ class AnchoredPage extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// 验证动画方向修复
+  /// 
+  /// 从底部锚点触发，使用 slideUp 动画
+  /// 由于空间不足，弹窗会被智能调整到上方
+  /// 修复后：动画应该从上方滑入（与最终位置一致）
+  /// 修复前：动画会从下方滑入（与最终位置不一致）
+  void _showAnimationDirectionTest(GlobalKey anchorKey) async {
+    final selected = await Pop.menu<String>(
+      anchorKey: anchorKey,
+      anchorOffset: const Offset(0, 30),
+      animation: PopupAnimation.slideUp, // 使用 slideUp 动画
+      showBarrier: false, // 不显示遮盖层，方便观察动画
+      builder: (dismiss) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.purple.shade400,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '动画方向验证',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '从底部按钮触发，弹窗因空间不足被调整到上方。\n'
+              '修复后：动画应从上方滑入 ✅\n'
+              '修复前：动画从下方滑入 ❌',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildTestOption('选项1', () => dismiss('option1')),
+                _buildTestOption('选项2', () => dismiss('option2')),
+                _buildTestOption('选项3', () => dismiss('option3')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    debugPrint('animation direction test selected: $selected');
+  }
+
+  Widget _buildTestOption(String title, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+          ),
         ),
       ),
     );
