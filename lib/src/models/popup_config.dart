@@ -19,6 +19,7 @@ part of '../core/popup_manager.dart';
 /// - [type]：弹层类型，驱动系统返回键拦截等策略
 /// - [showBarrier]：是否显示遮盖层，默认为 true。
 /// - [barrierColor]：遮盖层颜色，默认为 Colors.black54。
+/// - [clipDuringAnimation]：在锚点模式下是否裁剪动画超出区域，默认 false
 class PopupConfig {
   /// [必填] 弹出层要显示的子 Widget
   final Widget child;
@@ -70,6 +71,9 @@ class PopupConfig {
   /// [可选] 预留的边缘间距
   final double edgeGap;
 
+  /// [可选] 在锚点模式下是否裁剪动画超出区域，默认 false
+  final bool clipDuringAnimation;
+
   static const double defaultEdgeGap = kBottomNavigationBarHeight + 4;
 
   PopupConfig({
@@ -89,5 +93,6 @@ class PopupConfig {
     this.type = PopupType.other,
     this.dockToEdge = false,
     this.edgeGap = defaultEdgeGap,
+    this.clipDuringAnimation = false,
   });
 }

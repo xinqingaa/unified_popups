@@ -286,10 +286,12 @@ class _PopupLayoutState extends State<_PopupLayout> {
       final offsetDelta = _smartPosition! - _originalPosition!;
       dynamicOffset = offsetDelta;
     }
+    late final Widget animatedChild;
 
     switch (widget.config.animation) {
       case PopupAnimation.fade:
-        return FadeTransition(opacity: widget.animation, child: child);
+        animatedChild = FadeTransition(opacity: widget.animation, child: child);
+        break;
       case PopupAnimation.slideUp:
         // 如果有动态偏移，根据垂直方向调整
         Offset beginOffset = const Offset(0, 1);
@@ -297,10 +299,11 @@ class _PopupLayoutState extends State<_PopupLayout> {
           // 最终位置在原始位置上方，从上方滑入
           beginOffset = const Offset(0, -1);
         }
-        return SlideTransition(
+        animatedChild = SlideTransition(
           position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
           child: child,
         );
+        break;
       case PopupAnimation.slideDown:
         // 如果有动态偏移，根据垂直方向调整
         Offset beginOffset = const Offset(0, -1);
@@ -308,10 +311,11 @@ class _PopupLayoutState extends State<_PopupLayout> {
           // 最终位置在原始位置下方，从下方滑入
           beginOffset = const Offset(0, 1);
         }
-        return SlideTransition(
+        animatedChild = SlideTransition(
           position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
           child: child,
         );
+        break;
       case PopupAnimation.slideLeft:
         // 如果有动态偏移，根据水平方向调整
         Offset beginOffset = const Offset(-1, 0);
@@ -319,10 +323,11 @@ class _PopupLayoutState extends State<_PopupLayout> {
           // 最终位置在原始位置右侧，从右侧滑入
           beginOffset = const Offset(1, 0);
         }
-        return SlideTransition(
+        animatedChild = SlideTransition(
           position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
           child: child,
         );
+        break;
       case PopupAnimation.slideRight:
         // 如果有动态偏移，根据水平方向调整
         Offset beginOffset = const Offset(1, 0);
@@ -330,13 +335,21 @@ class _PopupLayoutState extends State<_PopupLayout> {
           // 最终位置在原始位置左侧，从左侧滑入
           beginOffset = const Offset(-1, 0);
         }
-        return SlideTransition(
+        animatedChild = SlideTransition(
           position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
           child: child,
         );
+        break;
       case PopupAnimation.none:
-      return child;
+        animatedChild = child;
+        break;
     }
+
+    if (widget.config.anchorKey != null && widget.config.clipDuringAnimation) {
+      return ClipRect(child: animatedChild);
+    }
+
+    return animatedChild;
   }
 
   Alignment _getAlignmentFromPosition(PopupPosition position) {

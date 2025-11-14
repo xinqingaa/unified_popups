@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.12]
+
+## Feat
+- `clipDuringAnimation` for PopupConfig  Whether to crop the animation that exceeds the area in anchor point mode, default false.
+
 ## [1.1.11]
 
 ### Fixed
