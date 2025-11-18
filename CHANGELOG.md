@@ -1,8 +1,22 @@
 # Changelog
 
+## [1.1.13]
+
+### Added
+- **Toast Toggle Feature**
+  - Added toggle functionality for Toast, allowing users to switch between two states by tapping
+  - Added `tMessage` parameter: alternate message text for toggle mode
+  - Added `tImagePath` parameter: alternate image path for toggle mode
+  - Added `tToastType` parameter: alternate toast type for toggle mode
+  - Added `tImgColor` parameter: alternate image color for toggle mode
+  - Added `onTap` parameter: callback function when toast is tapped
+  - Added `toggleable` parameter: enable/disable toggle mode (default: false)
+  - ToastWidget changed from StatelessWidget to StatefulWidget to support state management
+  - When `toggleable` is `true` and `tMessage` or `tImagePath` is provided, tapping the toast will switch between two states
+
 ## [1.1.12]
 
-## Feat
+### Feat
 - `clipDuringAnimation` for PopupConfig  Whether to crop the animation that exceeds the area in anchor point mode, default false.
 
 ## [1.1.11]

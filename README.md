@@ -115,6 +115,12 @@ Pop.toast(
   Decoration? decoration,
   TextStyle? style,
   TextAlign? textAlign,
+  String? tMessage,
+  String? tImagePath,
+  ToastType? tToastType,
+  Color? tImgColor,
+  VoidCallback? onTap,
+  bool toggleable = false,
 })
 ```
 
@@ -130,6 +136,12 @@ Pop.toast(
 - `layoutDirection`：布局方向，默认 `Axis.horizontal`（Row），`Axis.vertical` 为 Column（图片在上，文字在下）
 - `showBarrier`：是否显示遮罩层
 - `barrierDismissible`：点击遮罩是否关闭
+- `tMessage`：切换后的消息文本（可选），用于切换模式
+- `tImagePath`：切换后的自定义图片路径（可选），用于切换模式
+- `tToastType`：切换后的 Toast 等级（可选），用于切换模式
+- `tImgColor`：切换后的自定义图片的着色（可选），用于切换模式
+- `onTap`：点击回调（可选）
+- `toggleable`：是否可切换，默认 `false`。当设置为 `true` 且提供了 `tMessage` 或 `tImagePath` 时，点击 toast 会在两个状态间切换
 
 **使用示例：**
 ```dart
@@ -159,6 +171,20 @@ Pop.toast(
     borderRadius: BorderRadius.circular(20),
   ),
   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+);
+
+// 切换模式：平衡锁定和重力感应
+Pop.toast(
+  '平衡锁定',
+  customImagePath: 'assets/balance_lock.png',
+  tMessage: '重力感应',
+  tImagePath: 'assets/gravity.png',
+  toggleable: true,
+  imageSize: 32,
+  duration: const Duration(seconds: 2),
+  onTap: () {
+    print('Toast 状态已切换');
+  },
 );
 ```
 
@@ -726,6 +752,38 @@ WillPopScope(
   },
   child: HomePage(),
 )
+```
+
+## 🎉 v1.1.13 更新
+
+### ✨ Toast 切换功能
+
+**新增 Toast 点击切换功能，支持在两个状态间切换！**
+
+- ✅ 新增 `tMessage` 参数：切换后的消息文本
+- ✅ 新增 `tImagePath` 参数：切换后的自定义图片路径
+- ✅ 新增 `tToastType` 参数：切换后的 Toast 等级
+- ✅ 新增 `tImgColor` 参数：切换后的自定义图片着色
+- ✅ 新增 `onTap` 参数：点击回调函数
+- ✅ 新增 `toggleable` 参数：启用/禁用切换模式（默认：false）
+- ✅ ToastWidget 从 StatelessWidget 改为 StatefulWidget，支持状态管理
+- ✅ 当 `toggleable` 为 `true` 且提供了 `tMessage` 或 `tImagePath` 时，点击 toast 会在两个状态间切换
+
+**使用示例：**
+```dart
+// 切换模式：平衡锁定和重力感应
+Pop.toast(
+  '平衡锁定',
+  customImagePath: 'assets/img.png',
+  tMessage: '重力感应',
+  tImagePath: 'assets/temp.png',
+  toggleable: true,
+  imageSize: 32,
+  duration: const Duration(seconds: 2),
+  onTap: () {
+    print('Toast 状态已切换');
+  },
+);
 ```
 
 ## 🎉 v1.1.11 增强更新

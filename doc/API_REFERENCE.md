@@ -46,12 +46,19 @@ static void toast(
   Duration animationDuration = const Duration(milliseconds: 200),
   String? customImagePath,
   double? imageSize,
+  Color? imgColor,
   Axis layoutDirection = Axis.horizontal,
   EdgeInsetsGeometry? padding,
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
   TextStyle? style,
   TextAlign? textAlign,
+  String? tMessage,
+  String? tImagePath,
+  ToastType? tToastType,
+  Color? tImgColor,
+  VoidCallback? onTap,
+  bool toggleable = false,
 })
 ```
 
@@ -75,6 +82,12 @@ static void toast(
 | `style` | `TextStyle?` | `null` | ❌ | 文本样式 |
 | `animationDuration` | `Duration` | `200ms` | ❌ | 动画持续时间 |
 | `textAlign` | `TextAlign?` | `null` | ❌ | 文本对齐方式 |
+| `tMessage` | `String?` | `null` | ❌ | 切换后的消息文本，用于切换模式 |
+| `tImagePath` | `String?` | `null` | ❌ | 切换后的自定义图片路径，用于切换模式 |
+| `tToastType` | `ToastType?` | `null` | ❌ | 切换后的 Toast 等级，用于切换模式 |
+| `tImgColor` | `Color?` | `null` | ❌ | 切换后的自定义图片的着色，用于切换模式 |
+| `onTap` | `VoidCallback?` | `null` | ❌ | 点击回调函数 |
+| `toggleable` | `bool` | `false` | ❌ | 是否可切换，当设置为 `true` 且提供了 `tMessage` 或 `tImagePath` 时，点击 toast 会在两个状态间切换 |
 
 ### 使用示例
 
@@ -127,6 +140,20 @@ Pop.toast(
 Pop.toast(
   '快速提示',
   animationDuration: Duration(milliseconds: 100),
+);
+
+// 切换模式：平衡锁定和重力感应
+Pop.toast(
+  '平衡锁定',
+  customImagePath: 'assets/img.png',
+  tMessage: '重力感应',
+  tImagePath: 'assets/temp.png',
+  toggleable: true,
+  imageSize: 32,
+  duration: const Duration(seconds: 2),
+  onTap: () {
+    print('Toast 状态已切换');
+  },
 );
 ```
 

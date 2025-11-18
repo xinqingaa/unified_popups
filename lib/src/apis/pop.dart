@@ -41,12 +41,28 @@ abstract class Pop {
   /// - [imgColor]：自定义图片的着色（仅在 `customImagePath` 时生效）。
   /// - [layoutDirection]：布局方向，默认 `Axis.horizontal`（Row），`Axis.vertical` 为 Column（图片在上，文字在下）。
   /// - [padding]/[margin]/[decoration]/[style]/[textAlign]：细粒度样式定制。
+  /// - [tMessage]：切换后的消息文本（可选），用于切换模式。
+  /// - [tImagePath]：切换后的自定义图片路径（可选），用于切换模式。
+  /// - [tToastType]：切换后的 Toast 等级（可选），用于切换模式。
+  /// - [tImgColor]：切换后的自定义图片的着色（可选），用于切换模式。
+  /// - [onTap]：点击回调（可选）。
+  /// - [toggleable]：是否可切换，默认 `false`。当设置为 `true` 且提供了 `tMessage` 或 `tImagePath` 时，点击 toast 会在两个状态间切换。
   ///
   /// 用法示例：
   /// ```dart
   /// Pop.toast('保存成功', toastType: ToastType.success);
   /// Pop.toast('网络异常，请稍后重试', position: PopupPosition.bottom, duration: Duration(seconds: 2));
   /// Pop.toast('自定义图片', customImagePath: 'assets/custom.png', layoutDirection: Axis.vertical);
+  /// 
+  /// // 切换模式示例：平衡锁定和重力感应
+  /// Pop.toast(
+  ///   '平衡锁定',
+  ///   customImagePath: 'assets/balance_lock.png',
+  ///   tMessage: '重力感应',
+  ///   tImagePath: 'assets/gravity.png',
+  ///   toggleable: true,
+  ///   onTap: () => print('状态已切换'),
+  /// );
   /// ```
   static void toast(
     String message, {
@@ -65,6 +81,12 @@ abstract class Pop {
     Decoration? decoration,
     TextStyle? style,
     TextAlign? textAlign,
+    String? tMessage,
+    String? tImagePath,
+    ToastType? tToastType,
+    Color? tImgColor,
+    VoidCallback? onTap,
+    bool toggleable = false,
   }) =>
       _toastImpl(
         message,
@@ -83,6 +105,12 @@ abstract class Pop {
         decoration: decoration,
         style: style,
         textAlign: textAlign,
+        tMessage: tMessage,
+        tImagePath: tImagePath,
+        tToastType: tToastType,
+        tImgColor: tImgColor,
+        onTap: onTap,
+        toggleable: toggleable,
       );
 
   /// 显示一个 Loading 加载指示器。

@@ -19,6 +19,13 @@ void _toastImpl(
   Decoration? decoration,
   TextStyle? style,
   TextAlign? textAlign,
+  // 切换功能相关参数
+  String? tMessage,
+  String? tImagePath,
+  ToastType? tToastType,
+  Color? tImgColor,
+  VoidCallback? onTap,
+  bool toggleable = false,
 }) {
   // 根据位置决定一个更合适的默认动画
   final animation = (position == PopupPosition.top)
@@ -41,6 +48,12 @@ void _toastImpl(
         decoration: decoration,
         style: style,
         textAlign: textAlign,
+        tMessage: tMessage,
+        tImagePath: tImagePath,
+        tToastType: tToastType,
+        tImgColor: tImgColor,
+        onTap: onTap,
+        toggleable: toggleable,
       ),
       position: position,
       duration: duration,

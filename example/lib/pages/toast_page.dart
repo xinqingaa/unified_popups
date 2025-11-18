@@ -81,6 +81,22 @@ class ToastPage extends StatelessWidget {
                 ),
                 child: const Text('自定义图片 Toast'),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => Pop.toast(
+                  '平衡锁定',
+                  customImagePath: 'assets/img.png',
+                  tMessage: '重力感应',
+                  tImagePath: 'assets/temp.png',
+                  toggleable: true,
+                  imageSize: 32,
+                  duration: const Duration(seconds: 2),
+                  onTap: () {
+                    print('Toast 状态已切换');
+                  },
+                ),
+                child: const Text('可切换 Toast（平衡锁定/重力感应）'),
+              ),
             ],
           ),
         ),

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
 
-class ToastWidget extends StatelessWidget {
+class ToastWidget extends StatefulWidget {
   final String message;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -14,6 +14,14 @@ class ToastWidget extends StatelessWidget {
   final double? imageSize;
   final Color? imgColor;
   final Axis layoutDirection;
+  
+  // 切换功能相关参数
+  final String? tMessage;
+  final String? tImagePath;
+  final ToastType? tToastType;
+  final Color? tImgColor;
+  final VoidCallback? onTap;
+  final bool toggleable;
 
   const ToastWidget({
     super.key,
@@ -28,7 +36,30 @@ class ToastWidget extends StatelessWidget {
     this.decoration,
     this.style,
     this.textAlign,
+    // 切换功能参数
+    this.tMessage,
+    this.tImagePath,
+    this.tToastType,
+    this.tImgColor,
+    this.onTap,
+    this.toggleable = false,
   });
+
+  @override
+  State<ToastWidget> createState() => _ToastWidgetState();
+}
+
+class _ToastWidgetState extends State<ToastWidget> {
+  bool _isFirstState = true;
+
+  void _handleTap() {
+    if (widget.toggleable && (widget.tMessage != null || widget.tImagePath != null)) {
+      setState(() {
+        _isFirstState = !_isFirstState;
+      });
+    }
+    widget.onTap?.call();
+  }
 
 
 
@@ -43,17 +74,31 @@ class ToastWidget extends StatelessWidget {
     const defaultMargin = EdgeInsets.symmetric(horizontal: 20, vertical: 40);
     const defaultImageSize = 24.0;
     
+    // 根据当前状态选择显示的内容
+    final currentMessage = _isFirstState 
+        ? widget.message 
+        : (widget.tMessage ?? widget.message);
+    final currentImagePath = _isFirstState 
+        ? widget.customImagePath 
+        : (widget.tImagePath ?? widget.customImagePath);
+    final currentToastType = _isFirstState 
+        ? widget.toastType 
+        : (widget.tToastType ?? widget.toastType);
+    final currentImgColor = _isFirstState 
+        ? widget.imgColor 
+        : (widget.tImgColor ?? widget.imgColor);
+    
     // 确定图片路径：如果提供了自定义图片，优先使用；否则使用 toastType 对应的图标
     String? imgPath;
     bool shouldShowImage = false;
     
-    if (customImagePath != null) {
+    if (currentImagePath != null) {
       // 使用自定义图片
-      imgPath = customImagePath;
+      imgPath = currentImagePath;
       shouldShowImage = true;
     } else {
       // 使用 toastType 对应的图标
-      switch (toastType) {
+      switch (currentToastType) {
         case ToastType.success:
           imgPath = "assets/images/success.png";
           shouldShowImage = true;
@@ -73,26 +118,26 @@ class ToastWidget extends StatelessWidget {
       }
     }
     
-    final effectiveImageSize = imageSize ?? defaultImageSize;
+    final effectiveImageSize = widget.imageSize ?? defaultImageSize;
     
     // 构建图片 Widget
     Widget? imageWidget;
     if (shouldShowImage && imgPath != null) {
       imageWidget = Image.asset(
         imgPath,
-        package: customImagePath != null ? null : "unified_popups",
+        package: currentImagePath != null ? null : "unified_popups",
         height: effectiveImageSize,
         width: effectiveImageSize,
-        color: customImagePath != null ? imgColor : null,
+        color: currentImagePath != null ? currentImgColor : null,
       );
     }
     
     // 构建文字 Widget
     final textWidget = Flexible(
       child: Text(
-        message,
-        style: style ?? defaultStyle,
-        textAlign: textAlign ?? TextAlign.start,
+        currentMessage,
+        style: widget.style ?? defaultStyle,
+        textAlign: widget.textAlign ?? TextAlign.start,
         maxLines: null,
         overflow: TextOverflow.visible,
       ),
@@ -100,7 +145,7 @@ class ToastWidget extends StatelessWidget {
     
     // 根据布局方向决定使用 Row 还是 Column
     Widget content;
-    if (layoutDirection == Axis.vertical) {
+    if (widget.layoutDirection == Axis.vertical) {
       // Column 布局：图片在上，文字在下
       content = Column(
         mainAxisSize: MainAxisSize.min,
@@ -128,11 +173,21 @@ class ToastWidget extends StatelessWidget {
       );
     }
     
-    return Container(
-      margin: margin ?? defaultMargin,
-      padding: padding ?? defaultPadding,
-      decoration: decoration ?? defaultDecoration,
+    Widget container = Container(
+      margin: widget.margin ?? defaultMargin,
+      padding: widget.padding ?? defaultPadding,
+      decoration: widget.decoration ?? defaultDecoration,
       child: content,
     );
+    
+    // 如果可切换，添加点击手势
+    if (widget.toggleable && (widget.tMessage != null || widget.tImagePath != null)) {
+      container = GestureDetector(
+        onTap: _handleTap,
+        child: container,
+      );
+    }
+    
+    return container;
   }
 }

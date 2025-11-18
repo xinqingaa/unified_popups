@@ -111,6 +111,12 @@ Pop.toast(
   Decoration? decoration,
   TextStyle? style,
   TextAlign? textAlign,
+  String? tMessage,
+  String? tImagePath,
+  ToastType? tToastType,
+  Color? tImgColor,
+  VoidCallback? onTap,
+  bool toggleable = false,
 })
 ```
 
@@ -126,6 +132,12 @@ Pop.toast(
 - `layoutDirection`: Layout direction, default `Axis.horizontal` (Row), `Axis.vertical` for Column (image above, text below)
 - `showBarrier`: Whether to show barrier
 - `barrierDismissible`: Whether tapping barrier closes the popup
+- `tMessage`: Alternate message text (optional), for toggle mode
+- `tImagePath`: Alternate image path (optional), for toggle mode
+- `tToastType`: Alternate toast type (optional), for toggle mode
+- `tImgColor`: Alternate image color (optional), for toggle mode
+- `onTap`: Tap callback (optional)
+- `toggleable`: Whether toggle is enabled, default `false`. When set to `true` and `tMessage` or `tImagePath` is provided, tapping the toast will switch between two states
 
 **Usage Examples:**
 ```dart
@@ -155,6 +167,20 @@ Pop.toast(
     borderRadius: BorderRadius.circular(20),
   ),
   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+);
+
+// Toggle mode: Balance lock and gravity sensing
+Pop.toast(
+  'Balance Lock',
+  customImagePath: 'assets/balance_lock.png',
+  tMessage: 'Gravity Sensing',
+  tImagePath: 'assets/gravity.png',
+  toggleable: true,
+  imageSize: 32,
+  duration: const Duration(seconds: 2),
+  onTap: () {
+    print('Toast state toggled');
+  },
 );
 ```
 
@@ -319,6 +345,38 @@ await Pop.sheet<void>(
 - Added `rotationDuration` parameter to configure rotation animation speed
 - Custom indicator automatically includes rotation animation
 - Container maintains square aspect ratio when both message and customIndicator are present (max 25% screen width, 100px)
+
+## 🎉 What's New in v1.1.13
+
+### ✨ Toast Toggle Feature
+
+**Added toggle functionality for Toast, allowing users to switch between two states by tapping!**
+
+- ✅ Added `tMessage` parameter: alternate message text for toggle mode
+- ✅ Added `tImagePath` parameter: alternate image path for toggle mode
+- ✅ Added `tToastType` parameter: alternate toast type for toggle mode
+- ✅ Added `tImgColor` parameter: alternate image color for toggle mode
+- ✅ Added `onTap` parameter: callback function when toast is tapped
+- ✅ Added `toggleable` parameter: enable/disable toggle mode (default: false)
+- ✅ ToastWidget changed from StatelessWidget to StatefulWidget to support state management
+- ✅ When `toggleable` is `true` and `tMessage` or `tImagePath` is provided, tapping the toast will switch between two states
+
+**Usage Example:**
+```dart
+// Toggle mode: Balance lock and gravity sensing
+Pop.toast(
+  'Balance Lock',
+  customImagePath: 'assets/img.png',
+  tMessage: 'Gravity Sensing',
+  tImagePath: 'assets/temp.png',
+  toggleable: true,
+  imageSize: 32,
+  duration: const Duration(seconds: 2),
+  onTap: () {
+    print('Toast state toggled');
+  },
+);
+```
 
 ## 🎉 What's New in v1.1.11 - Enhanced Update
 
