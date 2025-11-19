@@ -44,5 +44,8 @@ void _loadingImpl({
 }
 
 void _hideLoadingImpl() {
-  PopupManager.hideByType(PopupType.loading);
+  // PopupManager.hideByType(PopupType.loading);
+  while (PopupManager.hideByType(PopupType.loading)) {
+    // 继续关闭直到没有 loading 弹窗
+  }
 }
