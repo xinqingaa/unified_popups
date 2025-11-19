@@ -33,6 +33,8 @@ class _PopupLayoutState extends State<_PopupLayout> {
   Size? _screenSize;
   // 最小边距
   static const double _minMargin = 8.0;
+  // 当动画值低于此阈值时，忽略命中测试，避免透明内容阻塞点击
+  static const double _hitTestIgnoreThreshold = 0.01;
 
   @override
   void initState() {
@@ -149,6 +151,11 @@ class _PopupLayoutState extends State<_PopupLayout> {
 
   @override
   Widget build(BuildContext context) {
+    // 当动画值接近0时（透明度很低），直接返回空 Widget
+    // 这样可以完全避免创建任何布局和事件处理逻辑，彻底防止 toast 消失后那片区域点击失效的问题
+    // if (widget.animation.value < 0.01) {
+    //   return const SizedBox.shrink();
+    // }
     // 获取屏幕尺寸
     final mediaQuery = MediaQuery.of(context);
     _screenSize = mediaQuery.size;
@@ -199,6 +206,14 @@ class _PopupLayoutState extends State<_PopupLayout> {
     Widget content = Material(
       color: Colors.transparent,
       child: _buildAnimatedChild(widget.config.child),
+    );
+
+    // 忽略命中测试，避免透明内容阻塞点击 主要解决toast消失后那片区域点击失效的问题
+    // 和 if (animation.value < threshold) return SizedBox.shrink(); 保留一种
+    final bool ignoreHitTest = widget.animation.value < _hitTestIgnoreThreshold;
+    content = IgnorePointer(
+      ignoring: ignoreHitTest,
+      child: content,
     );
 
     EdgeInsets edgePadding = EdgeInsets.zero;
