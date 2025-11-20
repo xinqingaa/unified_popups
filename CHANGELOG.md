@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.14]
+### Fixed
+- Fix the bug where the area that disappears when multiple Loading triggers occur remains and causes unclickability due to OverLary's effect.
+- Following the singleton pattern, the loading process cannot be triggered many times. The displayed OverLary will always have only one.
+
+
 ## [1.1.13]
 
 ### Added
