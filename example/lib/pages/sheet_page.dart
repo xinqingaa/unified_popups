@@ -295,7 +295,7 @@ class SheetPage extends StatelessWidget {
       
       dockToEdge: true,
       // edgeGap: ,
-      showBarrier: false,
+      showBarrier: true,
       childBuilder: (dismiss) => ListView(
         shrinkWrap: true,
         children: [

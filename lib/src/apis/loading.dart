@@ -17,9 +17,12 @@ void _loadingImpl({
   Color barrierColor = Colors.black54,
   Duration animationDuration = const Duration(milliseconds: 150),
 }) {
-  // 显示新 loading 前，先关闭旧的（如果存在）
-  PopupManager.hideByType(PopupType.loading);
+  // 如果已有 loading，先关闭它（确保单例模式）
+  if (PopupManager.getCountByType(PopupType.loading) > 0) {
+    return;
+  }
   
+  // 创建新的 loading（使用最新配置）
   PopupManager.show(
     PopupConfig(
       child: LoadingWidget(
@@ -44,8 +47,6 @@ void _loadingImpl({
 }
 
 void _hideLoadingImpl() {
-  // PopupManager.hideByType(PopupType.loading);
-  while (PopupManager.hideByType(PopupType.loading)) {
-    // 继续关闭直到没有 loading 弹窗
-  }
+  // 只需要关闭一个即可（因为最多只有一个）
+  PopupManager.hideByType(PopupType.loading);
 }

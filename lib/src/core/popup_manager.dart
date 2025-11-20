@@ -11,7 +11,7 @@ part '../widgets/popup_layout.dart';
 T? _ambiguate<T>(T? value) => value;
 
 /// 安全的 OverlayEntry，避免在构建阶段调用 setState 导致的错误。
-/// 
+///
 /// 重写 markNeedsBuild() 方法，检查当前是否在构建阶段。
 /// 如果在构建阶段（SchedulerPhase.persistentCallbacks），则延迟到 postFrameCallback 执行。
 class SafeOverlayEntry extends OverlayEntry {
@@ -69,7 +69,8 @@ class PopupManager {
   final List<String> _popupOrder = [];
 
   /// 创建一个 ValueNotifier 来广播非 Toast 弹窗的状态。
-  static final ValueNotifier<bool> hasNonToastPopupNotifier = ValueNotifier(false);
+  static final ValueNotifier<bool> hasNonToastPopupNotifier =
+      ValueNotifier(false);
 
   static GlobalKey<NavigatorState> get navigatorKey {
     if (_navigatorKey == null) {
@@ -92,7 +93,7 @@ class PopupManager {
   }
 
   /// 私有方法：执行实际的插入和动画操作
-  /// 
+  ///
   /// 将 overlay.insert() 和动画启动逻辑提取到独立方法，
   /// 以便在构建阶段时可以延迟执行。
   static void _insertPopup(
@@ -163,15 +164,18 @@ class PopupManager {
 
     // 4. 检查构建阶段，如果在构建阶段则延迟执行插入操作
     // 这避免了在路由构建过程中（如 Get.put() 立即初始化 Controller）调用时触发 setState 错误
-    final schedulerPhase = _ambiguate(SchedulerBinding.instance)?.schedulerPhase;
+    final schedulerPhase =
+        _ambiguate(SchedulerBinding.instance)?.schedulerPhase;
     if (schedulerPhase == SchedulerPhase.persistentCallbacks) {
       // 在构建阶段，延迟到下一帧执行
       _ambiguate(SchedulerBinding.instance)!.addPostFrameCallback((_) {
-        _insertPopup(overlay, overlayEntry, animationController, config, popupId, popupInfo);
+        _insertPopup(overlay, overlayEntry, animationController, config,
+            popupId, popupInfo);
       });
     } else {
       // 不在构建阶段，立即执行
-      _insertPopup(overlay, overlayEntry, animationController, config, popupId, popupInfo);
+      _insertPopup(overlay, overlayEntry, animationController, config, popupId,
+          popupInfo);
     }
 
     return popupId;
@@ -225,10 +229,10 @@ class PopupManager {
   }
 
   /// 根据类型隐藏指定类型的弹出层
-  /// 
+  ///
   /// 从最新的弹窗开始查找，找到第一个匹配类型的弹窗并关闭。
   /// 主要用于 loading 等单一实例的弹窗类型。
-  /// 
+  ///
   /// [type] 要关闭的弹窗类型
   /// 返回 true 如果找到并关闭了弹窗，否则返回 false
   static bool hideByType(PopupType type) {
@@ -242,6 +246,51 @@ class PopupManager {
       }
     }
     return false;
+  }
+
+  /// 获取指定类型的弹窗数量
+  ///
+  /// [type] 弹窗类型
+  /// 返回该类型的弹窗数量
+  static int getCountByType(PopupType type) {
+    int count = 0;
+    for (final info in _instance._popups.values) {
+      if (info.type == type) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /// 获取所有弹窗的调试信息（用于调试）
+  ///
+  /// 返回包含所有弹窗类型和数量的字符串
+  static String getDebugInfo() {
+    final buffer = StringBuffer();
+    buffer.writeln('=== PopupManager 调试信息 ===');
+    buffer.writeln('总弹窗数: ${_instance._popups.length}');
+    buffer.writeln('弹窗顺序: ${_instance._popupOrder}');
+
+    final typeCounts = <PopupType, int>{};
+    for (final info in _instance._popups.values) {
+      typeCounts[info.type] = (typeCounts[info.type] ?? 0) + 1;
+    }
+
+    buffer.writeln('按类型统计:');
+    typeCounts.forEach((type, count) {
+      buffer.writeln('  $type: $count 个');
+    });
+
+    buffer.writeln('详细列表:');
+    for (final id in _instance._popupOrder) {
+      final info = _instance._popups[id];
+      if (info != null) {
+        buffer.writeln(
+            '  $id: type=${info.type}, entry.mounted=${info.entry.mounted}');
+      }
+    }
+
+    return buffer.toString();
   }
 
   /// 检查指定ID的弹窗是否仍然可见

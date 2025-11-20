@@ -1,8 +1,3 @@
-// lib/src/widgets/popup_layout.dart
-// import 'package:flutter/material.dart';
-// import '../models/popup_config.dart';
-// import '../models/popup_enums.dart';
-
 part of '../core/popup_manager.dart';
 
 class _PopupLayout extends StatefulWidget {
@@ -249,12 +244,44 @@ class _PopupLayoutState extends State<_PopupLayout> {
         child: keyedContent,
       );
     } else {
-      // 先创建对齐后的内容
+      // 对于loading类型且center位置，使用稳定的屏幕尺寸来计算位置
+      // 避免键盘弹出/收起时位置跳动
+      if (widget.config.type == PopupType.loading && 
+          widget.config.position == PopupPosition.center) {
+        // 使用Builder来获取MediaQuery，确保能获取到最新的context
+        return Builder(
+          builder: (context) {
+            final mediaQuery = MediaQuery.of(context);
+            // 计算完整的屏幕尺寸（不受键盘影响）
+            // 完整屏幕高度 = size.height + viewInsets.bottom
+            // 完整屏幕宽度 = size.width + viewInsets.horizontal
+            final fullScreenHeight = mediaQuery.size.height + mediaQuery.viewInsets.bottom;
+            final fullScreenWidth = mediaQuery.size.width + mediaQuery.viewInsets.horizontal;
+            
+            // 创建一个不受键盘影响的MediaQuery
+            // 使用copyWith来创建一个新的MediaQuery，其中size是完整的屏幕尺寸，viewInsets为0
+            final stableMediaQuery = mediaQuery.copyWith(
+              size: Size(fullScreenWidth, fullScreenHeight),
+              viewInsets: EdgeInsets.zero,
+            );
+            
+            // 在这个稳定的MediaQuery context内使用Center
+            // 这样center位置就会基于稳定的屏幕尺寸，不受键盘影响
+            return MediaQuery(
+              data: stableMediaQuery,
+              child: Center(
+                child: content,
+              ),
+            );
+          },
+        );
+      }
+      
+      // 其他情况使用标准的Align
       Widget alignedContent = Align(
         alignment: _getAlignmentFromPosition(widget.config.position),
         child: content,
       );
-
 
       if (widget.config.useSafeArea) {
         // 如果是底部弹窗，我们不希望 SafeArea 在底部产生间距，

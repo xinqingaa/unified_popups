@@ -10,6 +10,7 @@ export 'src/core/popup_manager.dart'
         PopupConfig,
         PopupPosition,
         PopupAnimation,
+        PopupType,
         SheetDirection,
         ToastType,
         ConfirmButtonLayout;
