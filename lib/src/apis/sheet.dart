@@ -124,6 +124,7 @@ Future<T?> _sheetImpl<T>({
       animationDuration: animationDuration,
       useSafeArea: applySafeArea,
       dockToEdge: dockToEdge,
+      edgeGap: edgeGap ?? PopupConfig.defaultEdgeGap,
       showBarrier: showBarrier ?? true,
       barrierDismissible: barrierDismissible ?? true,
       barrierColor: barrierColor ?? Colors.black54,

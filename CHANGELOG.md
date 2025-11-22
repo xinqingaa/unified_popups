@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.15]
+### Fixed
+The `edgeGap` parameter is correctly passed to `PopupConfig`
+
 ## [1.1.14]
 ### Fixed
 - Fix the bug where the area that disappears when multiple Loading triggers occur remains and causes unclickability due to OverLary's effect.
