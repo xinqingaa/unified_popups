@@ -376,6 +376,11 @@ class _PopupLayoutState extends State<_PopupLayout> {
       return ClipRect(child: animatedChild);
     }
 
+    // 如果弹窗类型为sheet，并且dockToEdge为true，并且edgeGap大于0，则裁剪动画超出区域
+    if (widget.config.type == PopupType.sheet && widget.config.dockToEdge == true && widget.config.edgeGap > 0) {
+      return ClipRect(child: animatedChild);
+    }
+
     return animatedChild;
   }
 

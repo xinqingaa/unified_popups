@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.1.16]
+ClipRect Sheet
+
 ## [1.1.15]
 ### Fixed
 The `edgeGap` parameter is correctly passed to `PopupConfig`
