@@ -58,6 +58,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: GlobalKey<NavigatorState>(), // Required
+      navigatorObservers: [PopupRouteObserver()], // Optional route observer: Popups such as sheet and confirm will automatically close when the route changes.
       home: PopScopeWidget( // Optional: for handling back button
         child: HomePage(),
       ),
@@ -331,6 +332,11 @@ await Pop.sheet<void>(
 );
 // The TabBar stays visible and tappable because the barrier stops above it
 ```
+
+## v1.1.17
+- Added a new route observer to automatically handle the closing of `sheet` and `confirm` when the route changes.
+- Parameters can be passed in through `PopConfig` configuration.
+- `confirm` and `sheet` are fixed to close when the route switches, while others do not follow.
 
 ## 🔧 What's New in v1.1.4
 

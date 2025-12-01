@@ -34,6 +34,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         useMaterial3: true,
       ),
+      navigatorObservers: [PopupRouteObserver()], // 路由观察者 ,  sheet 、confirm 等弹窗会根据路由变化自动关闭
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),

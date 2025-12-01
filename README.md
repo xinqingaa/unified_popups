@@ -56,13 +56,13 @@ void main() {
   });
 }
 
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: GlobalKey<NavigatorState>(), // 必须提供
-      home: PopScopeWidget( // 可选：用于处理返回键
+      navigatorObservers: [PopupRouteObserver()], // 可选 路由观察者, sheet、confirm 等弹窗会根据路由变化自动关闭
+      home: PopScopeWidget( // 可选：用于处理自动返回键
         child: HomePage(),
       ),
     );
@@ -785,6 +785,13 @@ Pop.toast(
   },
 );
 ```
+
+## v1.1.17
+### 处理路由切换时，弹框没有自动关闭的逻辑
+- 新增路由观察者，自动处理`sheet`、`confirm`跟随路由变化而关闭
+- 参数可以通过 `PopConfig` 配置传入
+- `confirm`、`sheet`固定为跟随路由切换而关闭，其他不跟随
+
 
 ## 🎉 v1.1.11 增强更新
 

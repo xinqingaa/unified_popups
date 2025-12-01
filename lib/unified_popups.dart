@@ -19,3 +19,5 @@ export 'src/core/popup_manager.dart'
 export 'src/utils/sheet_dimension.dart';
 
 export 'src/widgets/pop_scope_widget.dart';
+
+export 'src/core/popup_route_observer.dart' show PopupRouteObserver;

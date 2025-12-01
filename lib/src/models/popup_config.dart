@@ -1,4 +1,3 @@
-// lib/src/models/popup_config.dart
 part of '../core/popup_manager.dart';
 
 /// 弹出层配置类，用于配置弹出层的行为和样式。
@@ -20,6 +19,10 @@ part of '../core/popup_manager.dart';
 /// - [showBarrier]：是否显示遮盖层，默认为 true。
 /// - [barrierColor]：遮盖层颜色，默认为 Colors.black54。
 /// - [clipDuringAnimation]：在锚点模式下是否裁剪动画超出区域，默认 false
+/// - [dismissOnRouteChange]：是否在路由切换时自动关闭，默认为 null（使用类型默认行为）
+/// - confirm 和 sheet：默认 true（自动关闭）
+/// - toast 和 loading：不关闭（通过类型过滤）
+/// - 其他类型：默认 false（不关闭）
 class PopupConfig {
   /// [必填] 弹出层要显示的子 Widget
   final Widget child;
@@ -74,6 +77,12 @@ class PopupConfig {
   /// [可选] 在锚点模式下是否裁剪动画超出区域，默认 false
   final bool clipDuringAnimation;
 
+  /// [可选] 是否在路由切换时自动关闭，默认为 null（使用类型默认行为）
+  /// - confirm 和 sheet：默认 true（自动关闭）
+  /// - toast 和 loading：不关闭（通过类型过滤）
+  /// - 其他类型：默认 false（不关闭）
+  final bool? dismissOnRouteChange;
+
   static const double defaultEdgeGap = kBottomNavigationBarHeight + 4;
 
   PopupConfig({
@@ -94,5 +103,6 @@ class PopupConfig {
     this.dockToEdge = false,
     this.edgeGap = defaultEdgeGap,
     this.clipDuringAnimation = false,
+    this.dismissOnRouteChange,
   });
 }
