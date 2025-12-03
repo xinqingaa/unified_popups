@@ -11,16 +11,16 @@ Unified Popups is a unified popup solution designed for enterprise-level Flutter
 
 ### ✨ Key Features
 
-- **🆕 Async Popup Support**: All popup types now fully support async calls! No more build phase errors. Based on `SafeOverlayEntry` and build phase detection mechanism, automatically detects build phase and defers execution. Perfect support for `Future.then()`, `async/await`, `Stream`, `Timer`, direct calls in `build()` method, and all other scenarios
-- **Unified API**: All popups are called through the `Pop` static class with a consistent API design
-- **Type Safety**: Full type support with compile-time error checking
-- **Multi-instance Support**: Based on Overlay implementation, supports displaying multiple popups simultaneously
-- **Animation Duration Configuration**: Each API supports custom animation duration for optimal experience in different scenarios
-- **Keyboard Adaptation**: Automatically handles layout adjustments and focus management when keyboard appears
+- **🆕 Async Popup Support**: All popup types fully support async calls without build-phase errors thanks to `SafeOverlayEntry` plus build-phase detection. Works seamlessly inside `Future.then()`, `async/await`, `Stream`, `Timer`, or even during `build()`
+- **Unified API**: Everything starts from the `Pop` static class, keeping API design consistent across toast, loading, confirm, sheet, date, and menu
+- **Type Safety**: Built on Dart's strong typing and `flutter_lints`, helping catch mistakes at compile time
+- **Multi-instance Support**: Overlay-based implementation keeps multiple popups running independently
+- **Animation Flexibility**: Every API exposes both animation duration and animation curve, so you can fine-tune easing per scenario
+- **Keyboard Adaptation**: Automatically adjusts layout and focus management when the keyboard appears
 - **Gesture Support**: Supports drag-to-close, tap barrier to close, and other interactions
 - **Theming**: Supports custom styles and theme configuration
 - **Accessibility Support**: Built-in accessibility support, compliant with accessibility design standards
-- **Performance Optimized**: Based on Overlay implementation, excellent performance with low memory usage
+- **Performance Optimized**: Overlay-based approach offers excellent performance with low memory usage
 
 ### 🎯 Use Cases
 
@@ -37,7 +37,7 @@ Add the dependency to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  unified_popups:  # Use the latest version
+  unified_popups: ^1.1.14 # Use the latest version
 ```
 
 ### Initialization
@@ -58,7 +58,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: GlobalKey<NavigatorState>(), // Required
-      navigatorObservers: [PopupRouteObserver()], // Optional route observer: Popups such as sheet and confirm will automatically close when the route changes.
       home: PopScopeWidget( // Optional: for handling back button
         child: HomePage(),
       ),
@@ -103,6 +102,7 @@ Pop.toast(
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
   Duration animationDuration = const Duration(milliseconds: 200),
+  Curve? animationCurve,
   String? customImagePath,
   double? imageSize,
   Color? imgColor,
@@ -127,6 +127,7 @@ Pop.toast(
 - `duration`: Display duration, default 1.2 seconds
 - `toastType`: Toast type, supports `success`, `warn`, `error`, `none`
 - `animationDuration`: Animation duration, default 200ms
+- `animationCurve`: Animation curve, default `Curves.easeInOut`
 - `customImagePath`: Custom image path, if provided will override toastType icon
 - `imageSize`: Image size, default 24.0
 - `imgColor`: Tint color for the custom image (only applied when `customImagePath` is provided)
@@ -203,6 +204,7 @@ void loading({
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
   Duration animationDuration = const Duration(milliseconds: 150),
+  Curve? animationCurve,
 })
 ```
 
@@ -211,6 +213,7 @@ void loading({
 **Parameters:**
 - `customIndicator`: Custom Widget (typically an image), if provided will replace the default CircularProgressIndicator and automatically add rotation animation
 - `rotationDuration`: Rotation animation duration, default 1 second. Only effective when using customIndicator
+- `animationCurve`: Animation curve, default `Curves.easeInOut`
 
 **Usage Examples:**
 ```dart
@@ -262,6 +265,9 @@ Future<T?> sheet<T>({
   SheetDimension? height,
   SheetDimension? maxWidth,
   SheetDimension? maxHeight,
+  bool? showBarrier,
+  bool? barrierDismissible,
+  Color? barrierColor,
   String? imgPath,
   Color? backgroundColor,
   BorderRadius? borderRadius,
@@ -270,10 +276,10 @@ Future<T?> sheet<T>({
   EdgeInsetsGeometry? titlePadding,
   TextStyle? titleStyle,
   TextAlign? titleAlign,
-  bool? showBarrier,
-  bool? barrierDismissible,
-  Color? barrierColor,
+  bool dockToEdge = false,
+  double? edgeGap,
   Duration animationDuration = const Duration(milliseconds: 400),
+  Curve? animationCurve,
 })
 ```
 
@@ -285,6 +291,7 @@ Future<T?> sheet<T>({
 - `dockToEdge`: When sliding from the `bottom` / `left` / `right`, keep the originating edge interactive (sheet and barrier both avoid it)
 - `edgeGap`: Size of the reserved edge region, defaults to `kBottomNavigationBarHeight + 4`
 - `animationDuration`: Animation duration, default 400ms
+- `animationCurve`: Animation curve, default `Curves.easeInOut`
 
 > `dockToEdge` is not available for the `top` position. When enabled, the reserved edge stays fully interactive (e.g. TabBar or navigation bar taps go through).
 
@@ -333,153 +340,211 @@ await Pop.sheet<void>(
 // The TabBar stays visible and tappable because the barrier stops above it
 ```
 
-## v1.1.17
-- Added a new route observer to automatically handle the closing of `sheet` and `confirm` when the route changes.
-- Parameters can be passed in through `PopConfig` configuration.
-- `confirm` and `sheet` are fixed to close when the route switches, while others do not follow.
+### Confirmation Dialog
 
-## 🔧 What's New in v1.1.4
+Collect user decisions with highly customizable dialogs.
 
-### Toast Enhancements
-- Added `customImagePath` parameter to support custom local images
-- Added `imageSize` parameter to customize image size (default: 24.0)
-- Added `layoutDirection` parameter to support Row/Column layout switching
-- Custom images will override toastType icons when provided
-
-### Loading Enhancements
-- Added `customIndicator` parameter to support custom Widget as loading indicator
-- Added `rotationDuration` parameter to configure rotation animation speed
-- Custom indicator automatically includes rotation animation
-- Container maintains square aspect ratio when both message and customIndicator are present (max 25% screen width, 100px)
-
-## 🎉 What's New in v1.1.13
-
-### ✨ Toast Toggle Feature
-
-**Added toggle functionality for Toast, allowing users to switch between two states by tapping!**
-
-- ✅ Added `tMessage` parameter: alternate message text for toggle mode
-- ✅ Added `tImagePath` parameter: alternate image path for toggle mode
-- ✅ Added `tToastType` parameter: alternate toast type for toggle mode
-- ✅ Added `tImgColor` parameter: alternate image color for toggle mode
-- ✅ Added `onTap` parameter: callback function when toast is tapped
-- ✅ Added `toggleable` parameter: enable/disable toggle mode (default: false)
-- ✅ ToastWidget changed from StatelessWidget to StatefulWidget to support state management
-- ✅ When `toggleable` is `true` and `tMessage` or `tImagePath` is provided, tapping the toast will switch between two states
-
-**Usage Example:**
 ```dart
-// Toggle mode: Balance lock and gravity sensing
-Pop.toast(
-  'Balance Lock',
-  customImagePath: 'assets/img.png',
-  tMessage: 'Gravity Sensing',
-  tImagePath: 'assets/temp.png',
-  toggleable: true,
-  imageSize: 32,
-  duration: const Duration(seconds: 2),
-  onTap: () {
-    print('Toast state toggled');
-  },
+Future<bool?> confirm({
+  String? title,
+  required String content,
+  PopupPosition position = PopupPosition.center,
+  String confirmText = 'confirm',
+  String? cancelText = 'cancel',
+  bool showCloseButton = true,
+  TextStyle? titleStyle,
+  TextStyle? contentStyle,
+  TextStyle? confirmStyle,
+  TextStyle? cancelStyle,
+  String? imagePath,
+  double? imageHeight = 80,
+  double? imageWidth,
+  TextAlign? textAlign = TextAlign.center,
+  ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
+  BorderRadiusGeometry? buttonBorderRadius,
+  BoxBorder? confirmBorder,
+  BoxBorder? cancelBorder,
+  Color? confirmBgColor,
+  Color? cancelBgColor,
+  EdgeInsetsGeometry? padding,
+  EdgeInsetsGeometry? margin,
+  Decoration? decoration,
+  Widget? confirmChild,
+  Duration animationDuration = const Duration(milliseconds: 250),
+  Curve? animationCurve,
+})
+```
+
+**Highlights**
+- `confirmBorder` / `cancelBorder`: define button borders for secondary emphasis
+- `confirmChild`: insert extra widgets (forms, inputs, etc.) between content and actions
+- `animationCurve`: override the default `Curves.easeInOut` easing
+
+**Usage**
+```dart
+final ok = await Pop.confirm(
+  title: 'Delete user',
+  content: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  confirmBgColor: Colors.red,
+  confirmBorder: Border.all(color: Colors.redAccent),
+);
+
+final result = await Pop.confirm(
+  title: 'Extra input',
+  content: 'Please describe the issue.',
+  confirmChild: TextField(maxLines: 3),
+  buttonLayout: ConfirmButtonLayout.column,
 );
 ```
 
-## 🎉 What's New in v1.1.11 - Enhanced Update
+### Date Picker
 
-### 🔧 Enhanced Build Phase Error Handling
-
-**Fully supports calling popups during build phase without errors!**
-
-- ✅ Fixed `overlay.insert()` setState error when called during build phase
-- ✅ Enhanced build phase detection mechanism with automatic deferred execution
-- ✅ Perfect support for scenarios like `Get.put()` immediate initialization in route building process
-- ✅ All popup types can be called in async operations and during build phase without errors
-
-**Technical Implementation:**
-- Extracted `_insertPopup` private method to handle overlay insertion logic
-- Added build phase detection in `PopupManager.show()` method
-- If called during build phase (`SchedulerPhase.persistentCallbacks`), automatically defers to `postFrameCallback` execution
-- Works together with `SafeOverlayEntry` for double protection ensuring build phase safety
-
-## 🎉 What's New in v1.1.10 - Major Update
-
-### ⚡ Async Popup Support (Core Feature)
-
-**All popup types now fully support async calls!**
-
-- ✅ Support calling in `Future.then()` callbacks
-- ✅ Support calling in `async/await` async methods
-- ✅ Support calling in `Stream` listener callbacks
-- ✅ Support calling in `Timer` callbacks
-- ✅ Support calling in `postFrameCallback`
-- ✅ Support async calling in `initState`
-- ✅ **New: Support calling directly in `build()` method (v1.1.11)**
-
-**Technical Implementation:**
-- Based on `SafeOverlayEntry` implementation, automatically detects build phase
-- If called during build phase, automatically defers to `postFrameCallback` execution
-- Completely solves "setState() called during build" errors
-- All popup types (Toast, Loading, Confirm, Sheet, Date, Menu) are supported
-
-**Usage Examples:**
 ```dart
-// ✅ Call in Future.then()
-Future.delayed(Duration(seconds: 1)).then((_) {
-  Pop.loading(message: 'Processing...');
-});
-
-// ✅ Call in async/await
-Future<void> fetchData() async {
-  await Future.delayed(Duration(milliseconds: 100));
-  Pop.loading(message: 'Loading...');
-  await api.fetch();
-  Pop.hideLoading();
-}
-
-// ✅ Call in Stream listener
-stream.listen((data) {
-  Pop.toast('Received data: $data');
-});
-
-// ✅ Call in Timer callback
-Timer(Duration(seconds: 1), () {
-  Pop.confirm(content: 'Confirm operation?');
-});
-
-// ✅ Call in postFrameCallback
-WidgetsBinding.instance.addPostFrameCallback((_) {
-  Pop.loading(message: 'Initializing...');
-});
-
-// ✅ Call directly in build() method (v1.1.11 new support)
-@override
-Widget build(BuildContext context) {
-  // Simulate Get.put() immediate initialization scenario
-  if (!_hasInitialized) {
-    _hasInitialized = true;
-    Pop.loading(message: 'Calling loading during build...');
-  }
-  return Scaffold(...);
-}
+Future<DateTime?> date({
+  DateTime? initialDate,
+  DateTime? minDate,
+  DateTime? maxDate,
+  String title = 'Date of Birth',
+  PopupPosition position = PopupPosition.bottom,
+  String confirmText = 'Confirm',
+  String? cancelText = 'Cancel',
+  Color? activeColor = Colors.black,
+  Color? noActiveColor = Colors.black38,
+  Color? headerBg = Colors.blue,
+  double? height = 180.0,
+  double? radius = 24.0,
+  Duration animationDuration = const Duration(milliseconds: 250),
+  Curve? animationCurve,
+})
 ```
 
-### Loading API Simplification
-- `Pop.loading()` no longer returns ID, now returns `void`
-- `Pop.hideLoading()` no longer requires a parameter
-- Only one loading instance allowed at a time, managed internally
+Tweak the picker with `animationDuration` / `animationCurve`, color accents, or container size.
 
-### PopupManager Enhancement
-- Added `PopupManager.hideByType(PopupType type)` method
-- Support finding and closing popups by type
+```dart
+final date = await Pop.date(
+  title: 'Select birthday',
+  minDate: DateTime(1900, 1, 1),
+  maxDate: DateTime.now(),
+);
 
-## 🔧 What's New in v1.1.6
+final joinedOn = await Pop.date(
+  title: 'Joined at',
+  initialDate: DateTime.now(),
+  activeColor: Colors.green,
+  headerBg: Colors.green,
+  radius: 16,
+);
+```
 
-### Toast Enhancements
-- Added `imgColor` parameter so custom images can be tinted directly from `Pop.toast`
+### Anchored Menu
 
-### Confirm Enhancements
-- Added `confirmBorder` and `cancelBorder` parameters for custom button borders
-- Confirm buttons now use container-based styling, making it easier to match background colors and borders
+```dart
+Future<T?> menu<T>({
+  required GlobalKey anchorKey,
+  Offset anchorOffset = Offset.zero,
+  required Widget Function(void Function([T? result]) dismiss) builder,
+  bool showBarrier = true,
+  bool barrierDismissible = true,
+  Color? barrierColor,
+  PopupAnimation animation = PopupAnimation.fade,
+  Duration animationDuration = const Duration(milliseconds: 200),
+  BoxDecoration? decoration,
+  EdgeInsetsGeometry? padding,
+  BoxConstraints? constraints,
+  Curve? animationCurve,
+})
+```
+
+Anchored menus default to a translucent barrier (`Colors.black54`). Override `barrierColor`, animation duration, or easing to match your motion system.
+
+```dart
+final GlobalKey btnKey = GlobalKey();
+
+ElevatedButton(
+  key: btnKey,
+  onPressed: () async {
+    final value = await Pop.menu<String>(
+      anchorKey: btnKey,
+      anchorOffset: const Offset(0, 8),
+      builder: (dismiss) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.content_copy),
+            title: const Text('Copy'),
+            onTap: () => dismiss('copy'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete, color: Colors.red),
+            title: const Text('Delete', style: TextStyle(color: Colors.red)),
+            onTap: () => dismiss('delete'),
+          ),
+        ],
+      ),
+    );
+  },
+  child: const Text('More'),
+);
+```
+
+## 🎨 Styling
+
+Every API exposes both `animationDuration` and `animationCurve`, so you can align motion with the surrounding UX.
+
+```dart
+Pop.toast(
+  'Quick feedback',
+  animationDuration: const Duration(milliseconds: 120),
+  animationCurve: Curves.easeOut,
+);
+
+Pop.sheet(
+  title: 'Deep workflow',
+  animationDuration: const Duration(milliseconds: 480),
+  animationCurve: Curves.easeOutCubic,
+  childBuilder: (dismiss) => const ComplexForm(),
+);
+```
+
+Default animation durations:
+
+- `Pop.toast()`: 200 ms
+- `Pop.loading()`: 150 ms
+- `Pop.confirm()`: 250 ms
+- `Pop.date()`: 250 ms
+- `Pop.menu()`: 200 ms
+- `Pop.sheet()`: 400 ms
+
+All APIs default to `Curves.easeInOut`. Override `animationCurve` for bounce, elastic, or physics-inspired motions.
+
+## 🔧 Best Practices
+
+- **Keyboard-friendly layouts**: place text fields inside `confirmChild` or a scrollable sheet and the library will handle safe areas and focus changes.
+- **Error handling**: always call `Pop.hideLoading()` inside `finally`/`catch` blocks to prevent orphaned overlays.
+- **Back navigation**: wrap your root with `PopScopeWidget` or defer the system back button by checking `PopupManager.hasNonToastPopup`.
+- **Single-loading rule**: `Pop.loading()` already enforces a single instance. Prefer showing success/failure via toast once the operation completes.
+
+## 🧠 PopupManager Essentials
+
+`PopupManager` keeps track of active overlays and exposes utility helpers:
+
+```dart
+final id = PopupManager.show(PopupConfig(child: CustomPopup()));
+PopupManager.hide(id);          // close explicit popups
+PopupManager.hideLast();        // close the most recent popup
+PopupManager.hideAll();         // clear every popup
+PopupManager.hideByType(PopupType.loading); // close by semantic type
+final hasOverlay = PopupManager.hasNonToastPopup;
+```
+
+It also powers `PopScopeWidget`, enabling smarter back-button handling based on `hasNonToastPopup` notifications.
+
+## 🚀 Performance Tips
+
+- Debounce repeated calls when showing lots of toast notifications.
+- Reuse expensive widgets inside sheets/menus instead of rebuilding giant child trees every time.
+- Keep images and custom indicators lightweight to avoid layout jank.
 
 ## 📄 License
 

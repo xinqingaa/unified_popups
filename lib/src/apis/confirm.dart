@@ -26,6 +26,7 @@ Future<bool?> _confirmImpl({
   Decoration? decoration,
   Widget? confirmChild,
   Duration animationDuration = const Duration(milliseconds: 250),
+  Curve? animationCurve,
 }) {
   final completer = Completer<bool?>();
   late String popupId;
@@ -75,6 +76,7 @@ Future<bool?> _confirmImpl({
         confirmChild: confirmChild,
       ),
       animation: animation,
+      animationCurve: animationCurve,
       animationDuration: animationDuration,
       position: position,
       barrierDismissible: true,

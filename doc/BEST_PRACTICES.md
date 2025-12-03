@@ -118,22 +118,8 @@ Future<void> submitForm() async {
   }
 }
 
-// ✅ 推荐：长时间操作提供进度信息
-Future<void> uploadFile() async {
-  Pop.loading(message: '上传中...');
-  
-  try {
-    await uploadWithProgress((progress) {
-      // 可以更新 loading 消息显示进度
-      Pop.loading(message: '上传中... ${(progress * 100).toInt()}%');
-    });
-    Pop.hideLoading();
-    Pop.toast('上传成功', toastType: ToastType.success);
-  } catch (e) {
-    Pop.hideLoading();
-    Pop.toast('上传失败', toastType: ToastType.error);
-  }
-}
+// ⚠️ Loading 为单实例，无法通过重复调用来刷新文案。
+// 需要展示实时进度时，推荐使用 Sheet/Menu 自定义控件或手动构建 PopupConfig。
 
 // ✅ 推荐：快速操作使用短动画
 Future<void> quickOperation() async {
@@ -151,6 +137,8 @@ Future<void> quickOperation() async {
     Pop.toast('处理失败', toastType: ToastType.error);
   }
 }
+
+> 若需展示实时百分比，可用 `Pop.sheet` 或自定义 `PopupConfig` 构建专用进度条，而不是重复调用 `Pop.loading()`。
 ```
 
 ### 3. Confirm 使用建议
@@ -873,3 +861,4 @@ class ErrorHandler {
 ```
 
 这些最佳实践将帮助你更好地使用 Unified Popups 库，提升用户体验和代码质量。
+

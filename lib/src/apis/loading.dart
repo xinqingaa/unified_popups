@@ -16,6 +16,7 @@ void _loadingImpl({
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
   Duration animationDuration = const Duration(milliseconds: 150),
+  Curve? animationCurve,
 }) {
   // 如果已有 loading，先关闭它（确保单例模式）
   if (PopupManager.getCountByType(PopupType.loading) > 0) {
@@ -41,6 +42,7 @@ void _loadingImpl({
       barrierColor: barrierColor,
       duration: null,
       animationDuration: animationDuration,
+      animationCurve: animationCurve,
       type: PopupType.loading,
     ),
   );

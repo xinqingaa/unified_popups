@@ -3,11 +3,13 @@ part of '../core/popup_manager.dart';
 class _PopupLayout extends StatefulWidget {
   final PopupConfig config;
   final Animation<double> animation;
+  final Animation<double> barrierAnimation;
   final VoidCallback onDismiss;
 
   const _PopupLayout({
     required this.config,
     required this.animation,
+    required this.barrierAnimation,
     required this.onDismiss,
   });
 
@@ -172,7 +174,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
                 }
               },
               child: FadeTransition(
-                opacity: widget.animation,
+                opacity: widget.barrierAnimation,
                 child: Container(
                   color: widget.config.barrierColor,
                 ),

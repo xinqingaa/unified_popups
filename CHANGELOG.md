@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0]
+- Add 
+
+## [1.1.17]
+- Add `PopupRouteObserver`.
+  - Popups such as sheet and confirm will automatically close when the route changes.
+
 ## [1.1.16]
 ClipRect Sheet
 

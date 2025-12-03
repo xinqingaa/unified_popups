@@ -32,6 +32,7 @@ Future<T?> _sheetImpl<T>({
   bool dockToEdge = false,
   double? edgeGap,
   Duration animationDuration = const Duration(milliseconds: 400),
+  Curve? animationCurve,
 }) {
   final completer = Completer<T?>();
   late String popupId;
@@ -122,6 +123,7 @@ Future<T?> _sheetImpl<T>({
       position: position,
       animation: animation,
       animationDuration: animationDuration,
+      animationCurve: animationCurve,
       useSafeArea: applySafeArea,
       dockToEdge: dockToEdge,
       edgeGap: edgeGap ?? PopupConfig.defaultEdgeGap,

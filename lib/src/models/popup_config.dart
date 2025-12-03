@@ -40,6 +40,9 @@ class PopupConfig {
   /// [可选] 弹出动画，默认为 [PopupAnimation.fade]
   final PopupAnimation animation;
 
+  /// [可选] 动画曲线，默认为 Curves.easeInOut
+  final Curve animationCurve;
+
   /// [可选] 动画持续时间，默认为 300 毫秒
   final Duration animationDuration;
 
@@ -92,6 +95,7 @@ class PopupConfig {
     this.anchorOffset = Offset.zero,
     this.animation = PopupAnimation.fade,
     this.animationDuration = const Duration(milliseconds: 300),
+    Curve? animationCurve,
     this.showBarrier = true,
     this.barrierColor = Colors.black54,
     this.barrierDismissible = true,
@@ -104,5 +108,6 @@ class PopupConfig {
     this.edgeGap = defaultEdgeGap,
     this.clipDuringAnimation = false,
     this.dismissOnRouteChange,
-  });
+  }) : animationCurve = animationCurve ?? Curves.easeInOut;
+  
 }

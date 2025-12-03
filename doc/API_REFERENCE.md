@@ -22,8 +22,8 @@
 abstract class Pop {
   // 静态方法
   static void toast(...)
-  static String loading(...)
-  static void hideLoading(String id)
+  static void loading(...)
+  static void hideLoading()
   static Future<bool?> confirm(...)
   static Future<T?> sheet<T>(...)
   static Future<DateTime?> date(...)
@@ -44,6 +44,7 @@ static void toast(
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
   Duration animationDuration = const Duration(milliseconds: 200),
+  Curve? animationCurve,
   String? customImagePath,
   double? imageSize,
   Color? imgColor,
@@ -81,6 +82,7 @@ static void toast(
 | `decoration` | `Decoration?` | `null` | ❌ | 装饰样式 |
 | `style` | `TextStyle?` | `null` | ❌ | 文本样式 |
 | `animationDuration` | `Duration` | `200ms` | ❌ | 动画持续时间 |
+| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
 | `textAlign` | `TextAlign?` | `null` | ❌ | 文本对齐方式 |
 | `tMessage` | `String?` | `null` | ❌ | 切换后的消息文本，用于切换模式 |
 | `tImagePath` | `String?` | `null` | ❌ | 切换后的自定义图片路径，用于切换模式 |
@@ -175,6 +177,7 @@ static void loading({
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
   Duration animationDuration = const Duration(milliseconds: 150),
+  Curve? animationCurve,
 })
 ```
 
@@ -194,6 +197,7 @@ static void loading({
 | `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
 | `barrierColor` | `Color` | `Colors.black54` | ❌ | 遮罩颜色 |
 | `animationDuration` | `Duration` | `150ms` | ❌ | 动画持续时间 |
+| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
 
 ### 返回值
 
@@ -282,6 +286,7 @@ static Future<bool?> confirm({
   Decoration? decoration,
   Widget? confirmChild,
   Duration animationDuration = const Duration(milliseconds: 250),
+  Curve? animationCurve,
 })
 ```
 
@@ -314,6 +319,7 @@ static Future<bool?> confirm({
 | `decoration` | `Decoration?` | `null` | ❌ | 装饰样式 |
 | `confirmChild` | `Widget?` | `null` | ❌ | 在内容与按钮之间插入的自定义组件 |
 | `animationDuration` | `Duration` | `250ms` | ❌ | 动画持续时间 |
+| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
 
 > 提示：确认与取消按钮现使用容器进行渲染，可同时定制背景色与边框，便于保持样式一致性。
 
@@ -423,6 +429,7 @@ static Future<T?> sheet<T>({
   bool dockToEdge = false,
   double? edgeGap,
   Duration animationDuration = const Duration(milliseconds: 400),
+  Curve? animationCurve,
 })
 ```
 
@@ -453,6 +460,7 @@ static Future<T?> sheet<T>({
 | `dockToEdge` | `bool` | `false` | ❌ | bottom/left/right 时是否保留边缘交互区域 |
 | `edgeGap` | `double?` | `kBottomNavigationBarHeight + 4` | ❌ | 预留边缘尺寸 |
 | `animationDuration` | `Duration` | `400ms` | ❌ | 动画持续时间 |
+| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
 
 > `dockToEdge` 仅在 `bottom` / `left` / `right` 方向生效，启用后预留区域可透传点击。
 
@@ -597,6 +605,7 @@ static Future<DateTime?> date({
   double? height = 180.0,
   double? radius = 24.0,
   Duration animationDuration = const Duration(milliseconds: 250),
+  Curve? animationCurve,
 })
 ```
 
@@ -617,6 +626,7 @@ static Future<DateTime?> date({
 | `height` | `double?` | `180.0` | ❌ | 高度 |
 | `radius` | `double?` | `24.0` | ❌ | 圆角 |
 | `animationDuration` | `Duration` | `250ms` | ❌ | 动画持续时间 |
+| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
 
 ### 返回值
 
@@ -674,12 +684,13 @@ static Future<T?> menu<T>({
   required Widget Function(void Function([T? result]) dismiss) builder,
   bool showBarrier = true,
   bool barrierDismissible = true,
-  Color barrierColor = Colors.transparent,
+  Color? barrierColor,
   PopupAnimation animation = PopupAnimation.fade,
   Duration animationDuration = const Duration(milliseconds: 200),
   BoxDecoration? decoration,
   EdgeInsetsGeometry? padding,
   BoxConstraints? constraints,
+  Curve? animationCurve,
 })
 ```
 
@@ -692,12 +703,13 @@ static Future<T?> menu<T>({
 | `builder` | `Widget Function(void Function([T? result]) dismiss)` | - | ✅ | 内容构建器 |
 | `showBarrier` | `bool` | `true` | ❌ | 是否显示遮罩 |
 | `barrierDismissible` | `bool` | `true` | ❌ | 点击遮罩是否关闭 |
-| `barrierColor` | `Color` | `Colors.transparent` | ❌ | 遮罩颜色 |
+| `barrierColor` | `Color?` | `Colors.black54` | ❌ | 遮罩颜色 |
 | `animation` | `PopupAnimation` | `fade` | ❌ | 动画类型 |
 | `animationDuration` | `Duration` | `200ms` | ❌ | 动画时长 |
-| `decoration` | `BoxDecoration` | `defaultDecoration` | ❌ | 容器装饰 |
-| `padding` | `EdgeInsetsGeometry` | `0` | ❌ | 内边距 |
-| `constraints` | `BoxConstraints` | `120-280` | ❌ | 容器约束 |
+| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
+| `decoration` | `BoxDecoration?` | `null` | ❌ | 容器装饰 |
+| `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
+| `constraints` | `BoxConstraints?` | `null` | ❌ | 容器约束 |
 
 ### 返回值
 
@@ -1173,3 +1185,4 @@ await Pop.sheet(
   childBuilder: (dismiss) => ...,
 );
 ```
+

@@ -9,6 +9,7 @@ void _toastImpl(
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
   Duration animationDuration = const Duration(milliseconds: 200),
+  Curve? animationCurve,
   // Widget 级别的样式配置
   String? customImagePath,
   double? imageSize,
@@ -59,6 +60,7 @@ void _toastImpl(
       duration: duration,
       animation: animation,
       animationDuration: animationDuration,
+      animationCurve: animationCurve,
       showBarrier: showBarrier,
       barrierDismissible: barrierDismissible,
       type: PopupType.toast,

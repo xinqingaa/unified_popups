@@ -196,6 +196,8 @@ class SheetPage extends StatelessWidget {
 
   void _showBottomMenu() async {
     final result = await Pop.sheet<String>(
+      animationCurve: Curves.easeInOutQuart,
+      animationDuration: const Duration(milliseconds: 1000),
       title: '选择一个水果 可滚动',
       direction: SheetDirection.bottom,
       imgPath: "assets/temp.png",

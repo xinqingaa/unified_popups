@@ -134,6 +134,18 @@ class PopupManager {
       duration: config.animationDuration,
     );
 
+
+    // 内容动画曲线
+    final contentAnimation = animationController.drive(
+      CurveTween(curve: config.animationCurve),
+    );
+    
+    // 蒙版动画曲线
+    final barrierAnimation = animationController.drive(
+      CurveTween(curve: Curves.easeOutQuint), 
+    );
+
+
     // 2. 创建 SafeOverlayEntry（避免在构建阶段调用 setState 导致的错误）
     // 注意 onDismiss 回调现在调用 hide(popupId)
     final overlayEntry = SafeOverlayEntry(
@@ -141,9 +153,8 @@ class PopupManager {
         return RepaintBoundary(
           child: _PopupLayout(
             config: config,
-            animation: animationController.drive(
-              CurveTween(curve: Curves.easeInOut),
-            ),
+            animation: contentAnimation,
+            barrierAnimation: barrierAnimation,
             onDismiss: () => hide(popupId),
           ),
         );

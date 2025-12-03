@@ -10,7 +10,8 @@ Future<T?> _menuImpl<T>({
   EdgeInsetsGeometry? padding,
   BoxConstraints? constraints,
   BoxDecoration? decoration,
-  PopupAnimation animation = PopupAnimation.fade,
+  PopupAnimation animation = PopupAnimation.fade, 
+  Curve? animationCurve,
   Duration animationDuration = const Duration(milliseconds: 200),
 }) {
   final completer = Completer<T?>();
@@ -28,6 +29,7 @@ Future<T?> _menuImpl<T>({
       anchorKey: anchorKey,
       anchorOffset: anchorOffset,
       animation: animation,
+      animationCurve: animationCurve,
       animationDuration: animationDuration,
       showBarrier: showBarrier,
       barrierDismissible: barrierDismissible,

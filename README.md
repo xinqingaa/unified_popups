@@ -13,9 +13,9 @@ Unified Popups 是一个专为企业级 Flutter 应用设计的统一弹窗解�
 
 - **🆕 异步弹框支持**：所有弹窗类型均支持在异步方法中调用，无需担心构建阶段错误。基于 `SafeOverlayEntry` 和构建阶段检测机制，自动检测构建阶段并延迟执行，完美支持 `Future.then()`、`async/await`、`Stream`、`Timer`、`build()` 方法中直接调用等所有场景
 - **统一 API**：所有弹窗通过 `Pop` 静态类调用，API 设计简洁一致
-- **类型安全**：完整的 TypeScript 类型支持，编译时错误检查
+- **类型安全**：依托 Dart 强类型系统与 `flutter_lints` 规则，编译期即可发现绝大多数问题
 - **多实例支持**：基于 Overlay 实现，支持同时显示多个弹窗
-- **动画时长配置**：每个API都支持自定义动画时长，为不同场景提供最佳体验
+- **动画可塑性**：每个 API 都支持自定义动画时长和动画曲线，快速适配不同交互语境
 - **键盘适配**：自动处理键盘弹出时的布局调整和焦点管理
 - **手势支持**：支持拖拽关闭、点击遮罩关闭等交互
 - **主题化**：支持自定义样式和主题配置
@@ -37,7 +37,7 @@ Unified Popups 是一个专为企业级 Flutter 应用设计的统一弹窗解�
 
 ```yaml
 dependencies:
-  unified_popups: ^1.1.0 # 选择最新版本
+  unified_popups: ^1.1.14 # 选择最新版本
 ```
 
 ### 初始化
@@ -56,13 +56,13 @@ void main() {
   });
 }
 
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: GlobalKey<NavigatorState>(), // 必须提供
-      navigatorObservers: [PopupRouteObserver()], // 可选 路由观察者, sheet、confirm 等弹窗会根据路由变化自动关闭
-      home: PopScopeWidget( // 可选：用于处理自动返回键
+      home: PopScopeWidget( // 可选：用于处理返回键
         child: HomePage(),
       ),
     );
@@ -106,6 +106,7 @@ Pop.toast(
   bool barrierDismissible = false,
   ToastType toastType = ToastType.none,
   Duration animationDuration = const Duration(milliseconds: 200),
+  Curve? animationCurve,
   String? customImagePath,
   double? imageSize,
   Color? imgColor,
@@ -130,6 +131,7 @@ Pop.toast(
 - `duration`：显示时长，默认 1.2 秒
 - `toastType`：提示类型，支持 `success`、`warn`、`error`、`none`
 - `animationDuration`：动画持续时间，默认 200ms
+- `animationCurve`：动画曲线，默认 `Curves.easeInOut`
 - `customImagePath`：自定义图片路径，如果提供则覆盖 toastType 的图标
 - `imageSize`：图片大小，默认 24.0
 - `imgColor`：自定义图片的着色，仅在提供 `customImagePath` 时生效
@@ -206,6 +208,7 @@ void loading({
   bool barrierDismissible = false,
   Color barrierColor = Colors.black54,
   Duration animationDuration = const Duration(milliseconds: 150),
+  Curve? animationCurve,
 })
 ```
 
@@ -214,6 +217,7 @@ void loading({
 **参数说明：**
 - `customIndicator`：自定义 Widget（通常是图片），如果提供则替代默认的 CircularProgressIndicator，并自动添加旋转动画
 - `rotationDuration`：旋转动画持续时间，默认 1 秒。仅在使用 customIndicator 时生效
+- `animationCurve`：动画曲线，默认 `Curves.easeInOut`
 
 **使用示例：**
 ```dart
@@ -281,11 +285,13 @@ Future<bool?> confirm({
   Decoration? decoration,
   Widget? confirmChild,
   Duration animationDuration = const Duration(milliseconds: 250),
+  Curve? animationCurve,
 })
 ```
 
 **新增参数亮点：**
 - `confirmBorder` / `cancelBorder`：允许自定义按钮边框样式
+- `animationCurve`：可自定义进出场曲线，默认 `Curves.easeInOut`
 
 **返回值：**
 - `true`：用户点击确认
@@ -348,6 +354,9 @@ Future<T?> sheet<T>({
   SheetDimension? height,
   SheetDimension? maxWidth,
   SheetDimension? maxHeight,
+  bool? showBarrier,
+  bool? barrierDismissible,
+  Color? barrierColor,
   String? imgPath,
   Color? backgroundColor,
   BorderRadius? borderRadius,
@@ -356,7 +365,10 @@ Future<T?> sheet<T>({
   EdgeInsetsGeometry? titlePadding,
   TextStyle? titleStyle,
   TextAlign? titleAlign,
+  bool dockToEdge = false,
+  double? edgeGap,
   Duration animationDuration = const Duration(milliseconds: 400),
+  Curve? animationCurve,
 })
 ```
 
@@ -369,6 +381,7 @@ Future<T?> sheet<T>({
 - `dockToEdge`：在 `bottom` / `left` / `right` 方向弹出时，是否保留原边缘的交互区域（遮罩和内容都会避开该区域）
 - `edgeGap`：保留边缘区域的尺寸，默认 `kBottomNavigationBarHeight + 4`
 - `animationDuration`：动画持续时间，默认 400ms
+- `animationCurve`：动画曲线，默认 `Curves.easeInOut`
 
 > `dockToEdge` 不支持 `top` 方向，启用后留白区域可透传到底部/侧边的 TabBar 或导航组件。
 
@@ -480,8 +493,11 @@ Future<DateTime?> date({
   double? height = 180.0,
   double? radius = 24.0,
   Duration animationDuration = const Duration(milliseconds: 250),
+  Curve? animationCurve,
 })
 ```
+
+可通过 `animationDuration` 与 `animationCurve` 调整日期弹窗的节奏与缓动。
 
 **使用示例：**
 ```dart
@@ -524,14 +540,17 @@ Future<T?> menu<T>({
   required Widget Function(void Function([T? result]) dismiss) builder,
   bool showBarrier = true,
   bool barrierDismissible = true,
-  Color barrierColor = Colors.transparent,
+  Color? barrierColor,
   PopupAnimation animation = PopupAnimation.fade,
   Duration animationDuration = const Duration(milliseconds: 200),
   BoxDecoration? decoration,
   EdgeInsetsGeometry? padding,
   BoxConstraints? constraints,
+  Curve? animationCurve,
 })
 ```
+
+锚定菜单默认使用半透明遮罩（`Colors.black54`）。可通过 `barrierColor`、`animationDuration`、`animationCurve` 和 `PopupAnimation` 组合出合适的动效。
 
 **使用示例：**
 ```dart
@@ -583,9 +602,9 @@ final result = await Pop.menu<String>(
 
 ## 🎨 样式定制
 
-### 动画时长配置
+### 动画时长与曲线配置
 
-每个弹窗API都支持自定义动画时长，为不同场景提供最佳的用户体验：
+每个弹窗 API 都支持自定义动画时长与动画曲线，为不同场景提供最佳的用户体验：
 
 ```dart
 // 快速反馈场景
@@ -603,7 +622,15 @@ Pop.confirm(
 Pop.sheet(
   title: '复杂操作',
   animationDuration: Duration(milliseconds: 500), // 较长动画，适合复杂内容
+  animationCurve: Curves.easeOutCubic,
   childBuilder: (dismiss) => ComplexWidget(),
+);
+
+// 自定义曲线
+Pop.menu(
+  anchorKey: buttonKey,
+  animationCurve: Curves.easeOutBack,
+  builder: (dismiss) => const MenuBody(),
 );
 ```
 
@@ -614,6 +641,8 @@ Pop.sheet(
 - `Pop.date()`: 250ms (适中时长)
 - `Pop.menu()`: 200ms (快速响应)
 - `Pop.sheet()`: 400ms (较长动画，适合抽屉效果)
+
+所有 API 的默认动画曲线均为 `Curves.easeInOut`，通过 `animationCurve` 可替换为更合适的缓动函数。
 
 ### 全局样式配置
 
@@ -753,142 +782,6 @@ WillPopScope(
   child: HomePage(),
 )
 ```
-
-## 🎉 v1.1.13 更新
-
-### ✨ Toast 切换功能
-
-**新增 Toast 点击切换功能，支持在两个状态间切换！**
-
-- ✅ 新增 `tMessage` 参数：切换后的消息文本
-- ✅ 新增 `tImagePath` 参数：切换后的自定义图片路径
-- ✅ 新增 `tToastType` 参数：切换后的 Toast 等级
-- ✅ 新增 `tImgColor` 参数：切换后的自定义图片着色
-- ✅ 新增 `onTap` 参数：点击回调函数
-- ✅ 新增 `toggleable` 参数：启用/禁用切换模式（默认：false）
-- ✅ ToastWidget 从 StatelessWidget 改为 StatefulWidget，支持状态管理
-- ✅ 当 `toggleable` 为 `true` 且提供了 `tMessage` 或 `tImagePath` 时，点击 toast 会在两个状态间切换
-
-**使用示例：**
-```dart
-// 切换模式：平衡锁定和重力感应
-Pop.toast(
-  '平衡锁定',
-  customImagePath: 'assets/img.png',
-  tMessage: '重力感应',
-  tImagePath: 'assets/temp.png',
-  toggleable: true,
-  imageSize: 32,
-  duration: const Duration(seconds: 2),
-  onTap: () {
-    print('Toast 状态已切换');
-  },
-);
-```
-
-## v1.1.17
-### 处理路由切换时，弹框没有自动关闭的逻辑
-- 新增路由观察者，自动处理`sheet`、`confirm`跟随路由变化而关闭
-- 参数可以通过 `PopConfig` 配置传入
-- `confirm`、`sheet`固定为跟随路由切换而关闭，其他不跟随
-
-
-## 🎉 v1.1.11 增强更新
-
-### 🔧 构建阶段错误处理增强
-
-**完全支持在构建过程中调用弹框，不会报错！**
-
-- ✅ 修复了 `overlay.insert()` 在构建阶段调用时的 setState 错误
-- ✅ 增强了构建阶段检测机制，自动延迟执行
-- ✅ 完美支持 `Get.put()` 立即初始化等路由构建过程中的调用场景
-- ✅ 所有弹窗类型在异步、构建过程中调用均不会报错
-
-**技术实现：**
-- 提取 `_insertPopup` 私有方法处理 overlay 插入逻辑
-- 在 `PopupManager.show()` 中添加构建阶段检测
-- 如果在构建阶段（`SchedulerPhase.persistentCallbacks`）调用，自动延迟到 `postFrameCallback` 执行
-- 与 `SafeOverlayEntry` 配合，双重保护确保构建阶段安全
-
-## 🎉 v1.1.10 重大更新
-
-### ⚡ 异步弹框支持（核心特性）
-
-**所有弹窗类型现在完全支持异步调用！**
-
-- ✅ 支持在 `Future.then()` 回调中调用
-- ✅ 支持在 `async/await` 异步方法中调用
-- ✅ 支持在 `Stream` 监听回调中调用
-- ✅ 支持在 `Timer` 回调中调用
-- ✅ 支持在 `postFrameCallback` 中调用
-- ✅ 支持在 `initState` 中异步调用
-- ✅ **新增：支持在 `build()` 方法中直接调用（v1.1.11）**
-
-**技术实现：**
-- 基于 `SafeOverlayEntry` 实现，自动检测构建阶段
-- 如果在构建阶段调用，自动延迟到 `postFrameCallback` 执行
-- 彻底解决了 "setState() called during build" 错误
-- 所有弹窗类型（Toast、Loading、Confirm、Sheet、Date、Menu）均支持
-
-**使用示例：**
-```dart
-// ✅ 在 Future.then() 中调用
-Future.delayed(Duration(seconds: 1)).then((_) {
-  Pop.loading(message: '处理中...');
-});
-
-// ✅ 在 async/await 中调用
-Future<void> fetchData() async {
-  await Future.delayed(Duration(milliseconds: 100));
-  Pop.loading(message: '加载中...');
-  await api.fetch();
-  Pop.hideLoading();
-}
-
-// ✅ 在 Stream 监听中调用
-stream.listen((data) {
-  Pop.toast('收到数据: $data');
-});
-
-// ✅ 在 Timer 回调中调用
-Timer(Duration(seconds: 1), () {
-  Pop.confirm(content: '确认操作？');
-});
-
-// ✅ 在 postFrameCallback 中调用
-WidgetsBinding.instance.addPostFrameCallback((_) {
-  Pop.loading(message: '初始化中...');
-});
-
-// ✅ 在 build() 方法中直接调用（v1.1.11 新增支持）
-@override
-Widget build(BuildContext context) {
-  // 模拟 Get.put() 立即初始化场景
-  if (!_hasInitialized) {
-    _hasInitialized = true;
-    Pop.loading(message: '构建中调用 loading...');
-  }
-  return Scaffold(...);
-}
-```
-
-### Loading API 简化
-- `Pop.loading()` 不再返回 ID，改为返回 `void`
-- `Pop.hideLoading()` 不再需要参数
-- 整个应用同时只能有一个 loading，内部自动管理
-
-### PopupManager 增强
-- 新增 `PopupManager.hideByType(PopupType type)` 方法
-- 支持根据类型查找并关闭弹窗
-
-## 🔧 v1.1.6 更新
-
-### Toast 增强
-- 新增 `imgColor` 参数，可在调用 `Pop.toast` 时为自定义图片着色
-
-### Confirm 增强
-- 新增 `confirmBorder`、`cancelBorder` 参数，支持为按钮定制边框
-- Confirm 按钮改用容器结构渲染，背景色与边框自定义更直观一致
 
 ## 🔧 PopupManager 原理与 popupId 使用规则
 

@@ -72,6 +72,7 @@ abstract class Pop {
     bool barrierDismissible = false,
     ToastType toastType = ToastType.none,
     Duration animationDuration = const Duration(milliseconds: 200),
+    Curve? animationCurve,
     String? customImagePath,
     double? imageSize,
     Color? imgColor,
@@ -96,6 +97,7 @@ abstract class Pop {
         barrierDismissible: barrierDismissible,
         toastType: toastType,
         animationDuration: animationDuration,
+        animationCurve: animationCurve,
         customImagePath: customImagePath,
         imageSize: imageSize,
         imgColor: imgColor,
@@ -157,6 +159,7 @@ abstract class Pop {
     bool barrierDismissible = false,
     Color barrierColor = Colors.black54,
     Duration animationDuration = const Duration(milliseconds: 150),
+    Curve? animationCurve,
   }) =>
       _loadingImpl(
         message: message,
@@ -171,6 +174,7 @@ abstract class Pop {
         barrierDismissible: barrierDismissible,
         barrierColor: barrierColor,
         animationDuration: animationDuration,
+        animationCurve: animationCurve,
       );
 
   /// 隐藏 Loading。
@@ -247,6 +251,7 @@ abstract class Pop {
     Decoration? decoration,
     Widget? confirmChild,
     Duration animationDuration = const Duration(milliseconds: 250),
+    Curve? animationCurve,
   }) =>
       _confirmImpl(
         title: title,
@@ -274,6 +279,7 @@ abstract class Pop {
         decoration: decoration,
         confirmChild: confirmChild,
         animationDuration: animationDuration,
+        animationCurve: animationCurve,
       );
 
   /// 显示一个从指定方向滑出的 Sheet 面板。
@@ -339,6 +345,7 @@ abstract class Pop {
     bool dockToEdge = false,
     double? edgeGap,
     Duration animationDuration = const Duration(milliseconds: 400),
+    Curve? animationCurve,
   }) =>
       _sheetImpl<T>(
         childBuilder: childBuilder,
@@ -364,6 +371,7 @@ abstract class Pop {
         dockToEdge: dockToEdge,
         edgeGap: edgeGap,
         animationDuration: animationDuration,
+        animationCurve: animationCurve,
       );
 
   /// 显示一个日期选择弹窗。
@@ -408,6 +416,7 @@ abstract class Pop {
     double? height = 180.0,
     double? radius = 24.0,
     Duration animationDuration = const Duration(milliseconds: 250),
+    Curve? animationCurve,
   }) =>
     _dateImpl(
       initialDate: initialDate,
@@ -423,6 +432,7 @@ abstract class Pop {
       headerBg: headerBg,
       radius: radius,
       animationDuration: animationDuration,
+      animationCurve: animationCurve,
     );
 
 
@@ -454,6 +464,7 @@ abstract class Pop {
     Duration animationDuration = const Duration(milliseconds: 200),
     EdgeInsetsGeometry? padding,
     BoxConstraints? constraints,
+    Curve? animationCurve,
   }) =>
       _menuImpl<T>(
         anchorKey: anchorKey,
@@ -467,5 +478,6 @@ abstract class Pop {
         animationDuration: animationDuration,
         padding: padding,
         constraints: constraints,
+        animationCurve: animationCurve,
       );
 }
