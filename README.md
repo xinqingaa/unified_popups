@@ -783,6 +783,24 @@ WillPopScope(
 )
 ```
 
+### 5. 路由切换与自动清理
+
+`PopScopeWidget` 负责拦截系统返回键，而 `PopupRouteObserver` 则在路由 push/pop/replace 时主动关闭需要清理的弹窗（如 confirm 与 sheet），两者协同可覆盖绝大多数导航场景：
+
+```dart
+final navigatorKey = GlobalKey<NavigatorState>();
+
+MaterialApp(
+  navigatorKey: navigatorKey,
+  home: const PopScopeWidget(child: HomePage()),
+  navigatorObservers: const [PopupRouteObserver()],
+);
+```
+
+- confirm、sheet 默认会在路由切换时关闭，toast/loading 仍保持显示
+- 若需要覆写行为，可在创建弹窗时通过 `PopupConfig.dismissOnRouteChange` 指定
+- 路由切换关闭的是所有匹配弹窗；返回键只会关闭最近的非 Toast 弹窗，不会影响路由栈
+
 ## 🔧 PopupManager 原理与 popupId 使用规则
 
 ### 核心原理

@@ -42,10 +42,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       navigatorKey: navigatorKey,
       home: const PopScopeWidget(child: HomePage()),
+      navigatorObservers: const [PopupRouteObserver()],
     );
   }
 }
 ```
+
+> `PopScopeWidget` 拦截系统返回键并优先关闭弹窗；`PopupRouteObserver` 监听路由 push/pop/replace，在页面切换时自动关闭 confirm、sheet（可通过 `dismissOnRouteChange` 自定义）。
 
 ### 基本调用
 

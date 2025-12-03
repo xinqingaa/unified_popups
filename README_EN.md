@@ -525,6 +525,25 @@ All APIs default to `Curves.easeInOut`. Override `animationCurve` for bounce, el
 - **Back navigation**: wrap your root with `PopScopeWidget` or defer the system back button by checking `PopupManager.hasNonToastPopup`.
 - **Single-loading rule**: `Pop.loading()` already enforces a single instance. Prefer showing success/failure via toast once the operation completes.
 
+### Route changes vs. system back
+
+The overlay stack can be cleaned up in two complementary ways:
+
+```dart
+final navigatorKey = GlobalKey<NavigatorState>();
+
+MaterialApp(
+  navigatorKey: navigatorKey,
+  home: const PopScopeWidget(child: HomePage()),
+  navigatorObservers: const [PopupRouteObserver()],
+);
+```
+
+- `PopScopeWidget` intercepts the system back button (Android) or page-level pop gestures and closes the latest non-toast popup before letting the route pop.
+- `PopupRouteObserver` listens for Navigator push/pop/replace events and closes any popup whose `dismissOnRouteChange` evaluates to `true` (confirm & sheet by default; override via `PopupConfig.dismissOnRouteChange`).
+- Toast and loading always stay untouched by route changes to avoid breaking transient feedback.
+
+
 ## 🧠 PopupManager Essentials
 
 `PopupManager` keeps track of active overlays and exposes utility helpers:

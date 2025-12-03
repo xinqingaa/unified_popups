@@ -580,6 +580,13 @@ WillPopScope(
   child: HomePage(),
 );
 ```
+// ✅ 推荐：在 MaterialApp 注册 PopupRouteObserver
+MaterialApp(
+  navigatorKey: navigatorKey,
+  home: const PopScopeWidget(child: HomePage()),
+)
+```
+> PopScopeWidget 负责拦截系统返回键；PopupRouteObserver 监听 Navigator push/pop/replace，并自动关闭 `dismissOnRouteChange == true` 的弹窗（confirm/sheet 默认为true，可在 `PopupConfig` 上覆写）。
 
 ### 3. 弹窗重叠问题
 
