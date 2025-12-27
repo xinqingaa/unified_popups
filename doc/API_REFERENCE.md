@@ -37,7 +37,7 @@ abstract class Pop {
 
 ```dart
 static void toast(
-  String message, {
+  String? message, {
   PopupPosition position = PopupPosition.center,
   Duration duration = const Duration(milliseconds: 1200),
   bool showBarrier = false,
@@ -54,6 +54,7 @@ static void toast(
   Decoration? decoration,
   TextStyle? style,
   TextAlign? textAlign,
+  Widget? messageWidget,
   String? tMessage,
   String? tImagePath,
   ToastType? tToastType,
@@ -67,7 +68,8 @@ static void toast(
 
 | 参数 | 类型 | 默认值 | 必填 | 说明 |
 |------|------|--------|------|------|
-| `message` | `String` | - | ✅ | 要显示的消息文本 |
+| `message` | `String?` | - | ❌ | 要显示的消息文本（与 `messageWidget` 二选一） |
+| `messageWidget` | `Widget?` | `null` | ❌ | 自定义消息 Widget，如果提供则优先使用，忽略 `message` |
 | `position` | `PopupPosition` | `center` | ❌ | 显示位置 |
 | `duration` | `Duration` | `1200ms` | ❌ | 显示时长 |
 | `showBarrier` | `bool` | `false` | ❌ | 是否显示遮罩层 |
@@ -136,6 +138,18 @@ Pop.toast(
   imageSize: 32.0,
   imgColor: Colors.orange,
   layoutDirection: Axis.vertical, // 图片在上，文字在下
+);
+
+// Widget 自定义消息
+Pop.toast(
+  messageWidget: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(Icons.check_circle, color: Colors.green),
+      SizedBox(width: 8),
+      Text('操作成功', style: TextStyle(fontWeight: FontWeight.bold)),
+    ],
+  ),
 );
 
 // 自定义动画时长
@@ -262,10 +276,14 @@ static void hideLoading()
 ```dart
 static Future<bool?> confirm({
   String? title,
-  required String content,
+  Widget? titleWidget,
+  String? content,
+  Widget? contentWidget,
   PopupPosition position = PopupPosition.center,
-  String confirmText = 'confirm',
-  String? cancelText = 'cancel',
+  String? confirmText,
+  Widget? confirmButtonWidget,
+  String? cancelText,
+  Widget? cancelButtonWidget,
   bool showCloseButton = true,
   TextStyle? titleStyle,
   TextStyle? contentStyle,
@@ -285,6 +303,8 @@ static Future<bool?> confirm({
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
   Widget? confirmChild,
+  VoidCallback? onConfirm,
+  VoidCallback? onCancel,
   Duration animationDuration = const Duration(milliseconds: 250),
   Curve? animationCurve,
 })
@@ -294,11 +314,17 @@ static Future<bool?> confirm({
 
 | 参数 | 类型 | 默认值 | 必填 | 说明 |
 |------|------|--------|------|------|
-| `title` | `String?` | `null` | ❌ | 对话框标题 |
-| `content` | `String` | - | ✅ | 对话框内容 |
+| `title` | `String?` | `null` | ❌ | 对话框标题（与 `titleWidget` 二选一） |
+| `titleWidget` | `Widget?` | `null` | ❌ | 自定义标题 Widget，如果提供则优先使用，忽略 `title` |
+| `content` | `String?` | `null` | ❌ | 对话框内容（与 `contentWidget` 二选一） |
+| `contentWidget` | `Widget?` | `null` | ❌ | 自定义内容 Widget，如果提供则优先使用，忽略 `content` |
 | `position` | `PopupPosition` | `center` | ❌ | 显示位置 |
-| `confirmText` | `String` | `'confirm'` | ❌ | 确认按钮文本 |
-| `cancelText` | `String?` | `'cancel'` | ❌ | 取消按钮文本 |
+| `confirmText` | `String?` | `'confirm'` | ❌ | 确认按钮文本（与 `confirmButtonWidget` 二选一） |
+| `confirmButtonWidget` | `Widget?` | `null` | ❌ | 自定义确认按钮 Widget，如果提供则优先使用，忽略 `confirmText` |
+| `cancelText` | `String?` | `'cancel'` | ❌ | 取消按钮文本（与 `cancelButtonWidget` 二选一） |
+| `cancelButtonWidget` | `Widget?` | `null` | ❌ | 自定义取消按钮 Widget，如果提供则优先使用，忽略 `cancelText` |
+| `onConfirm` | `VoidCallback?` | `null` | ❌ | 确认按钮点击回调，在内部关闭逻辑之前执行 |
+| `onCancel` | `VoidCallback?` | `null` | ❌ | 取消按钮点击回调，在内部关闭逻辑之前执行 |
 | `showCloseButton` | `bool` | `true` | ❌ | 是否显示关闭按钮 |
 | `titleStyle` | `TextStyle?` | `null` | ❌ | 标题样式 |
 | `contentStyle` | `TextStyle?` | `null` | ❌ | 内容样式 |
@@ -392,6 +418,47 @@ final result = await Pop.confirm(
   cancelBgColor: Colors.pink,
 );
 
+// Widget 自定义 Confirm
+final result = await Pop.confirm(
+  titleWidget: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.warning, color: Colors.orange),
+      SizedBox(width: 8),
+      Text('Widget 标题'),
+    ],
+  ),
+  contentWidget: Column(
+    children: [
+      Text('这是自定义内容 Widget'),
+      SizedBox(height: 8),
+      Icon(Icons.info, color: Colors.blue),
+    ],
+  ),
+  confirmButtonWidget: Container(
+    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    decoration: BoxDecoration(
+      color: Colors.green,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.check, color: Colors.white),
+        SizedBox(width: 4),
+        Text('确认', style: TextStyle(color: Colors.white)),
+      ],
+    ),
+  ),
+  cancelButtonWidget: Text('取消', style: TextStyle(color: Colors.grey)),
+  onConfirm: () {
+    print('确认按钮被点击');
+  },
+  onCancel: () {
+    print('取消按钮被点击');
+  },
+);
+
 // 自定义动画时长
 final result = await Pop.confirm(
   title: '快速确认',
@@ -408,6 +475,7 @@ final result = await Pop.confirm(
 static Future<T?> sheet<T>({
   required Widget Function(void Function([T? result]) dismiss) childBuilder,
   String? title,
+  Widget? titleWidget,
   SheetDirection direction = SheetDirection.bottom,
   bool showCloseButton = false,
   bool? useSafeArea,
@@ -438,7 +506,8 @@ static Future<T?> sheet<T>({
 | 参数 | 类型 | 默认值 | 必填 | 说明 |
 |------|------|--------|------|------|
 | `childBuilder` | `Widget Function(void Function([T? result]) dismiss)` | - | ✅ | 内容构建器 |
-| `title` | `String?` | `null` | ❌ | 面板标题 |
+| `title` | `String?` | `null` | ❌ | 面板标题（与 `titleWidget` 二选一） |
+| `titleWidget` | `Widget?` | `null` | ❌ | 自定义标题 Widget，如果提供则优先使用，忽略 `title` |
 | `direction` | `SheetDirection` | `bottom` | ❌ | 滑出方向 |
 | `showCloseButton` | `bool` | `false` | ❌ | 是否显示关闭按钮 |
 | `useSafeArea` | `bool?` | `null` | ❌ | 是否使用安全区域 |
@@ -570,6 +639,22 @@ final result = await Pop.sheet<String>(
       title: Text('选项 ${index + 1}'),
       onTap: () => dismiss('option_${index + 1}'),
     ),
+  ),
+);
+
+// Widget 自定义标题
+await Pop.sheet<void>(
+  titleWidget: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.settings, color: Colors.blue),
+      SizedBox(width: 8),
+      Text('设置面板', style: TextStyle(fontWeight: FontWeight.bold)),
+    ],
+  ),
+  childBuilder: (dismiss) => Container(
+    padding: EdgeInsets.all(16),
+    child: Text('自定义标题内容'),
   ),
 );
 

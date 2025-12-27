@@ -80,6 +80,11 @@ class SheetPage extends StatelessWidget {
                 onPressed: _showAnchoredBottomSheet,
                 child: const Text('TabBar 顶部 Sheet'),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _showSheetWithWidgetTitle,
+                child: const Text('Widget 自定义标题 Sheet'),
+              ),
             ],
               ),
             ),
@@ -106,7 +111,7 @@ class SheetPage extends StatelessWidget {
     final result = await Pop.sheet<String>(
       title: '选择操作',
       useSafeArea: true,
-      showBarrier: false,
+      showBarrier: true,
       showCloseButton: true,
       childBuilder: (dismiss) => ListView(
         shrinkWrap: true,
@@ -196,8 +201,6 @@ class SheetPage extends StatelessWidget {
 
   void _showBottomMenu() async {
     final result = await Pop.sheet<String>(
-      animationCurve: Curves.easeInOutQuart,
-      animationDuration: const Duration(milliseconds: 1000),
       title: '选择一个水果 可滚动',
       direction: SheetDirection.bottom,
       imgPath: "assets/temp.png",
@@ -432,6 +435,33 @@ class SheetPage extends StatelessWidget {
                 ),
                 child: const Text('确定'),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSheetWithWidgetTitle() async {
+    await Pop.sheet<void>(
+      titleWidget: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.info, color: Colors.blue),
+          const SizedBox(width: 8),
+          const Text('Widget 标题', style: TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+      childBuilder: (dismiss) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('这是使用 Widget 自定义标题的 Sheet'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => dismiss(),
+              child: const Text('关闭'),
             ),
           ],
         ),

@@ -99,7 +99,7 @@ final result = await Pop.confirm(
 
 ```dart
 Pop.toast(
-  String message, {
+  String? message, {
   PopupPosition position = PopupPosition.center,
   Duration duration = const Duration(milliseconds: 1200),
   bool showBarrier = false,
@@ -116,6 +116,7 @@ Pop.toast(
   Decoration? decoration,
   TextStyle? style,
   TextAlign? textAlign,
+  Widget? messageWidget,
   String? tMessage,
   String? tImagePath,
   ToastType? tToastType,
@@ -126,7 +127,8 @@ Pop.toast(
 ```
 
 **参数说明：**
-- `message`：消息文本（必填）
+- `message`：消息文本（可选，与 `messageWidget` 二选一）
+- `messageWidget`：自定义消息 Widget（可选），如果提供则优先使用，忽略 `message`
 - `position`：显示位置，支持 `top`、`center`、`bottom`、`left`、`right`
 - `duration`：显示时长，默认 1.2 秒
 - `toastType`：提示类型，支持 `success`、`warn`、`error`、`none`
@@ -187,6 +189,18 @@ Pop.toast(
   onTap: () {
     print('Toast 状态已切换');
   },
+);
+
+// Widget 自定义消息
+Pop.toast(
+  messageWidget: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(Icons.check_circle, color: Colors.green),
+      SizedBox(width: 8),
+      Text('操作成功', style: TextStyle(fontWeight: FontWeight.bold)),
+    ],
+  ),
 );
 ```
 
@@ -261,10 +275,14 @@ Pop.loading(
 ```dart
 Future<bool?> confirm({
   String? title,
-  required String content,
+  Widget? titleWidget,
+  String? content,
+  Widget? contentWidget,
   PopupPosition position = PopupPosition.center,
-  String confirmText = 'confirm',
-  String? cancelText = 'cancel',
+  String? confirmText,
+  Widget? confirmButtonWidget,
+  String? cancelText,
+  Widget? cancelButtonWidget,
   bool showCloseButton = true,
   TextStyle? titleStyle,
   TextStyle? contentStyle,
@@ -284,12 +302,16 @@ Future<bool?> confirm({
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
   Widget? confirmChild,
+  VoidCallback? onConfirm,
+  VoidCallback? onCancel,
   Duration animationDuration = const Duration(milliseconds: 250),
   Curve? animationCurve,
 })
 ```
 
 **新增参数亮点：**
+- `titleWidget` / `contentWidget` / `confirmButtonWidget` / `cancelButtonWidget`：支持完全自定义标题、内容和按钮 Widget，优先于对应的 String 参数
+- `onConfirm` / `onCancel`：按钮点击回调，在内部关闭逻辑之前执行，允许外部完全接管按钮点击事件
 - `confirmBorder` / `cancelBorder`：允许自定义按钮边框样式
 - `animationCurve`：可自定义进出场曲线，默认 `Curves.easeInOut`
 
@@ -337,6 +359,47 @@ final result = await Pop.confirm(
   content: '快速确认操作',
   animationDuration: Duration(milliseconds: 150),
 );
+
+// Widget 自定义 Confirm
+final result = await Pop.confirm(
+  titleWidget: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.warning, color: Colors.orange),
+      SizedBox(width: 8),
+      Text('Widget 标题'),
+    ],
+  ),
+  contentWidget: Column(
+    children: [
+      Text('这是自定义内容 Widget'),
+      SizedBox(height: 8),
+      Icon(Icons.info, color: Colors.blue),
+    ],
+  ),
+  confirmButtonWidget: Container(
+    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    decoration: BoxDecoration(
+      color: Colors.green,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.check, color: Colors.white),
+        SizedBox(width: 4),
+        Text('确认', style: TextStyle(color: Colors.white)),
+      ],
+    ),
+  ),
+  cancelButtonWidget: Text('取消', style: TextStyle(color: Colors.grey)),
+  onConfirm: () {
+    print('确认按钮被点击');
+  },
+  onCancel: () {
+    print('取消按钮被点击');
+  },
+);
 ```
 
 ### Sheet 底部面板
@@ -347,6 +410,7 @@ final result = await Pop.confirm(
 Future<T?> sheet<T>({
   required Widget Function(void Function([T? result]) dismiss) childBuilder,
   String? title,
+  Widget? titleWidget,
   SheetDirection direction = SheetDirection.bottom,
   bool showCloseButton = false,
   bool? useSafeArea,
@@ -374,6 +438,8 @@ Future<T?> sheet<T>({
 
 **参数说明：**
 - `childBuilder`：内容构建器，接收 `dismiss` 函数用于关闭面板
+- `title`：标题文本（可选，与 `titleWidget` 二选一）
+- `titleWidget`：自定义标题 Widget（可选），如果提供则优先使用，忽略 `title`
 - `direction`：滑出方向，支持 `top`、`bottom`、`left`、`right`
 - `width`/`height`：尺寸，支持像素值和百分比
 - `useSafeArea`：是否使用安全区域
@@ -470,6 +536,22 @@ await Pop.sheet<void>(
   childBuilder: (dismiss) => Container(
     padding: EdgeInsets.all(16),
     child: Text('快速内容'),
+  ),
+);
+
+// Widget 自定义标题
+await Pop.sheet<void>(
+  titleWidget: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.settings, color: Colors.blue),
+      SizedBox(width: 8),
+      Text('设置面板', style: TextStyle(fontWeight: FontWeight.bold)),
+    ],
+  ),
+  childBuilder: (dismiss) => Container(
+    padding: EdgeInsets.all(16),
+    child: Text('自定义标题内容'),
   ),
 );
 ```
@@ -979,7 +1061,53 @@ WillPopScope(
 )
 ```
 
-#### 3. 错误处理
+#### 3. PopScopeWidget 与 PopupManager 搭配使用
+```dart
+// 示例：在示例工程中查看 PopupManagerPage 获取完整示例
+// 展示如何使用 PopScopeWidget 和 PopupManager.show 进行弹窗管理
+
+// 使用 PopScopeWidget 包装页面
+class MyPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return PopScopeWidget(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('弹窗管理示例'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              // 智能处理返回：有弹窗则关闭弹窗，否则返回上一页
+              PopupManager.maybePop(context);
+            },
+          ),
+        ),
+        body: Column(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                // 使用 PopupManager.show 直接创建自定义弹窗
+                PopupManager.show(
+                  PopupConfig(
+                    child: Container(
+                      padding: EdgeInsets.all(20),
+                      child: Text('自定义弹窗'),
+                    ),
+                    animation: PopupAnimation.fade,
+                  ),
+                );
+              },
+              child: Text('显示自定义弹窗'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+#### 4. 错误处理
 ```dart
 // 确保 Loading 在异常情况下也能被关闭
 Future<void> safeOperation() async {

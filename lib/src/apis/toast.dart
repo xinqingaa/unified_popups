@@ -1,7 +1,7 @@
 part of 'pop.dart';
 
 void _toastImpl(
-  String message, {
+  String? message, {
   // Popup 级别的配置
   required PopupPosition position,
   Duration duration = const Duration(milliseconds: 1200),
@@ -20,6 +20,8 @@ void _toastImpl(
   Decoration? decoration,
   TextStyle? style,
   TextAlign? textAlign,
+  // Widget 支持
+  Widget? messageWidget,
   // 切换功能相关参数
   String? tMessage,
   String? tImagePath,
@@ -40,6 +42,7 @@ void _toastImpl(
       child: ToastWidget(
         toastType: toastType,
         message: message,
+        messageWidget: messageWidget,
         customImagePath: customImagePath,
         imageSize: imageSize,
         imgColor: imgColor,

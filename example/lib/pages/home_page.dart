@@ -61,6 +61,12 @@ class HomePage extends StatelessWidget {
             subtitle: '异步场景测试（验证 SafeOverlayEntry 修复）',
             routeName: '/async',
           ),
+          _buildMenuItem(
+            context,
+            title: 'PopupManager',
+            subtitle: 'PopupManager.show 和 PopScopeWidget 搭配使用',
+            routeName: '/popup_manager',
+          ),
           const Divider(),
           // 你之前的日历页面入口
           // _buildMenuItem(

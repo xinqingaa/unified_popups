@@ -3,6 +3,7 @@ part of 'pop.dart';
 Future<T?> _sheetImpl<T>({
   required Widget Function(void Function([T? result]) dismiss) childBuilder,
   String? title,
+  Widget? titleWidget,
   SheetDirection direction = SheetDirection.bottom,
   bool? useSafeArea,
   // Widget 级别的样式配置
@@ -96,6 +97,7 @@ Future<T?> _sheetImpl<T>({
     PopupConfig(
       child: SheetWidget(
         title: title,
+        titleWidget: titleWidget,
         direction: direction,
         showCloseButton: showCloseButton, // 传递新参数
         onClose: () => dismiss(null), // 传递关闭回调

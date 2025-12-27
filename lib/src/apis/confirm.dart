@@ -2,10 +2,14 @@ part of 'pop.dart';
 
 Future<bool?> _confirmImpl({
   String? title,
-  required String content,
+  Widget? titleWidget,
+  String? content,
+  Widget? contentWidget,
   required PopupPosition position,
   String? confirmText,
+  Widget? confirmButtonWidget,
   String? cancelText,
+  Widget? cancelButtonWidget,
   String? imagePath,
   double? imageHeight,
   double? imageWidth,
@@ -25,6 +29,8 @@ Future<bool?> _confirmImpl({
   EdgeInsetsGeometry? margin,
   Decoration? decoration,
   Widget? confirmChild,
+  VoidCallback? onConfirm,
+  VoidCallback? onCancel,
   Duration animationDuration = const Duration(milliseconds: 250),
   Curve? animationCurve,
 }) {
@@ -48,9 +54,13 @@ Future<bool?> _confirmImpl({
     PopupConfig(
       child: ConfirmWidget(
         title: title,
+        titleWidget: titleWidget,
         content: content,
+        contentWidget: contentWidget,
         confirmText: confirmText,
+        confirmButtonWidget: confirmButtonWidget,
         cancelText: cancelText,
+        cancelButtonWidget: cancelButtonWidget,
         showCloseButton: showCloseButton,
         imagePath: imagePath,
         imageHeight: imageHeight,
@@ -60,8 +70,14 @@ Future<bool?> _confirmImpl({
         buttonBorderRadius: buttonBorderRadius,
         confirmBorder: confirmBorder,
         cancelBorder: cancelBorder,
-        onConfirm: () => dismiss(true),
-        onCancel: () => dismiss(false),
+        onConfirm: () {
+          onConfirm?.call();
+          dismiss(true);
+        },
+        onCancel: () {
+          onCancel?.call();
+          dismiss(false);
+        },
         onClose: () => dismiss(null), // 关闭按钮的回调
         // --- 传递样式参数 ---
         titleStyle: titleStyle,

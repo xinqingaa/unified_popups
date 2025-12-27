@@ -6,6 +6,7 @@ import 'pages/async_page.dart';
 import 'pages/dialog_page.dart';
 import 'pages/home_page.dart';
 import 'pages/loading_page.dart';
+import 'pages/popup_manager_page.dart';
 import 'pages/sheet_page.dart';
 import 'pages/toast_page.dart';
 
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         '/anchored': (context) => const AnchoredPage(),
         '/date': (context) => const DatePage(),
         '/async': (context) => const AsyncPage(),
+        '/popup_manager': (context) => const PopupManagerPage(),
       },
     );
   }

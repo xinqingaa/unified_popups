@@ -79,13 +79,21 @@ Pop.toast(
   animationCurve: Curves.easeInOut,
   customImagePath: 'assets/icon.png',
   layoutDirection: Axis.horizontal,
+  messageWidget: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(Icons.check_circle, color: Colors.green),
+      SizedBox(width: 8),
+      Text('操作成功'),
+    ],
+  ),
   tMessage: '切换内容',
   tImagePath: 'assets/alt.png',
   toggleable: true,
 );
 ```
 
-> 通过 `tMessage` / `tImagePath` + `toggleable` 可实现点击切换；`showBarrier`/`barrierDismissible` 可控制遮罩。
+> 通过 `messageWidget` 可完全自定义消息内容；通过 `tMessage` / `tImagePath` + `toggleable` 可实现点击切换；`showBarrier`/`barrierDismissible` 可控制遮罩。
 
 ### Loading 加载指示器
 
@@ -107,22 +115,60 @@ Pop.loading(
 ```dart
 final result = await Pop.confirm(
   title: '危险操作',
+  titleWidget: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.warning, color: Colors.orange),
+      SizedBox(width: 8),
+      Text('Widget 标题'),
+    ],
+  ),
   content: '此操作不可撤销！',
+  contentWidget: Column(
+    children: [
+      Text('这是自定义内容 Widget'),
+      Icon(Icons.info, color: Colors.blue),
+    ],
+  ),
   confirmText: '删除',
+  confirmButtonWidget: Container(
+    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    decoration: BoxDecoration(
+      color: Colors.red,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Text('删除', style: TextStyle(color: Colors.white)),
+  ),
   cancelText: '取消',
   confirmBgColor: Colors.red,
   confirmBorder: Border.all(color: Colors.redAccent),
   buttonLayout: ConfirmButtonLayout.column,
   confirmChild: TextField(decoration: InputDecoration(labelText: '备注')),
+  onConfirm: () {
+    print('确认按钮被点击');
+  },
+  onCancel: () {
+    print('取消按钮被点击');
+  },
   animationCurve: Curves.easeOutCubic,
 );
 ```
+
+> 通过 `titleWidget`、`contentWidget`、`confirmButtonWidget`、`cancelButtonWidget` 可完全自定义标题、内容和按钮；通过 `onConfirm` 和 `onCancel` 回调可完全接管按钮点击事件。
 
 ### Sheet 底部/侧边面板
 
 ```dart
 final value = await Pop.sheet<String>(
   title: '选择操作',
+  titleWidget: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.settings, color: Colors.blue),
+      SizedBox(width: 8),
+      Text('设置面板', style: TextStyle(fontWeight: FontWeight.bold)),
+    ],
+  ),
   direction: SheetDirection.bottom,
   dockToEdge: true,
   showBarrier: true,
@@ -138,6 +184,8 @@ final value = await Pop.sheet<String>(
   animationCurve: Curves.easeOutQuint,
 );
 ```
+
+> 通过 `titleWidget` 可完全自定义标题 Widget。
 
 ### Date 日期选择器
 
@@ -188,6 +236,8 @@ ElevatedButton(
 - `PopupManager.show(PopupConfig)`：直接插入自定义弹窗
 - `PopupManager.hide(String id)` / `hideLast()` / `hideAll()` / `hideByType(type)`：按需关闭
 - `PopupManager.hasNonToastPopup`：判断是否存在遮挡页面的弹窗，可结合 `PopScopeWidget` 或 `WillPopScope` 优雅拦截返回键
+- `PopupManager.maybePop(context)`：智能处理返回，有弹窗则关闭弹窗，否则返回上一页
+- 示例工程中提供了 `PopupManagerPage` 示例页面，展示 `PopScopeWidget` 和 `PopupManager.show` 的搭配使用
 
 ## 🔗 更多资源
 

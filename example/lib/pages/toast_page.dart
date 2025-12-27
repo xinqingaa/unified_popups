@@ -97,6 +97,22 @@ class ToastPage extends StatelessWidget {
                 ),
                 child: const Text('可切换 Toast（平衡锁定/重力感应）'),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => Pop.toast(
+                  null,
+                  messageWidget: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text('使用 Widget 自定义内容'),
+                    ],
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+                child: const Text('Widget 自定义 Toast'),
+              ),
             ],
           ),
         ),

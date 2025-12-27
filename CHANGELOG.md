@@ -1,7 +1,26 @@
 # Changelog
 
-## [1.2.0]
-- Add 
+## [1.2.1]
+
+### Added
+- **Widget 自定义支持**
+  - `Pop.toast()` 新增 `messageWidget` 参数，支持完全自定义消息内容 Widget
+  - `Pop.confirm()` 新增 `titleWidget`、`contentWidget`、`confirmButtonWidget`、`cancelButtonWidget` 参数，支持完全自定义标题、内容和按钮 Widget
+  - `Pop.sheet()` 新增 `titleWidget` 参数，支持完全自定义标题 Widget
+  - 所有 Widget 参数优先于对应的 String 参数，提供更灵活的定制能力
+
+- **Confirm 回调增强**
+  - `Pop.confirm()` 新增 `onConfirm` 和 `onCancel` 回调参数
+  - 回调在内部关闭逻辑之前执行，允许外部完全接管按钮点击事件
+  - 保留原有的 `Future<bool?>` 返回值机制，向后兼容
+
+- **示例页面**
+  - 新增 `PopupManagerPage` 示例页面，展示 `PopScopeWidget` 和 `PopupManager.show` 的搭配使用
+  - 演示返回键处理、多弹窗管理、弹窗状态监听等场景
+
+## 【1.2.0】
+### Added
+- 新增 `animationCurve` 参数，支持动态配置动画类型
 
 ## [1.1.17]
 - Add `PopupRouteObserver`.

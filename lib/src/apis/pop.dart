@@ -29,7 +29,8 @@ abstract class Pop {
   /// 显示一个 Toast 消息。
   ///
   /// 参数：
-  /// - [message]：消息文本（必填）。
+  /// - [message]：消息文本（可选，与 messageWidget 二选一）。
+  /// - [messageWidget]：自定义消息 Widget（可选），如果提供则优先使用，忽略 message。
   /// - [position]：显示位置，默认 `PopupPosition.center`（居中）。
   /// - [duration]：显示时长，默认 `1200ms`。到时自动关闭。
   /// - [showBarrier]：是否显示遮罩层，默认 `false`。通常 toast 不需要遮罩。
@@ -65,7 +66,7 @@ abstract class Pop {
   /// );
   /// ```
   static void toast(
-    String message, {
+    String? message, {
     PopupPosition position = PopupPosition.center,
     Duration duration = const Duration(milliseconds: 1200),
     bool showBarrier = false,
@@ -82,6 +83,7 @@ abstract class Pop {
     Decoration? decoration,
     TextStyle? style,
     TextAlign? textAlign,
+    Widget? messageWidget,
     String? tMessage,
     String? tImagePath,
     ToastType? tToastType,
@@ -107,6 +109,7 @@ abstract class Pop {
         decoration: decoration,
         style: style,
         textAlign: textAlign,
+        messageWidget: messageWidget,
         tMessage: tMessage,
         tImagePath: tImagePath,
         tToastType: tToastType,
@@ -227,10 +230,14 @@ abstract class Pop {
   /// ```
   static Future<bool?> confirm({
     String? title,
-    required String content,
+    Widget? titleWidget,
+    String? content,
+    Widget? contentWidget,
     PopupPosition position = PopupPosition.center,
-    String confirmText = 'confirm',
-    String? cancelText = 'cancel',
+    String? confirmText,
+    Widget? confirmButtonWidget,
+    String? cancelText,
+    Widget? cancelButtonWidget,
     bool showCloseButton = true,
     TextStyle? titleStyle,
     TextStyle? contentStyle,
@@ -250,15 +257,21 @@ abstract class Pop {
     EdgeInsetsGeometry? margin,
     Decoration? decoration,
     Widget? confirmChild,
+    VoidCallback? onConfirm,
+    VoidCallback? onCancel,
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve? animationCurve,
   }) =>
       _confirmImpl(
         title: title,
+        titleWidget: titleWidget,
         content: content,
+        contentWidget: contentWidget,
         position: position,
-        confirmText: confirmText,
+        confirmText: confirmText ?? 'confirm',
+        confirmButtonWidget: confirmButtonWidget,
         cancelText: cancelText,
+        cancelButtonWidget: cancelButtonWidget,
         imagePath: imagePath,
         imageHeight: imageHeight,
         imageWidth: imageWidth,
@@ -278,6 +291,8 @@ abstract class Pop {
         margin: margin,
         decoration: decoration,
         confirmChild: confirmChild,
+        onConfirm: onConfirm,
+        onCancel: onCancel,
         animationDuration: animationDuration,
         animationCurve: animationCurve,
       );
@@ -324,6 +339,7 @@ abstract class Pop {
   static Future<T?> sheet<T>({
     required Widget Function(void Function([T? result]) dismiss) childBuilder,
     String? title,
+    Widget? titleWidget,
     SheetDirection direction = SheetDirection.bottom,
     bool showCloseButton = false,
     bool? useSafeArea,
@@ -350,6 +366,7 @@ abstract class Pop {
       _sheetImpl<T>(
         childBuilder: childBuilder,
         title: title,
+        titleWidget: titleWidget,
         direction: direction,
         imgPath: imgPath,
         showCloseButton: showCloseButton,

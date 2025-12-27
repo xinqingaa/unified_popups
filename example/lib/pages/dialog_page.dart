@@ -47,12 +47,15 @@ class DialogPage extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   final result = await Pop.confirm(
+                    // padding: EdgeInsets.zero,
                     title: 'Confirm Deletion',
                     content: 'Are you sure you want to delete this item?',
                     imagePath: "assets/img.png",
+                    confirmText: 'I know',
+                    cancelText: 'I don\'t know',
                     buttonLayout:ConfirmButtonLayout.column
                   );
-                  print('Confirm result: $result');
+                  debugPrint('Confirm result: $result');
                 },
                 child: const Text('双按钮（行） Confirm Dialog 带图片'),
               ),
@@ -63,10 +66,12 @@ class DialogPage extends StatelessWidget {
                     title: 'Confirm Deletion',
                     content: 'Are you sure you want to delete this item?',
                     imagePath: "assets/img.png",
+                    confirmText: 'I know',
+                    cancelText: 'I don\'t know',
                     cancelBorder: Border.all(color: Colors.blue , width: 2),
                     confirmBorder: Border.all(color: Colors.black),
                   );
-                  print('Confirm result: $result');
+                  debugPrint('Confirm result: $result');
                 },
                 child: const Text('双按钮（列） Confirm Dialog 带图片'),
               ),
@@ -93,7 +98,7 @@ class DialogPage extends StatelessWidget {
                     buttonLayout:ConfirmButtonLayout.column,
                     position: PopupPosition.bottom
                   );
-                  print('Confirm result: $result');
+                  debugPrint('Confirm result: $result');
                 },
                 child: const Text(' Confirm Dialog 底部'),
               ),
@@ -180,7 +185,64 @@ class DialogPage extends StatelessWidget {
                 },
                 child: const Text('危险操作确认框'),
               ),
-              
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await Pop.confirm(
+                    titleWidget: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.warning, color: Colors.orange),
+                        SizedBox(width: 8),
+                        Text('Widget 标题'),
+                      ],
+                    ),
+                    contentWidget: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('这是使用 Widget 自定义的内容'),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text('可以包含任意 Widget'),
+                        ),
+                      ],
+                    ),
+                    confirmButtonWidget: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: const Center(
+                        child: Text('自定义确认按钮', style: TextStyle(color: Colors.white)),
+                      ),
+                    ),
+                    cancelButtonWidget: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: const Center(
+                        child: Text('自定义取消按钮', style: TextStyle(color: Colors.white)),
+                      ),
+                    ),
+                    onConfirm: () {
+                      debugPrint('确认按钮被点击');
+                    },
+                    onCancel: () {
+                      debugPrint('取消按钮被点击');
+                    },
+                  );
+                  debugPrint('Confirm result: $result');
+                },
+                child: const Text('Widget 自定义 Confirm'),
+              ),
             ],
           ),
         ),

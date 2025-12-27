@@ -5,6 +5,7 @@ import '../core/popup_manager.dart';
 
 class SheetWidget extends StatefulWidget {
   final String? title;
+  final Widget? titleWidget;
   final Widget child;
   final SheetDirection direction;
   final bool showCloseButton;
@@ -44,6 +45,7 @@ class SheetWidget extends StatefulWidget {
   const SheetWidget({
     super.key,
     this.title,
+    this.titleWidget,
     required this.child,
     this.direction = SheetDirection.bottom,
     this.showCloseButton = false, // 默认不显示
@@ -244,21 +246,26 @@ class _SheetWidgetState extends State<SheetWidget> {
 
     // 标题和关闭按钮的组合
     Widget? titleBar;
-    if (widget.title != null || widget.showCloseButton) {
+    if (widget.title != null || widget.titleWidget != null || widget.showCloseButton) {
       final titleContent  = Padding(
         padding: widget.titlePadding ?? defaultTitlePadding,
         child: Stack(
           children: [
-            // 标题占据主要空间
-            widget.title != null ? Center(
-              child: Text(
-                widget.title!,
-                style: widget.titleStyle ?? defaultTitleStyle,
-                textAlign: widget.titleAlign ?? defaultTitleAlign,
-                maxLines: null,
-                overflow: TextOverflow.visible,
-              ),
-            ) : const SizedBox.shrink(),
+            // 标题占据主要空间：优先使用 titleWidget，否则使用 title
+            if (widget.titleWidget != null)
+              Center(child: widget.titleWidget!)
+            else if (widget.title != null)
+              Center(
+                child: Text(
+                  widget.title!,
+                  style: widget.titleStyle ?? defaultTitleStyle,
+                  textAlign: widget.titleAlign ?? defaultTitleAlign,
+                  maxLines: null,
+                  overflow: TextOverflow.visible,
+                ),
+              )
+            else
+              const SizedBox.shrink(),
 
             if (widget.showCloseButton && widget.direction == SheetDirection.bottom)
               Positioned(

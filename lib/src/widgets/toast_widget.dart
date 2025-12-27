@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
 
 class ToastWidget extends StatefulWidget {
-  final String message;
+  final String? message;
+  final Widget? messageWidget;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Decoration? decoration;
@@ -25,7 +26,8 @@ class ToastWidget extends StatefulWidget {
 
   const ToastWidget({
     super.key,
-    required this.message,
+    this.message,
+    this.messageWidget,
     this.toastType,
     this.customImagePath,
     this.imageSize,
@@ -132,21 +134,31 @@ class _ToastWidgetState extends State<ToastWidget> {
       );
     }
     
-    // 构建文字 Widget
-    final textWidget = Flexible(
-      child: Text(
-        currentMessage,
-        style: widget.style ?? defaultStyle,
-        textAlign: widget.textAlign ?? TextAlign.start,
-        maxLines: null,
-        overflow: TextOverflow.visible,
-      ),
-    );
+    // 构建内容 Widget：优先使用 messageWidget，否则使用 message（String）
+    Widget contentWidget;
+    if (widget.messageWidget != null) {
+      // 使用自定义 Widget
+      contentWidget = Flexible(child: widget.messageWidget!);
+    } else if (currentMessage != null) {
+      // 使用 String 文本
+      contentWidget = Flexible(
+        child: Text(
+          currentMessage,
+          style: widget.style ?? defaultStyle,
+          textAlign: widget.textAlign ?? TextAlign.start,
+          maxLines: null,
+          overflow: TextOverflow.visible,
+        ),
+      );
+    } else {
+      // 如果都没有提供，显示空内容
+      contentWidget = const SizedBox.shrink();
+    }
     
     // 根据布局方向决定使用 Row 还是 Column
     Widget content;
     if (widget.layoutDirection == Axis.vertical) {
-      // Column 布局：图片在上，文字在下
+      // Column 布局：图片在上，内容在下
       content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -154,11 +166,11 @@ class _ToastWidgetState extends State<ToastWidget> {
             imageWidget,
             const SizedBox(height: 12),
           ],
-          textWidget,
+          contentWidget,
         ],
       );
     } else {
-      // Row 布局：图片在左，文字在右（保持原有行为）
+      // Row 布局：图片在左，内容在右（保持原有行为）
       content = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -168,7 +180,7 @@ class _ToastWidgetState extends State<ToastWidget> {
               child: imageWidget,
             ),
           ],
-          textWidget,
+          contentWidget,
         ],
       );
     }

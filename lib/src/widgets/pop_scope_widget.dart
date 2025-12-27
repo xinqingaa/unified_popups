@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../unified_popups.dart';
 
-
 class PopScopeWidget extends StatelessWidget {
   final Widget child;
   const PopScopeWidget({super.key, required this.child});

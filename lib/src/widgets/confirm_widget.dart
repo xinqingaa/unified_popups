@@ -17,9 +17,13 @@ class ConfirmWidget extends StatelessWidget {
   final BorderRadiusGeometry? buttonBorderRadius;
 
   final String? title;
-  final String content;
+  final Widget? titleWidget;
+  final String? content;
+  final Widget? contentWidget;
   final String? confirmText;
+  final Widget? confirmButtonWidget;
   final String? cancelText;
+  final Widget? cancelButtonWidget;
   final bool showCloseButton;
 
   final TextStyle? titleStyle;
@@ -35,7 +39,7 @@ class ConfirmWidget extends StatelessWidget {
   final Decoration? decoration;
   final Widget? confirmChild;
 
-  final VoidCallback onConfirm;
+  final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
   final VoidCallback? onClose;
 
@@ -45,14 +49,18 @@ class ConfirmWidget extends StatelessWidget {
     this.imageHeight,
     this.imageWidth,
     this.title,
-    required this.content,
-    required this.confirmText,
+    this.titleWidget,
+    this.content,
+    this.contentWidget,
+    this.confirmText,
+    this.confirmButtonWidget,
     this.cancelText,
+    this.cancelButtonWidget,
     this.showCloseButton = false,
     this.textAlign,
     this.buttonLayout ,
     this.buttonBorderRadius,
-    required this.onConfirm,
+    this.onConfirm,
     this.onCancel,
     this.onClose,
     this.padding,
@@ -67,8 +75,16 @@ class ConfirmWidget extends StatelessWidget {
     this.confirmBorder,
     this.cancelBorder,
     this.confirmChild
-  }) : assert(cancelText == null || onCancel != null,
-  'onCancel must be provided if cancelText is not null.');
+  }) : assert(
+    (content != null || contentWidget != null),
+    'Either content or contentWidget must be provided.',
+  ), assert(
+    (confirmText != null || confirmButtonWidget != null),
+    'Either confirmText or confirmButtonWidget must be provided.',
+  ), assert(
+    cancelText == null || cancelButtonWidget == null || onCancel != null,
+    'onCancel must be provided if cancelText or cancelButtonWidget is not null.',
+  );
 
 
   @override
@@ -85,7 +101,7 @@ class ConfirmWidget extends StatelessWidget {
     // 焦点管理：在操作前收起键盘
     void handleConfirm() {
       FocusScope.of(context).unfocus();
-      onConfirm();
+      onConfirm?.call();
     }
 
     void handleCancel() {
@@ -99,7 +115,7 @@ class ConfirmWidget extends StatelessWidget {
     }
 
     // 内部内容
-    final contentWidget = Column(
+    final mainContent = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -111,12 +127,18 @@ class ConfirmWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
         ],
-        if (title != null) ...[
-          // ?? TextAlign.center
+        if (titleWidget != null) ...[
+          titleWidget!,
+          const SizedBox(height: 12),
+        ] else if (title != null) ...[
           Text(title!, style: titleStyle ?? defaultTitleStyle, textAlign: textAlign, maxLines: null, overflow: TextOverflow.visible),
           const SizedBox(height: 12),
         ],
-        Text(content, style: contentStyle ?? defaultContentStyle, textAlign: textAlign, maxLines: null, overflow: TextOverflow.visible),
+        if (contentWidget != null) ...[
+          contentWidget!,
+        ] else if (content != null) ...[
+          Text(content!, style: contentStyle ?? defaultContentStyle, textAlign: textAlign, maxLines: null, overflow: TextOverflow.visible),
+        ],
         if (confirmChild != null) ...[
           const SizedBox(height: 12),
           confirmChild!,
@@ -143,7 +165,7 @@ class ConfirmWidget extends StatelessWidget {
               physics: const ClampingScrollPhysics(),
               child: Padding(
                 padding: padding ?? defaultPadding,
-                child: contentWidget,
+                child: mainContent,
               ),
             ),
             if (showCloseButton)
@@ -173,7 +195,7 @@ class ConfirmWidget extends StatelessWidget {
     // 取消按钮文字颜色默认为确认按钮的背景色
     final defaultCancelTextStyle = TextStyle(color: effectiveConfirmBgColor, fontSize: 14, fontWeight: FontWeight.w500);
 
-    Widget buildButton({
+    Widget buildTextButton({
       required String text,
       VoidCallback? onTap,
       Color? backgroundColor,
@@ -195,25 +217,45 @@ class ConfirmWidget extends StatelessWidget {
       );
     }
 
-    final confirmButton = buildButton(
-      text: confirmText!,
-      onTap: onConfirmTap,
-      backgroundColor: effectiveConfirmBgColor,
-      textStyle: confirmStyle ?? defaultConfirmTextStyle,
-      border: confirmBorder,
-    );
-
-    if (cancelText == null) {
-      return confirmButton;
+    // 构建确认按钮：优先使用 confirmButtonWidget，否则使用 confirmText
+    Widget confirmButton;
+    if (confirmButtonWidget != null) {
+      confirmButton = GestureDetector(
+        onTap: onConfirmTap,
+        child: confirmButtonWidget!,
+      );
+    } else if (confirmText != null) {
+      confirmButton = buildTextButton(
+        text: confirmText!,
+        onTap: onConfirmTap,
+        backgroundColor: effectiveConfirmBgColor,
+        textStyle: confirmStyle ?? defaultConfirmTextStyle,
+        border: confirmBorder,
+      );
+    } else {
+      confirmButton = const SizedBox.shrink();
     }
 
-    final cancelButton = buildButton(
-      text: cancelText!,
-      onTap: onCancelTap,
-      backgroundColor: cancelBgColor ?? Colors.black12,
-      textStyle: cancelStyle ?? defaultCancelTextStyle,
-      border: cancelBorder,
-    );
+    // 构建取消按钮：优先使用 cancelButtonWidget，否则使用 cancelText
+    Widget? cancelButton;
+    if (cancelButtonWidget != null) {
+      cancelButton = GestureDetector(
+        onTap: onCancelTap,
+        child: cancelButtonWidget!,
+      );
+    } else if (cancelText != null) {
+      cancelButton = buildTextButton(
+        text: cancelText!,
+        onTap: onCancelTap,
+        backgroundColor: cancelBgColor ?? Colors.black12,
+        textStyle: cancelStyle ?? defaultCancelTextStyle,
+        border: cancelBorder,
+      );
+    }
+
+    if (cancelButton == null) {
+      return confirmButton;
+    }
 
     // 根据 buttonLayout 返回不同的布局
     if (buttonLayout == ConfirmButtonLayout.column) {
