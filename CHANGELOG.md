@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.1]
+## [1.2.2]
 
 ### Performance Optimizations ⚡
 
@@ -32,6 +32,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 改进动画资源生命周期管理
 
 ---
+
+## [1.2.1]
+
+### Added
+##### Widget 自定义支持
+
+- Pop.toast() 新增 messageWidget 参数，支持完全自定义消息内容 Widget
+- Pop.confirm() 新增 titleWidget、contentWidget、confirmButtonWidget、cancelButtonWidget 参数，支持完全自定义标题、内容和按钮 Widget
+- Pop.sheet() 新增 titleWidget 参数，支持完全自定义标题 Widget
+- 所有 Widget 参数优先于对应的 String 参数，提供更灵活的定制能力
+
+#### Confirm 回调增强
+
+- Pop.confirm() 新增 onConfirm 和 onCancel 回调参数
+- 回调在内部关闭逻辑之前执行，允许外部完全接管按钮点击事件
+- 保留原有的 Future<bool?> 返回值机制，向后兼容
+
+> 示例页面
+> 新增 PopupManagerPage 示例页面，展示 PopScopeWidget 和 PopupManager.show 的搭配使用
+
 
 ## [1.2.0]
 
