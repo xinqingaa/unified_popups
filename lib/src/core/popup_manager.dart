@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../utils/animation_controller_pool.dart';
+
 part '../models/popup_config.dart';
 part '../models/popup_enums.dart';
 part '../widgets/popup_layout.dart';
@@ -128,10 +130,11 @@ class PopupManager {
     final popupId =
         'popup_${DateTime.now().microsecondsSinceEpoch}_${_instance._popups.length}';
 
-    // 1. 为新弹窗创建独立的 AnimationController
-    final animationController = AnimationController(
-      vsync: overlay,
-      duration: config.animationDuration,
+    // 1. 为新弹窗获取 AnimationController（优先从对象池获取）
+    final animationController = AnimationControllerPool().acquire(
+      overlay,
+      config.animationDuration,
+      debugLabel: 'popup_${config.type}',
     );
 
 
@@ -213,7 +216,8 @@ class PopupManager {
       if (popupInfo.entry.mounted) {
         popupInfo.entry.remove();
       }
-      popupInfo.controller.dispose();
+      // 释放 AnimationController 回对象池（而不是直接 dispose）
+      AnimationControllerPool().release(popupInfo.controller);
 
       // 调用保存的回调
       popupInfo.onDismissCallback?.call();

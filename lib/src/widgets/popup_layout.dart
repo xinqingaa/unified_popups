@@ -26,10 +26,34 @@ class _PopupLayoutState extends State<_PopupLayout> {
   Offset? _smartPosition;
   // 原始计算的初始位置（未调整前）
   Offset? _originalPosition;
-  // 屏幕尺寸
-  Size? _screenSize;
+  // 缓存的屏幕尺寸
+  Size? _cachedScreenSize;
+  // 屏幕尺寸缓存是否需要更新
+  bool _screenSizeDirty = true;
+  // 缓存的 RenderBox 引用
+  RenderBox? _cachedAnchorRenderBox;
+  RenderBox? _cachedContentRenderBox;
   // 最小边距
   static const double _minMargin = 8.0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 当依赖变化时（如屏幕方向、键盘状态等），标记屏幕尺寸需要更新
+    _screenSizeDirty = true;
+    // 清空 RenderBox 缓存，因为布局可能已改变
+    _cachedAnchorRenderBox = null;
+    _cachedContentRenderBox = null;
+  }
+
+  /// 获取屏幕尺寸（带缓存）
+  Size get _screenSize {
+    if (_screenSizeDirty || _cachedScreenSize == null) {
+      _cachedScreenSize = MediaQuery.of(context).size;
+      _screenSizeDirty = false;
+    }
+    return _cachedScreenSize!;
+  }
 
   @override
   void initState() {
@@ -65,10 +89,13 @@ class _PopupLayoutState extends State<_PopupLayout> {
   void _calculateAnchorPosition() {
     final key = widget.config.anchorKey;
     if (key?.currentContext != null) {
-      final renderBox = key!.currentContext!.findRenderObject() as RenderBox;
-      final position = renderBox.localToGlobal(Offset.zero);
-      final size = renderBox.size;
-      if (mounted) {
+      // 使用缓存的 RenderBox（如果存在且有效）
+      _cachedAnchorRenderBox ??=
+          key!.currentContext!.findRenderObject() as RenderBox?;
+
+      if (_cachedAnchorRenderBox != null && mounted) {
+        final position = _cachedAnchorRenderBox!.localToGlobal(Offset.zero);
+        final size = _cachedAnchorRenderBox!.size;
         setState(() {
           _anchorPosition = position;
           _anchorSize = size;
@@ -79,22 +106,23 @@ class _PopupLayoutState extends State<_PopupLayout> {
 
   // 计算智能位置，返回 true 表示计算成功，false 表示需要重试
   bool _calculateSmartPosition() {
-    if (_anchorPosition == null || _anchorSize == null || _screenSize == null) {
+    if (_anchorPosition == null || _anchorSize == null) {
       return false;
     }
-    
-    // 获取菜单内容的实际大小
+
+    // 获取菜单内容的实际大小（使用缓存的 RenderBox）
     final context = _contentKey.currentContext;
     if (context == null) {
       return false;
     }
-    
-    final contentRenderBox = context.findRenderObject() as RenderBox?;
-    if (contentRenderBox == null || !contentRenderBox.hasSize) {
+
+    // 使用缓存的 RenderBox（如果存在）
+    _cachedContentRenderBox ??= context.findRenderObject() as RenderBox?;
+    if (_cachedContentRenderBox == null || !_cachedContentRenderBox!.hasSize) {
       return false;
     }
-    
-    final contentSize = contentRenderBox.size;
+
+    final contentSize = _cachedContentRenderBox!.size;
     
     // 计算初始位置（保持左对齐）
     double left = _anchorPosition!.dx + widget.config.anchorOffset.dx;
@@ -104,10 +132,10 @@ class _PopupLayoutState extends State<_PopupLayout> {
     _originalPosition = Offset(left, top);
     
     // 检查右边缘是否溢出
-    if (left + contentSize.width > _screenSize!.width - _minMargin) {
+    if (left + contentSize.width > _screenSize.width - _minMargin) {
       // 右边缘会溢出，调整位置
       // 优先尝试：将菜单向右移动到不溢出（保持左对齐）
-      final maxLeft = _screenSize!.width - contentSize.width - _minMargin;
+      final maxLeft = _screenSize.width - contentSize.width - _minMargin;
       if (maxLeft >= _minMargin) {
         // 有足够空间，调整到不溢出的位置
         left = maxLeft;
@@ -121,10 +149,10 @@ class _PopupLayoutState extends State<_PopupLayout> {
     }
     
     // 检查底部是否溢出
-    if (top + contentSize.height > _screenSize!.height - _minMargin) {
+    if (top + contentSize.height > _screenSize.height - _minMargin) {
       // 底部会溢出，向上调整
       // 优先尝试：将菜单向上移动到不溢出
-      final maxTop = _screenSize!.height - contentSize.height - _minMargin;
+      final maxTop = _screenSize.height - contentSize.height - _minMargin;
       if (maxTop >= _minMargin) {
         top = maxTop;
       } else {
@@ -146,10 +174,6 @@ class _PopupLayoutState extends State<_PopupLayout> {
 
   @override
   Widget build(BuildContext context) {
-    // 获取屏幕尺寸
-    final mediaQuery = MediaQuery.of(context);
-    _screenSize = mediaQuery.size;
-    
     final bool dockToEdge = widget.config.dockToEdge;
     final bool allowDock = dockToEdge && widget.config.position != PopupPosition.top;
     final double edgeGap = allowDock ? widget.config.edgeGap : 0;
@@ -160,7 +184,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
 
     return Stack(
       children: [
-        // 遮盖层
+        // 遮盖层 - Positioned 必须直接在 Stack 下，不能用 RepaintBoundary 包裹
         if (widget.config.showBarrier)
           Positioned.fill(
             top: 0,
@@ -182,7 +206,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
             ),
           ),
 
-        // 内容层
+        // 内容层 - 直接调用，内部会根据是否锚定决定是否使用 RepaintBoundary
         _buildPopupContent(),
       ],
     );
@@ -228,18 +252,18 @@ class _PopupLayoutState extends State<_PopupLayout> {
         // 在计算出位置前，先不显示内容，避免闪烁
         return const SizedBox.shrink();
       }
-      
+
       // 给内容添加 GlobalKey 用于获取实际大小（仅在锚定模式下）
       final keyedContent = widget.config.type == PopupType.menu
           ? KeyedSubtree(key: _contentKey, child: content)
           : content;
-      
+
       // 使用智能计算的位置，如果没有则使用原始位置
       final position = _smartPosition ?? Offset(
         _anchorPosition!.dx + widget.config.anchorOffset.dx,
         _anchorPosition!.dy + _anchorSize!.height + widget.config.anchorOffset.dy,
       );
-      
+
       return Positioned(
         top: position.dy,
         left: position.dx,
@@ -248,7 +272,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
     } else {
       // 对于loading类型且center位置，使用稳定的屏幕尺寸来计算位置
       // 避免键盘弹出/收起时位置跳动
-      if (widget.config.type == PopupType.loading && 
+      if (widget.config.type == PopupType.loading &&
           widget.config.position == PopupPosition.center) {
         // 使用Builder来获取MediaQuery，确保能获取到最新的context
         return Builder(
@@ -259,14 +283,14 @@ class _PopupLayoutState extends State<_PopupLayout> {
             // 完整屏幕宽度 = size.width + viewInsets.horizontal
             final fullScreenHeight = mediaQuery.size.height + mediaQuery.viewInsets.bottom;
             final fullScreenWidth = mediaQuery.size.width + mediaQuery.viewInsets.horizontal;
-            
+
             // 创建一个不受键盘影响的MediaQuery
             // 使用copyWith来创建一个新的MediaQuery，其中size是完整的屏幕尺寸，viewInsets为0
             final stableMediaQuery = mediaQuery.copyWith(
               size: Size(fullScreenWidth, fullScreenHeight),
               viewInsets: EdgeInsets.zero,
             );
-            
+
             // 在这个稳定的MediaQuery context内使用Center
             // 这样center位置就会基于稳定的屏幕尺寸，不受键盘影响
             return MediaQuery(
@@ -278,7 +302,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
           },
         );
       }
-      
+
       // 其他情况使用标准的Align
       Widget alignedContent = Align(
         alignment: _getAlignmentFromPosition(widget.config.position),

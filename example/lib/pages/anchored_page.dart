@@ -203,7 +203,7 @@ class AnchoredPage extends StatelessWidget {
   void _showAnchoredMenu(GlobalKey anchorKey) async {
     final selected = await Pop.menu<String>(
       showBarrier: true,
-      barrierDismissible: false,
+      barrierDismissible: true,
       anchorKey: anchorKey,
       anchorOffset: const Offset(0, 0),
       builder: (dismiss) => Column(

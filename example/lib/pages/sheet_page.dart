@@ -299,7 +299,7 @@ class SheetPage extends StatelessWidget {
       direction: SheetDirection.bottom,
       
       dockToEdge: true,
-      edgeGap: 60,
+      edgeGap: 64,
       showBarrier: true,
       childBuilder: (dismiss) => ListView(
         shrinkWrap: true,

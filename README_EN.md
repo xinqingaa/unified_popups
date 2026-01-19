@@ -37,7 +37,7 @@ Add the dependency to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  unified_popups: ^1.1.14 # Use the latest version
+  unified_popups: ^1.2.1 # Use the latest version
 ```
 
 ### Initialization
@@ -543,6 +543,24 @@ MaterialApp(
 - `PopupRouteObserver` listens for Navigator push/pop/replace events and closes any popup whose `dismissOnRouteChange` evaluates to `true` (confirm & sheet by default; override via `PopupConfig.dismissOnRouteChange`).
 - Toast and loading always stay untouched by route changes to avoid breaking transient feedback.
 
+### Route changes vs. system back
+
+The overlay stack can be cleaned up in two complementary ways:
+
+```dart
+final navigatorKey = GlobalKey<NavigatorState>();
+
+MaterialApp(
+  navigatorKey: navigatorKey,
+  home: const PopScopeWidget(child: HomePage()),
+  navigatorObservers: const [PopupRouteObserver()],
+);
+```
+
+- `PopScopeWidget` intercepts the system back button (Android) or page-level pop gestures and closes the latest non-toast popup before letting the route pop.
+- `PopupRouteObserver` listens for Navigator push/pop/replace events and closes any popup whose `dismissOnRouteChange` evaluates to `true` (confirm & sheet by default; override via `PopupConfig.dismissOnRouteChange`).
+- Toast and loading always stay untouched by route changes to avoid breaking transient feedback.
+
 
 ## 🧠 PopupManager Essentials
 
@@ -578,4 +596,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Unified Popups** - Making popup development simpler, more unified, and more efficient!
-
