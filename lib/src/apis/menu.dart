@@ -4,13 +4,14 @@ Future<T?> _menuImpl<T>({
   required GlobalKey anchorKey,
   Offset anchorOffset = Offset.zero,
   required Widget Function(void Function([T? result]) dismiss) builder,
+  bool? dismissOnRouteChange,
   bool showBarrier = true,
   bool barrierDismissible = true,
   Color? barrierColor,
   EdgeInsetsGeometry? padding,
   BoxConstraints? constraints,
   BoxDecoration? decoration,
-  PopupAnimation animation = PopupAnimation.fade, 
+  PopupAnimation animation = PopupAnimation.fade,
   Curve? animationCurve,
   Duration animationDuration = const Duration(milliseconds: 200),
 }) {
@@ -37,6 +38,12 @@ Future<T?> _menuImpl<T>({
       // 锚定菜单不使用 SafeArea
       useSafeArea: false,
       type: PopupType.menu,
+      dismissOnRouteChange: dismissOnRouteChange,
+      onDismiss: () {
+        if (!completer.isCompleted) {
+          completer.complete(null);
+        }
+      },
       // 传入菜单内容
       child: MenuWidget(
         padding: padding,

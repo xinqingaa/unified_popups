@@ -4,12 +4,12 @@ import 'package:unified_popups/unified_popups.dart';
 import 'pages/anchored_page.dart';
 import 'pages/async_page.dart';
 import 'pages/dialog_page.dart';
+import 'pages/flow_sheet_page.dart';
 import 'pages/home_page.dart';
 import 'pages/loading_page.dart';
 import 'pages/popup_manager_page.dart';
 import 'pages/sheet_page.dart';
 import 'pages/toast_page.dart';
-
 
 // 创建 GlobalKey
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -35,7 +35,13 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         useMaterial3: true,
       ),
-      navigatorObservers: [PopupRouteObserver()], // 路由观察者 ,  sheet 、confirm 等弹窗会根据路由变化自动关闭
+      navigatorObservers: [
+        PopupRouteObserver()
+      ], // 路由观察者 ,  sheet 、confirm 等弹窗会根据路由变化自动关闭
+      // 系统返回优先关闭弹窗（含 FlowSheet 内部页）
+      builder: (context, child) => PopScopeWidget(
+        child: child ?? const SizedBox.shrink(),
+      ),
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
@@ -43,6 +49,7 @@ class MyApp extends StatelessWidget {
         '/dialog': (context) => const DialogPage(),
         '/loading': (context) => const LoadingPage(),
         '/sheet': (context) => const SheetPage(),
+        '/flow_sheet': (context) => const FlowSheetDemoPage(),
         '/anchored': (context) => const AnchoredPage(),
         '/date': (context) => const DatePage(),
         '/async': (context) => const AsyncPage(),

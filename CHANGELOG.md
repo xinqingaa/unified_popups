@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0]
+
+### Added
+
+#### FlowSheet
+- 新增 `Pop.flowSheet`：在单个 Sheet 内维护多页栈（`push` / `pop` / `replace` / `completeCurrent` / `closeAll`）
+- 新增 `FlowSheetController`、`FlowSheetPage`、`FlowSheetPageState` 与生命周期钩子（`onLoad` / `onShow` / `onHide` / `onRemove` / `onClose`）
+- 支持按页配置 `SheetDragDismissMode`，以及自定义 `FlowSheetRouteBuilder`
+
+#### Sheet 拖拽与返回
+- 新增 `SheetDragDismissMode`：`fullBody` / `contentWhenAtTop` / `handleOnly`
+- `Pop.sheet` 支持 `showDragHandle`、`dragHandleColor`、`adjustForKeyboard`、`dragDismissMode`、`dragDismissModeListenable`、`onBackPressed`
+- `PopupConfig.onBackPressed`：系统返回可先交给弹窗内部处理（FlowSheet 优先退内部页）
+- `PopupRouteObserver.didRemove`：路由 remove 时同样触发弹窗清理
+- 各 `Pop.*` API 透出可选 `dismissOnRouteChange`
+
+### Example
+- 新增 FlowSheet 演示：订单交易流、开户/KYC 向导
+
+---
+
 ## [1.2.2]
 
 ### Performance Optimizations ⚡

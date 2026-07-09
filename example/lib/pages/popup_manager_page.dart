@@ -53,7 +53,9 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
             children: [
               // 状态显示卡片
               Card(
-                color: _popupCount > 0 ? Colors.orange.shade50 : Colors.green.shade50,
+                color: _popupCount > 0
+                    ? Colors.orange.shade50
+                    : Colors.green.shade50,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -62,8 +64,11 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
                       Row(
                         children: [
                           Icon(
-                            _popupCount > 0 ? Icons.warning : Icons.check_circle,
-                            color: _popupCount > 0 ? Colors.orange : Colors.green,
+                            _popupCount > 0
+                                ? Icons.warning
+                                : Icons.check_circle,
+                            color:
+                                _popupCount > 0 ? Colors.orange : Colors.green,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -71,7 +76,9 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: _popupCount > 0 ? Colors.orange : Colors.green,
+                              color: _popupCount > 0
+                                  ? Colors.orange
+                                  : Colors.green,
                             ),
                           ),
                         ],
@@ -88,7 +95,7 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // 基础示例
               _buildSection(
                 title: '基础示例',
@@ -109,32 +116,35 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // 弹窗管理示例
               _buildSection(
                 title: '弹窗管理',
                 children: [
                   ElevatedButton(
-                    onPressed: _currentPopupId != null ? _hideCurrentPopup : null,
+                    onPressed:
+                        _currentPopupId != null ? _hideCurrentPopup : null,
                     child: const Text('关闭当前弹窗（通过 ID）'),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: PopupManager.hasNonToastPopup ? _hideLastPopup : null,
+                    onPressed:
+                        PopupManager.hasNonToastPopup ? _hideLastPopup : null,
                     child: const Text('关闭最后一个弹窗'),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: PopupManager.hasNonToastPopup ? _hideAllPopups : null,
+                    onPressed:
+                        PopupManager.hasNonToastPopup ? _hideAllPopups : null,
                     child: const Text('关闭所有弹窗'),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // 多弹窗示例
               _buildSection(
                 title: '多弹窗层级',
@@ -150,9 +160,9 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // 返回键处理示例
               _buildSection(
                 title: '返回键处理',
@@ -297,7 +307,8 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 ),
                 onPressed: () {
                   if (_currentPopupId != null) {
@@ -429,7 +440,8 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
                           children: [
                             const Text(
                               '第二个弹窗',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
                             const Text('这是上层的弹窗，会覆盖第一个'),
@@ -502,7 +514,8 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
                           children: [
                             const Text(
                               '内层弹窗',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 8),
                             const Text('这是嵌套在最内层的弹窗'),
@@ -542,4 +555,3 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
     );
   }
 }
-

@@ -128,7 +128,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
           final maxWidth = constraints.maxWidth.isInfinite
               ? 300.0
               : (constraints.maxWidth * 0.32).clamp(80.0, 160.0);
-          
+
           return ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: maxWidth,

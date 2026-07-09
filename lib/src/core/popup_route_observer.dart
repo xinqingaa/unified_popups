@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'popup_manager.dart';
 
 /// 弹窗路由观察者
-/// 
-/// 监听路由变化，当路由切换时自动关闭符合条件的弹窗（confirm、sheet等）。
-/// toast 和 loading 不会被关闭。
+///
+/// 监听路由变化，当路由切换时自动关闭符合条件的弹窗。
+/// 默认行为由弹窗类型决定，也可通过 dismissOnRouteChange 显式覆盖。
 class PopupRouteObserver extends RouteObserver<PageRoute<dynamic>> {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
@@ -27,6 +27,12 @@ class PopupRouteObserver extends RouteObserver<PageRoute<dynamic>> {
     if (newRoute != null) {
       _onRouteChanged(newRoute);
     }
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didRemove(route, previousRoute);
+    PopupManager.hidePopupsOnRouteChange();
   }
 
   /// 路由变化时的处理逻辑

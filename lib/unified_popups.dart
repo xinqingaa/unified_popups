@@ -12,6 +12,7 @@ export 'src/core/popup_manager.dart'
         PopupAnimation,
         PopupType,
         SheetDirection,
+        SheetDragDismissMode,
         ToastType,
         ConfirmButtonLayout;
 
@@ -21,3 +22,11 @@ export 'src/utils/sheet_dimension.dart';
 export 'src/widgets/pop_scope_widget.dart';
 
 export 'src/core/popup_route_observer.dart' show PopupRouteObserver;
+
+export 'src/flow_sheets/flow_sheet.dart'
+    show
+        FlowSheetController,
+        FlowSheetNavigator,
+        FlowSheetPage,
+        FlowSheetPageState,
+        FlowSheetRouteBuilder;

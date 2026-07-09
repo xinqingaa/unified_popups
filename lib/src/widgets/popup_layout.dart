@@ -123,14 +123,16 @@ class _PopupLayoutState extends State<_PopupLayout> {
     }
 
     final contentSize = _cachedContentRenderBox!.size;
-    
+
     // 计算初始位置（保持左对齐）
     double left = _anchorPosition!.dx + widget.config.anchorOffset.dx;
-    double top = _anchorPosition!.dy + _anchorSize!.height + widget.config.anchorOffset.dy;
-    
+    double top = _anchorPosition!.dy +
+        _anchorSize!.height +
+        widget.config.anchorOffset.dy;
+
     // 保存原始位置，用于后续动画方向计算
     _originalPosition = Offset(left, top);
-    
+
     // 检查右边缘是否溢出
     if (left + contentSize.width > _screenSize.width - _minMargin) {
       // 右边缘会溢出，调整位置
@@ -147,7 +149,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
       // 左边缘太靠左，调整到最小边距
       left = _minMargin;
     }
-    
+
     // 检查底部是否溢出
     if (top + contentSize.height > _screenSize.height - _minMargin) {
       // 底部会溢出，向上调整
@@ -163,7 +165,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
       // 顶部太靠上，调整到最小边距
       top = _minMargin;
     }
-    
+
     if (mounted) {
       setState(() {
         _smartPosition = Offset(left, top);
@@ -175,12 +177,16 @@ class _PopupLayoutState extends State<_PopupLayout> {
   @override
   Widget build(BuildContext context) {
     final bool dockToEdge = widget.config.dockToEdge;
-    final bool allowDock = dockToEdge && widget.config.position != PopupPosition.top;
+    final bool allowDock =
+        dockToEdge && widget.config.position != PopupPosition.top;
     final double edgeGap = allowDock ? widget.config.edgeGap : 0;
 
-    final bool reserveBottom = allowDock && widget.config.position == PopupPosition.bottom;
-    final bool reserveLeft = allowDock && widget.config.position == PopupPosition.left;
-    final bool reserveRight = allowDock && widget.config.position == PopupPosition.right;
+    final bool reserveBottom =
+        allowDock && widget.config.position == PopupPosition.bottom;
+    final bool reserveLeft =
+        allowDock && widget.config.position == PopupPosition.left;
+    final bool reserveRight =
+        allowDock && widget.config.position == PopupPosition.right;
 
     return Stack(
       children: [
@@ -214,7 +220,8 @@ class _PopupLayoutState extends State<_PopupLayout> {
 
   Widget _buildPopupContent() {
     final config = widget.config;
-    final bool dockToEdge = config.dockToEdge && config.position != PopupPosition.top;
+    final bool dockToEdge =
+        config.dockToEdge && config.position != PopupPosition.top;
     final double edgeGap = dockToEdge ? config.edgeGap : 0;
 
     Widget content = Material(
@@ -259,10 +266,13 @@ class _PopupLayoutState extends State<_PopupLayout> {
           : content;
 
       // 使用智能计算的位置，如果没有则使用原始位置
-      final position = _smartPosition ?? Offset(
-        _anchorPosition!.dx + widget.config.anchorOffset.dx,
-        _anchorPosition!.dy + _anchorSize!.height + widget.config.anchorOffset.dy,
-      );
+      final position = _smartPosition ??
+          Offset(
+            _anchorPosition!.dx + widget.config.anchorOffset.dx,
+            _anchorPosition!.dy +
+                _anchorSize!.height +
+                widget.config.anchorOffset.dy,
+          );
 
       return Positioned(
         top: position.dy,
@@ -281,8 +291,10 @@ class _PopupLayoutState extends State<_PopupLayout> {
             // 计算完整的屏幕尺寸（不受键盘影响）
             // 完整屏幕高度 = size.height + viewInsets.bottom
             // 完整屏幕宽度 = size.width + viewInsets.horizontal
-            final fullScreenHeight = mediaQuery.size.height + mediaQuery.viewInsets.bottom;
-            final fullScreenWidth = mediaQuery.size.width + mediaQuery.viewInsets.horizontal;
+            final fullScreenHeight =
+                mediaQuery.size.height + mediaQuery.viewInsets.bottom;
+            final fullScreenWidth =
+                mediaQuery.size.width + mediaQuery.viewInsets.horizontal;
 
             // 创建一个不受键盘影响的MediaQuery
             // 使用copyWith来创建一个新的MediaQuery，其中size是完整的屏幕尺寸，viewInsets为0
@@ -332,8 +344,8 @@ class _PopupLayoutState extends State<_PopupLayout> {
   Widget _buildAnimatedChild(Widget child) {
     // 计算动态动画偏移（仅在锚定模式且有智能位置调整时）
     Offset? dynamicOffset;
-    if (widget.config.anchorKey != null && 
-        _smartPosition != null && 
+    if (widget.config.anchorKey != null &&
+        _smartPosition != null &&
         _originalPosition != null) {
       // 计算最终位置相对于原始位置的偏移
       final offsetDelta = _smartPosition! - _originalPosition!;
@@ -353,7 +365,8 @@ class _PopupLayoutState extends State<_PopupLayout> {
           beginOffset = const Offset(0, -1);
         }
         animatedChild = SlideTransition(
-          position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
+          position: Tween<Offset>(begin: beginOffset, end: Offset.zero)
+              .animate(widget.animation),
           child: child,
         );
         break;
@@ -365,7 +378,8 @@ class _PopupLayoutState extends State<_PopupLayout> {
           beginOffset = const Offset(0, 1);
         }
         animatedChild = SlideTransition(
-          position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
+          position: Tween<Offset>(begin: beginOffset, end: Offset.zero)
+              .animate(widget.animation),
           child: child,
         );
         break;
@@ -377,7 +391,8 @@ class _PopupLayoutState extends State<_PopupLayout> {
           beginOffset = const Offset(1, 0);
         }
         animatedChild = SlideTransition(
-          position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
+          position: Tween<Offset>(begin: beginOffset, end: Offset.zero)
+              .animate(widget.animation),
           child: child,
         );
         break;
@@ -389,7 +404,8 @@ class _PopupLayoutState extends State<_PopupLayout> {
           beginOffset = const Offset(-1, 0);
         }
         animatedChild = SlideTransition(
-          position: Tween<Offset>(begin: beginOffset, end: Offset.zero).animate(widget.animation),
+          position: Tween<Offset>(begin: beginOffset, end: Offset.zero)
+              .animate(widget.animation),
           child: child,
         );
         break;
@@ -403,7 +419,9 @@ class _PopupLayoutState extends State<_PopupLayout> {
     }
 
     // 如果弹窗类型为sheet，并且dockToEdge为true，并且edgeGap大于0，则裁剪动画超出区域
-    if (widget.config.type == PopupType.sheet && widget.config.dockToEdge == true && widget.config.edgeGap > 0) {
+    if (widget.config.type == PopupType.sheet &&
+        widget.config.dockToEdge == true &&
+        widget.config.edgeGap > 0) {
       return ClipRect(child: animatedChild);
     }
 
@@ -421,7 +439,7 @@ class _PopupLayoutState extends State<_PopupLayout> {
       case PopupPosition.right:
         return Alignment.centerRight;
       case PopupPosition.center:
-      return Alignment.center;
+        return Alignment.center;
     }
   }
 }

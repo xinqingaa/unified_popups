@@ -26,8 +26,7 @@ void main() {
   });
 
   group('PopScopeWidget Rebuild Performance', () {
-    testWidgets('PopScopeWidget rebuilds only when necessary',
-        (tester) async {
+    testWidgets('PopScopeWidget rebuilds only when necessary', (tester) async {
       // 创建 navigatorKey 并初始化 PopupManager
       final navigatorKey = GlobalKey<NavigatorState>();
       PopupManager.initialize(navigatorKey: navigatorKey);
@@ -406,7 +405,8 @@ void main() {
                         width: 50,
                         height: 50,
                         margin: const EdgeInsets.all(5),
-                        color: Colors.primaries[index % Colors.primaries.length],
+                        color:
+                            Colors.primaries[index % Colors.primaries.length],
                       );
                     }),
                     Builder(

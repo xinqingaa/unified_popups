@@ -6,6 +6,7 @@ Future<bool?> _confirmImpl({
   String? content,
   Widget? contentWidget,
   required PopupPosition position,
+  bool? dismissOnRouteChange,
   String? confirmText,
   Widget? confirmButtonWidget,
   String? cancelText,
@@ -97,6 +98,7 @@ Future<bool?> _confirmImpl({
       position: position,
       barrierDismissible: true,
       type: PopupType.confirm,
+      dismissOnRouteChange: dismissOnRouteChange,
       onDismiss: () {
         // 如果是通过点击遮罩层关闭的，也需要 complete
         if (!completer.isCompleted) {

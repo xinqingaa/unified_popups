@@ -15,7 +15,7 @@ class ToastWidget extends StatefulWidget {
   final double? imageSize;
   final Color? imgColor;
   final Axis layoutDirection;
-  
+
   // 切换功能相关参数
   final String? tMessage;
   final String? tImagePath;
@@ -55,15 +55,14 @@ class _ToastWidgetState extends State<ToastWidget> {
   bool _isFirstState = true;
 
   void _handleTap() {
-    if (widget.toggleable && (widget.tMessage != null || widget.tImagePath != null)) {
+    if (widget.toggleable &&
+        (widget.tMessage != null || widget.tImagePath != null)) {
       setState(() {
         _isFirstState = !_isFirstState;
       });
     }
     widget.onTap?.call();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -72,28 +71,27 @@ class _ToastWidgetState extends State<ToastWidget> {
       borderRadius: BorderRadius.circular(12.0),
     );
     const defaultStyle = TextStyle(color: Colors.white, fontSize: 16);
-    const defaultPadding = EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0);
+    const defaultPadding =
+        EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0);
     const defaultMargin = EdgeInsets.symmetric(horizontal: 20, vertical: 40);
     const defaultImageSize = 24.0;
-    
+
     // 根据当前状态选择显示的内容
-    final currentMessage = _isFirstState 
-        ? widget.message 
-        : (widget.tMessage ?? widget.message);
-    final currentImagePath = _isFirstState 
-        ? widget.customImagePath 
+    final currentMessage =
+        _isFirstState ? widget.message : (widget.tMessage ?? widget.message);
+    final currentImagePath = _isFirstState
+        ? widget.customImagePath
         : (widget.tImagePath ?? widget.customImagePath);
-    final currentToastType = _isFirstState 
-        ? widget.toastType 
+    final currentToastType = _isFirstState
+        ? widget.toastType
         : (widget.tToastType ?? widget.toastType);
-    final currentImgColor = _isFirstState 
-        ? widget.imgColor 
-        : (widget.tImgColor ?? widget.imgColor);
-    
+    final currentImgColor =
+        _isFirstState ? widget.imgColor : (widget.tImgColor ?? widget.imgColor);
+
     // 确定图片路径：如果提供了自定义图片，优先使用；否则使用 toastType 对应的图标
     String? imgPath;
     bool shouldShowImage = false;
-    
+
     if (currentImagePath != null) {
       // 使用自定义图片
       imgPath = currentImagePath;
@@ -119,9 +117,9 @@ class _ToastWidgetState extends State<ToastWidget> {
           break;
       }
     }
-    
+
     final effectiveImageSize = widget.imageSize ?? defaultImageSize;
-    
+
     // 构建图片 Widget
     Widget? imageWidget;
     if (shouldShowImage && imgPath != null) {
@@ -133,7 +131,7 @@ class _ToastWidgetState extends State<ToastWidget> {
         color: currentImagePath != null ? currentImgColor : null,
       );
     }
-    
+
     // 构建内容 Widget：优先使用 messageWidget，否则使用 message（String）
     Widget contentWidget;
     if (widget.messageWidget != null) {
@@ -154,7 +152,7 @@ class _ToastWidgetState extends State<ToastWidget> {
       // 如果都没有提供，显示空内容
       contentWidget = const SizedBox.shrink();
     }
-    
+
     // 根据布局方向决定使用 Row 还是 Column
     Widget content;
     if (widget.layoutDirection == Axis.vertical) {
@@ -184,22 +182,23 @@ class _ToastWidgetState extends State<ToastWidget> {
         ],
       );
     }
-    
+
     Widget container = Container(
       margin: widget.margin ?? defaultMargin,
       padding: widget.padding ?? defaultPadding,
       decoration: widget.decoration ?? defaultDecoration,
       child: content,
     );
-    
+
     // 如果可切换，添加点击手势
-    if (widget.toggleable && (widget.tMessage != null || widget.tImagePath != null)) {
+    if (widget.toggleable &&
+        (widget.tMessage != null || widget.tImagePath != null)) {
       container = GestureDetector(
         onTap: _handleTap,
         child: container,
       );
     }
-    
+
     return container;
   }
 }

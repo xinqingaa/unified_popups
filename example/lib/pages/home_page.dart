@@ -45,6 +45,12 @@ class HomePage extends StatelessWidget {
           ),
           _buildMenuItem(
             context,
+            title: 'FlowSheet',
+            subtitle: '多步业务流：订单交易 / KYC 向导（push·replace·生命周期）',
+            routeName: '/flow_sheet',
+          ),
+          _buildMenuItem(
+            context,
             title: 'Anchored Popup',
             subtitle: '跟随特定组件弹出的气泡',
             routeName: '/anchored',
@@ -81,11 +87,11 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildMenuItem(
-      BuildContext context, {
-        required String title,
-        required String subtitle,
-        required String routeName,
-      }) {
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String routeName,
+  }) {
     return ListTile(
       title: Text(title),
       subtitle: Text(subtitle),

@@ -7,7 +7,7 @@ class ToastPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScopeWidget(
-      child: Scaffold(
+        child: Scaffold(
       appBar: AppBar(title: const Text('Toast Demo')),
       body: Center(
         child: Padding(
@@ -26,17 +26,22 @@ class ToastPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => Pop.toast('This is a warning toast.', toastType: ToastType.warn, ),
+                onPressed: () => Pop.toast(
+                  'This is a warning toast.',
+                  toastType: ToastType.warn,
+                ),
                 child: const Text('Show Warning Toast'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => Pop.toast('This is an error toast.', toastType: ToastType.error),
+                onPressed: () => Pop.toast('This is an error toast.',
+                    toastType: ToastType.error),
                 child: const Text('Show Error Toast'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => Pop.toast('This phone number is not registered. Please use the verification code to log in and register first.'),
+                onPressed: () => Pop.toast(
+                    'This phone number is not registered. Please use the verification code to log in and register first.'),
                 child: const Text('Show None Toast'),
               ),
               const SizedBox(height: 12),
@@ -56,7 +61,8 @@ class ToastPage extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
                 child: const Text('自定义样式 Toast'),
               ),
@@ -117,7 +123,6 @@ class ToastPage extends StatelessWidget {
           ),
         ),
       ),
-    )
-    );
+    ));
   }
 }

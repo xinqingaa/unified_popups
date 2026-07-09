@@ -12,7 +12,7 @@ part '../widgets/popup_layout.dart';
 T? _ambiguate<T>(T? value) => value;
 
 /// 安全的 OverlayEntry，避免在构建阶段调用 setState 导致的错误。
-/// 
+///
 /// 重写 markNeedsBuild() 方法，检查当前是否在构建阶段。
 /// 如果在构建阶段（SchedulerPhase.persistentCallbacks），则延迟到 postFrameCallback 执行。
 class SafeOverlayEntry extends OverlayEntry {
@@ -40,6 +40,7 @@ class _PopupInfo {
   final OverlayEntry entry;
   final AnimationController controller;
   final VoidCallback? onDismissCallback;
+  final bool Function()? onBackPressed;
   final PopupType type;
   final bool? dismissOnRouteChange;
   Timer? dismissTimer;
@@ -48,6 +49,7 @@ class _PopupInfo {
     required this.entry,
     required this.controller,
     this.onDismissCallback,
+    this.onBackPressed,
     this.type = PopupType.other,
     this.dismissOnRouteChange,
   });
@@ -72,7 +74,8 @@ class PopupManager {
   final List<String> _popupOrder = [];
 
   /// 创建一个 ValueNotifier 来广播非 Toast 弹窗的状态。
-  static final ValueNotifier<bool> hasNonToastPopupNotifier = ValueNotifier(false);
+  static final ValueNotifier<bool> hasNonToastPopupNotifier =
+      ValueNotifier(false);
 
   static GlobalKey<NavigatorState> get navigatorKey {
     if (_navigatorKey == null) {
@@ -95,7 +98,7 @@ class PopupManager {
   }
 
   /// 私有方法：执行实际的插入和动画操作
-  /// 
+  ///
   /// 将 overlay.insert() 和动画启动逻辑提取到独立方法，
   /// 以便在构建阶段时可以延迟执行。
   static void _insertPopup(
@@ -137,17 +140,15 @@ class PopupManager {
       debugLabel: 'popup_${config.type}',
     );
 
-
     // 内容动画曲线
     final contentAnimation = animationController.drive(
       CurveTween(curve: config.animationCurve),
     );
-    
+
     // 蒙版动画曲线
     final barrierAnimation = animationController.drive(
-      CurveTween(curve: Curves.easeOutQuint), 
+      CurveTween(curve: Curves.easeOutQuint),
     );
-
 
     // 2. 创建 SafeOverlayEntry（避免在构建阶段调用 setState 导致的错误）
     // 注意 onDismiss 回调现在调用 hide(popupId)
@@ -169,6 +170,7 @@ class PopupManager {
       entry: overlayEntry,
       controller: animationController,
       onDismissCallback: config.onDismiss,
+      onBackPressed: config.onBackPressed,
       type: config.type,
       dismissOnRouteChange: config.dismissOnRouteChange,
     );
@@ -179,15 +181,18 @@ class PopupManager {
 
     // 4. 检查构建阶段，如果在构建阶段则延迟执行插入操作
     // 这避免了在路由构建过程中（如 Get.put() 立即初始化 Controller）调用时触发 setState 错误
-    final schedulerPhase = _ambiguate(SchedulerBinding.instance)?.schedulerPhase;
+    final schedulerPhase =
+        _ambiguate(SchedulerBinding.instance)?.schedulerPhase;
     if (schedulerPhase == SchedulerPhase.persistentCallbacks) {
       // 在构建阶段，延迟到下一帧执行
       _ambiguate(SchedulerBinding.instance)!.addPostFrameCallback((_) {
-        _insertPopup(overlay, overlayEntry, animationController, config, popupId, popupInfo);
+        _insertPopup(overlay, overlayEntry, animationController, config,
+            popupId, popupInfo);
       });
     } else {
       // 不在构建阶段，立即执行
-      _insertPopup(overlay, overlayEntry, animationController, config, popupId, popupInfo);
+      _insertPopup(overlay, overlayEntry, animationController, config, popupId,
+          popupInfo);
     }
 
     return popupId;
@@ -242,10 +247,10 @@ class PopupManager {
   }
 
   /// 根据类型隐藏指定类型的弹出层
-  /// 
+  ///
   /// 从最新的弹窗开始查找，找到第一个匹配类型的弹窗并关闭。
   /// 主要用于 loading 等单一实例的弹窗类型。
-  /// 
+  ///
   /// [type] 要关闭的弹窗类型
   /// 返回 true 如果找到并关闭了弹窗，否则返回 false
   static bool hideByType(PopupType type) {
@@ -266,7 +271,7 @@ class PopupManager {
     return _instance._popups.containsKey(popupId);
   }
 
-    /// 获取指定类型的弹窗数量
+  /// 获取指定类型的弹窗数量
   ///
   /// [type] 弹窗类型
   /// 返回该类型的弹窗数量
@@ -327,6 +332,10 @@ class PopupManager {
       final id = _instance._popupOrder[i];
       final info = _instance._popups[id];
       if (info != null && info.type != PopupType.toast) {
+        final handled = info.onBackPressed?.call() ?? false;
+        if (handled) {
+          return true;
+        }
         hide(id);
         // debugPrint('[PopupManager] Found and hid a non-toast popup.');
         return true;
@@ -371,7 +380,8 @@ class PopupManager {
   /// 判断弹窗是否应该在路由切换时关闭
   static bool _shouldDismissOnRouteChange(_PopupInfo popupInfo) {
     // 排除 toast 和 loading
-    if (popupInfo.type == PopupType.toast || popupInfo.type == PopupType.loading) {
+    if (popupInfo.type == PopupType.toast ||
+        popupInfo.type == PopupType.loading) {
       return false;
     }
 
@@ -385,7 +395,7 @@ class PopupManager {
   }
 
   /// 关闭所有在路由切换时应该关闭的弹窗
-  /// 
+  ///
   /// 用于路由观察者在路由变化时调用
   static void hidePopupsOnRouteChange() {
     // 创建一个key的副本进行迭代，因为 hide() 方法会修改 _popups Map

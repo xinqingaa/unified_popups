@@ -2,6 +2,7 @@ part of 'pop.dart';
 
 void _loadingImpl({
   String? message,
+  bool? dismissOnRouteChange,
   // 样式参数
   Color? backgroundColor,
   double? borderRadius,
@@ -18,11 +19,11 @@ void _loadingImpl({
   Duration animationDuration = const Duration(milliseconds: 150),
   Curve? animationCurve,
 }) {
-  // 如果已有 loading，先关闭它（确保单例模式）
+  // 如果已有 loading，先关闭它（确保单例模式，并用最新配置重建）
   if (PopupManager.getCountByType(PopupType.loading) > 0) {
-    return;
+    PopupManager.hideByType(PopupType.loading);
   }
-  
+
   // 创建新的 loading（使用最新配置）
   PopupManager.show(
     PopupConfig(
@@ -44,6 +45,7 @@ void _loadingImpl({
       animationDuration: animationDuration,
       animationCurve: animationCurve,
       type: PopupType.loading,
+      dismissOnRouteChange: dismissOnRouteChange,
     ),
   );
 }

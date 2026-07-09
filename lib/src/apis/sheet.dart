@@ -5,6 +5,8 @@ Future<T?> _sheetImpl<T>({
   String? title,
   Widget? titleWidget,
   SheetDirection direction = SheetDirection.bottom,
+  bool? dismissOnRouteChange,
+  bool Function()? onBackPressed,
   bool? useSafeArea,
   // Widget 级别的样式配置
   SheetDimension? width,
@@ -15,13 +17,11 @@ Future<T?> _sheetImpl<T>({
   String? imgPath,
   double? imageSize,
   Offset? imageOffset,
-  
+
   // 遮罩相关参数
   bool? showBarrier,
   bool? barrierDismissible,
   Color? barrierColor,
-
-
   bool showCloseButton = false,
   Color? backgroundColor,
   BorderRadius? borderRadius,
@@ -32,6 +32,11 @@ Future<T?> _sheetImpl<T>({
   TextAlign? titleAlign,
   bool dockToEdge = false,
   double? edgeGap,
+  bool showDragHandle = true,
+  Color? dragHandleColor,
+  bool adjustForKeyboard = true,
+  SheetDragDismissMode dragDismissMode = SheetDragDismissMode.fullBody,
+  ValueListenable<SheetDragDismissMode>? dragDismissModeListenable,
   Duration animationDuration = const Duration(milliseconds: 400),
   Curve? animationCurve,
 }) {
@@ -91,7 +96,8 @@ Future<T?> _sheetImpl<T>({
   final resolvedMaxHeight = resolveDimension(maxHeight, screenSize.height);
 
   // 如果用户没有指定 useSafeArea，则根据方向智能判断。
-  final bool applySafeArea = useSafeArea ?? (direction == SheetDirection.bottom);
+  final bool applySafeArea =
+      useSafeArea ?? (direction == SheetDirection.bottom);
 
   popupId = PopupManager.show(
     PopupConfig(
@@ -99,8 +105,8 @@ Future<T?> _sheetImpl<T>({
         title: title,
         titleWidget: titleWidget,
         direction: direction,
-        showCloseButton: showCloseButton, // 传递新参数
-        onClose: () => dismiss(null), // 传递关闭回调
+        showCloseButton: showCloseButton,
+        onClose: dismiss,
         width: resolvedWidth,
         height: resolvedHeight,
         maxWidth: resolvedMaxWidth,
@@ -119,6 +125,11 @@ Future<T?> _sheetImpl<T>({
         titleAlign: titleAlign,
         dockToEdge: dockToEdge,
         edgeGap: edgeGap,
+        showDragHandle: showDragHandle,
+        dragHandleColor: dragHandleColor,
+        adjustForKeyboard: adjustForKeyboard,
+        dragDismissMode: dragDismissMode,
+        dragDismissModeListenable: dragDismissModeListenable,
         // 使用 childBuilder 构建子 Widget，并传入 dismiss 函数
         child: childBuilder(dismiss),
       ),
@@ -133,6 +144,8 @@ Future<T?> _sheetImpl<T>({
       barrierDismissible: barrierDismissible ?? true,
       barrierColor: barrierColor ?? Colors.black54,
       type: PopupType.sheet,
+      dismissOnRouteChange: dismissOnRouteChange,
+      onBackPressed: onBackPressed,
       onDismiss: () {
         // 点击蒙层关闭
         if (!completer.isCompleted) {

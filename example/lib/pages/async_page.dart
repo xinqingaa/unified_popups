@@ -139,8 +139,7 @@ class _AsyncPageState extends State<AsyncPage> {
     _updateResult('');
     try {
       // 模拟网络请求
-      Future.delayed(const Duration(milliseconds: 100))
-          .then((_) {
+      Future.delayed(const Duration(milliseconds: 100)).then((_) {
         // 在 then 回调中调用 loading
         Pop.loading(message: '处理数据中...');
         Future.delayed(const Duration(seconds: 2)).then((_) {
@@ -161,13 +160,13 @@ class _AsyncPageState extends State<AsyncPage> {
     try {
       // 第一步异步操作
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       // 在中间调用 loading
       Pop.loading(message: '继续处理中...');
-      
+
       // 第二步异步操作
       await Future.delayed(const Duration(seconds: 2));
-      
+
       Pop.hideLoading();
       _updateResult('场景2: 成功 - async/await 中间调用 loading 正常');
       Pop.toast('场景2测试成功', toastType: ToastType.success);
@@ -256,11 +255,13 @@ class _AsyncPageState extends State<AsyncPage> {
     _updateResult('');
     try {
       // 创建一个新的 StatefulWidget 来测试 initState
-      Navigator.of(context).push(
+      Navigator.of(context)
+          .push(
         MaterialPageRoute(
           builder: (context) => const _TestInitStateWidget(),
         ),
-      ).then((result) {
+      )
+          .then((result) {
         if (result == true) {
           _updateResult('场景6: 成功 - initState 中异步调用 loading 正常');
           Pop.toast('场景6测试成功', toastType: ToastType.success);
@@ -278,11 +279,13 @@ class _AsyncPageState extends State<AsyncPage> {
     try {
       // 创建一个新的 StatefulWidget，在 build() 方法中直接调用 loading
       // 这模拟了路由构建过程中通过 Get.put() 立即初始化 Controller 的场景
-      Navigator.of(context).push(
+      Navigator.of(context)
+          .push(
         MaterialPageRoute(
           builder: (context) => const _TestBuildDirectWidget(),
         ),
-      ).then((result) {
+      )
+          .then((result) {
         if (result == true) {
           _updateResult('场景7: 成功 - build() 中直接调用 loading 正常（关键修复测试）');
           Pop.toast('场景7测试成功（关键修复测试）', toastType: ToastType.success);
@@ -387,4 +390,3 @@ class _TestBuildDirectWidgetState extends State<_TestBuildDirectWidget> {
     );
   }
 }
-

@@ -18,74 +18,74 @@ class SheetPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-              // 输入框
-              const TextField(
-                decoration: InputDecoration(
-                  labelText: '请输入',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showBottomSheet,
-                child: const Text('Show Bottom Sheet'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showLeftDrawer,
-                child: const Text('Show Left Drawer'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showRightDrawer,
-                child: const Text('Show Right Drawer'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed:_showTopNotification,
-                child: const Text('Show Top Notification'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showBottomMenu,
-                child: const Text('长列表 Bottom Sheet'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showShort,
-                child: const Text('短列表'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showFullScreenBottomDrawer,
-                child: const Text('全屏底部抽屉'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showBottomSheetWithInputNoAvoid,
-                child: const Text('Bottom Sheet 含输入框'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showBottomSheetWithForm,
-                child: const Text('表单 Sheet'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showBottomSheetWithCustomStyle,
-                child: const Text('自定义样式 Sheet'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showAnchoredBottomSheet,
-                child: const Text('TabBar 顶部 Sheet'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: _showSheetWithWidgetTitle,
-                child: const Text('Widget 自定义标题 Sheet'),
-              ),
-            ],
+                  // 输入框
+                  const TextField(
+                    decoration: InputDecoration(
+                      labelText: '请输入',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showBottomSheet,
+                    child: const Text('Show Bottom Sheet'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showLeftDrawer,
+                    child: const Text('Show Left Drawer'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showRightDrawer,
+                    child: const Text('Show Right Drawer'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showTopNotification,
+                    child: const Text('Show Top Notification'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showBottomMenu,
+                    child: const Text('长列表 Bottom Sheet'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showShort,
+                    child: const Text('短列表'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showFullScreenBottomDrawer,
+                    child: const Text('全屏底部抽屉'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showBottomSheetWithInputNoAvoid,
+                    child: const Text('Bottom Sheet 含输入框'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showBottomSheetWithForm,
+                    child: const Text('表单 Sheet'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showBottomSheetWithCustomStyle,
+                    child: const Text('自定义样式 Sheet'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showAnchoredBottomSheet,
+                    child: const Text('TabBar 顶部 Sheet'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _showSheetWithWidgetTitle,
+                    child: const Text('Widget 自定义标题 Sheet'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -116,37 +116,23 @@ class SheetPage extends StatelessWidget {
       childBuilder: (dismiss) => ListView(
         shrinkWrap: true,
         children: [
-          _buildItem(
-            onTap: () => dismiss('share'),
-            title: "分享"
-          ),
-          _buildItem(
-              onTap: () => dismiss('edit'),
-              title: "编辑"
-          ),
-          _buildItem(
-              onTap: () => dismiss('delete'),
-              title: "删除"
-          ),
-          _buildItem(
-              onTap: () => dismiss(),
-              title: "关闭"
-          ),
+          _buildItem(onTap: () => dismiss('share'), title: "分享"),
+          _buildItem(onTap: () => dismiss('edit'), title: "编辑"),
+          _buildItem(onTap: () => dismiss('delete'), title: "删除"),
+          _buildItem(onTap: () => dismiss(), title: "关闭"),
         ],
       ),
     );
     _handleSheetResult(result);
   }
 
-  Widget _buildItem({required VoidCallback onTap , required String title}){
+  Widget _buildItem({required VoidCallback onTap, required String title}) {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10 , horizontal: 0),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
         child: Row(
-          children: [
-            Text(title)
-          ],
+          children: [Text(title)],
         ),
       ),
     );
@@ -160,8 +146,14 @@ class SheetPage extends StatelessWidget {
       title: '菜单',
       childBuilder: (dismiss) => ListView(
         children: [
-          ListTile(leading: const Icon(Icons.home), title: const Text('首页'), onTap: () => dismiss('home')),
-          ListTile(leading: const Icon(Icons.settings), title: const Text('设置'), onTap: () => dismiss('setting')),
+          ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('首页'),
+              onTap: () => dismiss('home')),
+          ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('设置'),
+              onTap: () => dismiss('setting')),
         ],
       ),
     );
@@ -176,8 +168,14 @@ class SheetPage extends StatelessWidget {
       title: '菜单',
       childBuilder: (dismiss) => Column(
         children: [
-          ListTile(leading: const Icon(Icons.abc), title: const Text('abc'), onTap: () => dismiss('abc')),
-          ListTile(leading: const Icon(Icons.vaccines), title: const Text('vaccines'), onTap: () => dismiss('vaccines')),
+          ListTile(
+              leading: const Icon(Icons.abc),
+              title: const Text('abc'),
+              onTap: () => dismiss('abc')),
+          ListTile(
+              leading: const Icon(Icons.vaccines),
+              title: const Text('vaccines'),
+              onTap: () => dismiss('vaccines')),
         ],
       ),
     );
@@ -197,7 +195,6 @@ class SheetPage extends StatelessWidget {
       ),
     );
   }
-
 
   void _showBottomMenu() async {
     final result = await Pop.sheet<String>(
@@ -236,7 +233,7 @@ class SheetPage extends StatelessWidget {
     );
   }
 
-  void _showShort(){
+  void _showShort() {
     Pop.sheet(
       title: '短列表',
       // maxHeight: const SheetDimension.fraction(0.6), // 最大占屏 60%
@@ -250,7 +247,7 @@ class SheetPage extends StatelessWidget {
     );
   }
 
-    void _showBottomSheetWithInputNoAvoid() async {
+  void _showBottomSheetWithInputNoAvoid() async {
     await Pop.sheet<void>(
       title: '填写信息',
       // 不做任何 viewInsets 处理，演示遮挡问题
@@ -297,7 +294,6 @@ class SheetPage extends StatelessWidget {
     final result = await Pop.sheet<String>(
       title: 'TabBar 顶部弹出',
       direction: SheetDirection.bottom,
-      
       dockToEdge: true,
       edgeGap: 64,
       showBarrier: true,
@@ -449,7 +445,8 @@ class SheetPage extends StatelessWidget {
         children: [
           Icon(Icons.info, color: Colors.blue),
           const SizedBox(width: 8),
-          const Text('Widget 标题', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text('Widget 标题',
+              style: TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
       childBuilder: (dismiss) => Padding(

@@ -4,6 +4,7 @@ void _toastImpl(
   String? message, {
   // Popup 级别的配置
   required PopupPosition position,
+  bool? dismissOnRouteChange,
   Duration duration = const Duration(milliseconds: 1200),
   bool showBarrier = false,
   bool barrierDismissible = false,
@@ -67,6 +68,7 @@ void _toastImpl(
       showBarrier: showBarrier,
       barrierDismissible: barrierDismissible,
       type: PopupType.toast,
+      dismissOnRouteChange: dismissOnRouteChange,
     ),
   );
 }

@@ -44,17 +44,20 @@ class AnchoredPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
-                    onPressed: () => _showAnchoredMenuWithIcons(anchorButtonKey),
+                    onPressed: () =>
+                        _showAnchoredMenuWithIcons(anchorButtonKey),
                     child: const Text('图标菜单'),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
-                    onPressed: () => _showAnchoredMenuWithCustomStyle(anchorButtonKey),
+                    onPressed: () =>
+                        _showAnchoredMenuWithCustomStyle(anchorButtonKey),
                     child: const Text('行内菜单'),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
-                    onPressed: () => _showAnimationDirectionTest(bottomAnchorKey),
+                    onPressed: () =>
+                        _showAnimationDirectionTest(bottomAnchorKey),
                     child: const Text('动画方向修复'),
                   ),
                 ],
@@ -123,7 +126,8 @@ class AnchoredPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSmartPositionTestButton(GlobalKey key, String label, MaterialColor color, VoidCallback onTap) {
+  Widget _buildSmartPositionTestButton(
+      GlobalKey key, String label, MaterialColor color, VoidCallback onTap) {
     return Container(
       key: key,
       child: ElevatedButton(
@@ -147,7 +151,7 @@ class AnchoredPage extends StatelessWidget {
             color: Colors.black26,
             blurRadius: 10,
             offset: Offset(0, 4),
-          ) ,
+          ),
         ],
       ),
       anchorKey: anchorKey,
@@ -182,7 +186,7 @@ class AnchoredPage extends StatelessWidget {
         anchorKey: anchorKey,
         anchorOffset: const Offset(0, 0),
         animation: PopupAnimation.fade,
-        showBarrier: true, 
+        showBarrier: true,
         barrierColor: Colors.black54,
         barrierDismissible: true, // 点击遮盖关闭
         child: Container(
@@ -267,8 +271,7 @@ class AnchoredPage extends StatelessWidget {
       anchorOffset: const Offset(0, 0),
       builder: (dismiss) => Container(
         padding: const EdgeInsets.all(8),
-        child: 
-        Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildCustomMenuItem(

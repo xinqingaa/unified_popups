@@ -4,7 +4,7 @@ import 'package:unified_popups/unified_popups.dart';
 class DialogPage extends StatelessWidget {
   const DialogPage({super.key});
 
-  Widget _buildInputList(){
+  Widget _buildInputList() {
     return const Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -35,7 +35,7 @@ class DialogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScopeWidget(
-      child: Scaffold(
+        child: Scaffold(
       appBar: AppBar(title: const Text('Dialog Demo')),
       body: Center(
         child: SingleChildScrollView(
@@ -47,14 +47,13 @@ class DialogPage extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   final result = await Pop.confirm(
-                    // padding: EdgeInsets.zero,
-                    title: 'Confirm Deletion',
-                    content: 'Are you sure you want to delete this item?',
-                    imagePath: "assets/img.png",
-                    confirmText: 'I know',
-                    cancelText: 'I don\'t know',
-                    buttonLayout:ConfirmButtonLayout.column
-                  );
+                      // padding: EdgeInsets.zero,
+                      title: 'Confirm Deletion',
+                      content: 'Are you sure you want to delete this item?',
+                      imagePath: "assets/img.png",
+                      confirmText: 'I know',
+                      cancelText: 'I don\'t know',
+                      buttonLayout: ConfirmButtonLayout.column);
                   debugPrint('Confirm result: $result');
                 },
                 child: const Text('双按钮（行） Confirm Dialog 带图片'),
@@ -68,7 +67,7 @@ class DialogPage extends StatelessWidget {
                     imagePath: "assets/img.png",
                     confirmText: 'I know',
                     cancelText: 'I don\'t know',
-                    cancelBorder: Border.all(color: Colors.blue , width: 2),
+                    cancelBorder: Border.all(color: Colors.blue, width: 2),
                     confirmBorder: Border.all(color: Colors.black),
                   );
                   debugPrint('Confirm result: $result');
@@ -81,7 +80,7 @@ class DialogPage extends StatelessWidget {
                   Pop.confirm(
                     content: "This is a single-button dialog.",
                     confirmText: 'I know',
-                    buttonLayout:ConfirmButtonLayout.column,
+                    buttonLayout: ConfirmButtonLayout.column,
                     cancelText: null,
                   );
                 },
@@ -91,13 +90,12 @@ class DialogPage extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   final result = await Pop.confirm(
-                    title: 'Confirm Deletion',
-                    content: 'Are you sure you want to delete this item?',
-                    buttonBorderRadius: BorderRadius.circular(24),
-                    imagePath: "assets/img.png",
-                    buttonLayout:ConfirmButtonLayout.column,
-                    position: PopupPosition.bottom
-                  );
+                      title: 'Confirm Deletion',
+                      content: 'Are you sure you want to delete this item?',
+                      buttonBorderRadius: BorderRadius.circular(24),
+                      imagePath: "assets/img.png",
+                      buttonLayout: ConfirmButtonLayout.column,
+                      position: PopupPosition.bottom);
                   debugPrint('Confirm result: $result');
                 },
                 child: const Text(' Confirm Dialog 底部'),
@@ -119,8 +117,12 @@ class DialogPage extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    titleStyle: const TextStyle(color: Colors.blueAccent, fontSize: 20, fontWeight: FontWeight.bold),
-                    contentStyle: const TextStyle(color: Colors.blueGrey, fontSize: 16),
+                    titleStyle: const TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
+                    contentStyle:
+                        const TextStyle(color: Colors.blueGrey, fontSize: 16),
                     confirmBgColor: Colors.green,
                     cancelBgColor: Colors.pink,
                     cancelStyle: const TextStyle(color: Colors.white),
@@ -128,7 +130,6 @@ class DialogPage extends StatelessWidget {
                 },
                 child: const Text("完全自定义样式"),
               ),
-
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () async {
@@ -219,7 +220,8 @@ class DialogPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: const Center(
-                        child: Text('自定义确认按钮', style: TextStyle(color: Colors.white)),
+                        child: Text('自定义确认按钮',
+                            style: TextStyle(color: Colors.white)),
                       ),
                     ),
                     cancelButtonWidget: Container(
@@ -229,7 +231,8 @@ class DialogPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: const Center(
-                        child: Text('自定义取消按钮', style: TextStyle(color: Colors.white)),
+                        child: Text('自定义取消按钮',
+                            style: TextStyle(color: Colors.white)),
                       ),
                     ),
                     onConfirm: () {
@@ -247,7 +250,6 @@ class DialogPage extends StatelessWidget {
           ),
         ),
       ),
-      )
-    );
+    ));
   }
 }

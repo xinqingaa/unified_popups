@@ -19,6 +19,7 @@ part of '../core/popup_manager.dart';
 /// - [showBarrier]：是否显示遮盖层，默认为 true。
 /// - [barrierColor]：遮盖层颜色，默认为 Colors.black54。
 /// - [clipDuringAnimation]：在锚点模式下是否裁剪动画超出区域，默认 false
+/// - [onBackPressed]：系统返回/侧滑返回优先交给弹窗处理；返回 true 表示已消费，不关闭弹窗
 /// - [dismissOnRouteChange]：是否在路由切换时自动关闭，默认为 null（使用类型默认行为）
 /// - confirm 和 sheet：默认 true（自动关闭）
 /// - toast 和 loading：不关闭（通过类型过滤）
@@ -65,6 +66,11 @@ class PopupConfig {
   /// [可选] 弹出层关闭时的回调
   final VoidCallback? onDismiss;
 
+  /// [可选] 系统返回/侧滑返回时的优先处理回调。
+  ///
+  /// 返回 true 表示弹窗已自行处理返回，PopupManager 不再直接关闭弹窗。
+  final bool Function()? onBackPressed;
+
   /// [可选] 控制安全区域 默认在安全区域内
   final bool useSafeArea;
 
@@ -103,11 +109,11 @@ class PopupConfig {
     this.duration,
     this.onShow,
     this.onDismiss,
+    this.onBackPressed,
     this.type = PopupType.other,
     this.dockToEdge = false,
     this.edgeGap = defaultEdgeGap,
     this.clipDuringAnimation = false,
     this.dismissOnRouteChange,
   }) : animationCurve = animationCurve ?? Curves.easeInOut;
-  
 }

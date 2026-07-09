@@ -6,6 +6,7 @@ Future<DateTime?> _dateImpl({
   DateTime? maxDate,
   required String title,
   required PopupPosition position,
+  bool? dismissOnRouteChange,
   required String confirmText,
   String? cancelText,
   Color? activeColor,
@@ -29,8 +30,8 @@ Future<DateTime?> _dateImpl({
   final animation = (position == PopupPosition.top)
       ? PopupAnimation.slideDown
       : (position == PopupPosition.bottom)
-      ? PopupAnimation.slideUp
-      : PopupAnimation.fade;
+          ? PopupAnimation.slideUp
+          : PopupAnimation.fade;
 
   popupId = PopupManager.show(
     PopupConfig(
@@ -54,6 +55,7 @@ Future<DateTime?> _dateImpl({
       animationDuration: animationDuration,
       position: position,
       type: PopupType.date,
+      dismissOnRouteChange: dismissOnRouteChange,
       barrierDismissible: true,
       onDismiss: () {
         // 如果是通过点击遮罩层关闭的，也需要 complete

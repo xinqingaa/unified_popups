@@ -1,8 +1,10 @@
 // lib/src/apis/pop.dart
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
 import '../utils/sheet_dimension.dart';
+import '../flow_sheets/flow_sheet.dart';
 import '../widgets/confirm_widget.dart';
 import '../widgets/date_picker_widget.dart';
 import '../widgets/loading_widget.dart';
@@ -14,6 +16,7 @@ part 'toast.dart';
 part 'loading.dart';
 part 'confirm.dart';
 part 'sheet.dart';
+part 'flow_sheet.dart';
 part 'date.dart';
 part 'menu.dart';
 
@@ -48,13 +51,14 @@ abstract class Pop {
   /// - [tImgColor]：切换后的自定义图片的着色（可选），用于切换模式。
   /// - [onTap]：点击回调（可选）。
   /// - [toggleable]：是否可切换，默认 `false`。当设置为 `true` 且提供了 `tMessage` 或 `tImagePath` 时，点击 toast 会在两个状态间切换。
+  /// - [dismissOnRouteChange]：是否在路由切换时自动关闭。默认遵循类型策略；toast 默认不关闭。
   ///
   /// 用法示例：
   /// ```dart
   /// Pop.toast('保存成功', toastType: ToastType.success);
   /// Pop.toast('网络异常，请稍后重试', position: PopupPosition.bottom, duration: Duration(seconds: 2));
   /// Pop.toast('自定义图片', customImagePath: 'assets/custom.png', layoutDirection: Axis.vertical);
-  /// 
+  ///
   /// // 切换模式示例：平衡锁定和重力感应
   /// Pop.toast(
   ///   '平衡锁定',
@@ -68,6 +72,7 @@ abstract class Pop {
   static void toast(
     String? message, {
     PopupPosition position = PopupPosition.center,
+    bool? dismissOnRouteChange,
     Duration duration = const Duration(milliseconds: 1200),
     bool showBarrier = false,
     bool barrierDismissible = false,
@@ -94,6 +99,7 @@ abstract class Pop {
       _toastImpl(
         message,
         position: position,
+        dismissOnRouteChange: dismissOnRouteChange,
         duration: duration,
         showBarrier: showBarrier,
         barrierDismissible: barrierDismissible,
@@ -134,6 +140,7 @@ abstract class Pop {
   /// - [showBarrier]：是否显示遮罩层，默认 `true`。
   /// - [barrierDismissible]：点击遮罩是否关闭，默认 `false`（避免误触导致加载中被关）。
   /// - [barrierColor]：遮罩层颜色，默认 `Colors.black54`。
+  /// - [dismissOnRouteChange]：是否在路由切换时自动关闭。默认遵循类型策略；loading 默认不关闭。
   /// - [animationDuration]：动画持续时间，默认 `150ms`。loading 需要快速显示。
   ///
   /// 用法示例：
@@ -141,7 +148,7 @@ abstract class Pop {
   /// Pop.loading(message: '提交中...');
   /// // ... 异步操作完成后
   /// Pop.hideLoading();
-  /// 
+  ///
   /// // 使用自定义图片作为 loading 图标
   /// Pop.loading(
   ///   message: '加载中',
@@ -151,6 +158,7 @@ abstract class Pop {
   /// ```
   static void loading({
     String? message,
+    bool? dismissOnRouteChange,
     Color? backgroundColor,
     double? borderRadius,
     Color? indicatorColor,
@@ -166,6 +174,7 @@ abstract class Pop {
   }) =>
       _loadingImpl(
         message: message,
+        dismissOnRouteChange: dismissOnRouteChange,
         backgroundColor: backgroundColor,
         borderRadius: borderRadius,
         indicatorColor: indicatorColor,
@@ -215,6 +224,7 @@ abstract class Pop {
   /// - [confirmBgColor]/[cancelBgColor]：按钮背景色。
   /// - [padding]/[margin]/[decoration]：外观与间距定制。
   /// - [confirmChild]：在内容与按钮之间插入的自定义组件，常用于放置输入框等交互元素。
+  /// - [dismissOnRouteChange]：是否在路由切换时自动关闭。默认遵循类型策略；confirm 默认关闭。
   /// - [animationDuration]：动画持续时间，默认 `250ms`。confirm 需要适中的动画时长。
   ///
   /// 用法示例：
@@ -234,6 +244,7 @@ abstract class Pop {
     String? content,
     Widget? contentWidget,
     PopupPosition position = PopupPosition.center,
+    bool? dismissOnRouteChange,
     String? confirmText,
     Widget? confirmButtonWidget,
     String? cancelText,
@@ -268,6 +279,7 @@ abstract class Pop {
         content: content,
         contentWidget: contentWidget,
         position: position,
+        dismissOnRouteChange: dismissOnRouteChange,
         confirmText: confirmText ?? 'confirm',
         confirmButtonWidget: confirmButtonWidget,
         cancelText: cancelText,
@@ -319,8 +331,14 @@ abstract class Pop {
   /// - [backgroundColor]/[borderRadius]/[boxShadow]：容器外观定制。
   /// - [padding]/[titlePadding]/[titleStyle]/[titleAlign]：间距与标题样式。
   /// - [dockToEdge] / [edgeGap]：保留弹窗所在边缘的交互区域及其间距。
+  /// - [showDragHandle]：是否显示顶部拖拽指示器（小横条），默认 `true`。
+  /// - [dragHandleColor]：顶部拖拽指示器背景色。
+  /// - [adjustForKeyboard]：底部弹窗是否在键盘弹出时跟随上移，默认 `true`。
+  /// - [dragDismissMode]：拖动关闭策略，默认 `SheetDragDismissMode.fullBody`。
+  /// - [dragDismissModeListenable]：动态切换拖动关闭策略（FlowSheet 按页切换时使用）。
+  /// - [dismissOnRouteChange]：是否在路由切换时自动关闭。默认遵循类型策略；sheet 默认关闭。
+  /// - [onBackPressed]：系统返回/侧滑返回时优先交给 sheet 处理；返回 true 表示已消费。
   /// - [animationDuration]：动画持续时间，默认 `400ms`。sheet 需要更长的动画时长。
-  /// - [dockToEdge]/[edgeGap]：保留弹窗所在边缘的交互区域及其间距。
   ///
   /// 用法示例：
   /// ```dart
@@ -341,6 +359,8 @@ abstract class Pop {
     String? title,
     Widget? titleWidget,
     SheetDirection direction = SheetDirection.bottom,
+    bool? dismissOnRouteChange,
+    bool Function()? onBackPressed,
     bool showCloseButton = false,
     bool? useSafeArea,
     SheetDimension? width,
@@ -360,6 +380,11 @@ abstract class Pop {
     TextAlign? titleAlign,
     bool dockToEdge = false,
     double? edgeGap,
+    bool showDragHandle = true,
+    Color? dragHandleColor,
+    bool adjustForKeyboard = true,
+    SheetDragDismissMode dragDismissMode = SheetDragDismissMode.fullBody,
+    ValueListenable<SheetDragDismissMode>? dragDismissModeListenable,
     Duration animationDuration = const Duration(milliseconds: 400),
     Curve? animationCurve,
   }) =>
@@ -368,6 +393,8 @@ abstract class Pop {
         title: title,
         titleWidget: titleWidget,
         direction: direction,
+        dismissOnRouteChange: dismissOnRouteChange,
+        onBackPressed: onBackPressed,
         imgPath: imgPath,
         showCloseButton: showCloseButton,
         useSafeArea: useSafeArea,
@@ -387,8 +414,59 @@ abstract class Pop {
         titleAlign: titleAlign,
         dockToEdge: dockToEdge,
         edgeGap: edgeGap,
+        showDragHandle: showDragHandle,
+        dragHandleColor: dragHandleColor,
+        adjustForKeyboard: adjustForKeyboard,
+        dragDismissMode: dragDismissMode,
+        dragDismissModeListenable: dragDismissModeListenable,
         animationDuration: animationDuration,
         animationCurve: animationCurve,
+      );
+
+  /// FlowSheet：在一个 sheet 内部提供可控的页面栈（push/pop/replace/closeAll）。
+  ///
+  /// [controller] 由调用方持有，承载内部页面栈与结果回传；底层仍走 [Pop.sheet]。
+  /// 通过 `nav.push` 动态进入后续步骤。
+  /// 需要生命周期的页面可在 [FlowSheetPageState] 中按需 override hook。
+  static Future<R?> flowSheet<R>({
+    required FlowSheetController<R> controller,
+    required FlowSheetPage initialPage,
+    SheetDirection direction = SheetDirection.bottom,
+    SheetDimension? maxHeight,
+    SheetDimension? maxWidth,
+    Color? backgroundColor,
+    EdgeInsetsGeometry? padding,
+    bool barrierDismissible = false,
+    bool? showBarrier,
+    Color? barrierColor,
+    bool Function()? onBackPressed,
+    bool showDragHandle = true,
+    Color? dragHandleColor,
+    bool adjustForKeyboard = true,
+    Duration animationDuration = const Duration(milliseconds: 400),
+    SheetDragDismissMode dragDismissMode = SheetDragDismissMode.fullBody,
+    Color? pageBackgroundColor,
+    FlowSheetRouteBuilder? routeBuilder,
+  }) =>
+      _flowSheetImpl<R>(
+        controller: controller,
+        initialPage: initialPage,
+        direction: direction,
+        maxHeight: maxHeight,
+        maxWidth: maxWidth,
+        backgroundColor: backgroundColor,
+        padding: padding,
+        barrierDismissible: barrierDismissible,
+        showBarrier: showBarrier,
+        barrierColor: barrierColor,
+        onBackPressed: onBackPressed,
+        showDragHandle: showDragHandle,
+        dragHandleColor: dragHandleColor,
+        adjustForKeyboard: adjustForKeyboard,
+        animationDuration: animationDuration,
+        dragDismissMode: dragDismissMode,
+        pageBackgroundColor: pageBackgroundColor,
+        routeBuilder: routeBuilder,
       );
 
   /// 显示一个日期选择弹窗。
@@ -407,6 +485,7 @@ abstract class Pop {
   /// - [headerBg]：头部背景色。
   /// - [height]：组件内容高度，默认 `180.0`。
   /// - [radius]：圆角，默认 `24.0`。
+  /// - [dismissOnRouteChange]：是否在路由切换时自动关闭。默认遵循类型策略；date 默认不关闭。
   /// - [animationDuration]：动画持续时间，默认 `250ms`。date 需要适中的动画时长。
   ///
   /// 用法示例：
@@ -425,6 +504,7 @@ abstract class Pop {
     DateTime? maxDate,
     String title = 'Date of Birth',
     PopupPosition position = PopupPosition.bottom,
+    bool? dismissOnRouteChange,
     String confirmText = 'Confirm',
     String? cancelText = 'Cancel',
     Color? activeColor = Colors.black,
@@ -435,23 +515,23 @@ abstract class Pop {
     Duration animationDuration = const Duration(milliseconds: 250),
     Curve? animationCurve,
   }) =>
-    _dateImpl(
-      initialDate: initialDate,
-      minDate: minDate,
-      maxDate: maxDate,
-      title: title,
-      position: position,
-      confirmText: confirmText,
-      cancelText: cancelText,
-      activeColor: activeColor,
-      noActiveColor: noActiveColor,
-      height: height,
-      headerBg: headerBg,
-      radius: radius,
-      animationDuration: animationDuration,
-      animationCurve: animationCurve,
-    );
-
+      _dateImpl(
+        initialDate: initialDate,
+        minDate: minDate,
+        maxDate: maxDate,
+        title: title,
+        position: position,
+        dismissOnRouteChange: dismissOnRouteChange,
+        confirmText: confirmText,
+        cancelText: cancelText,
+        activeColor: activeColor,
+        noActiveColor: noActiveColor,
+        height: height,
+        headerBg: headerBg,
+        radius: radius,
+        animationDuration: animationDuration,
+        animationCurve: animationCurve,
+      );
 
   /// 显示一个锚定的菜单/气泡弹层。
   ///
@@ -473,6 +553,7 @@ abstract class Pop {
     required GlobalKey anchorKey,
     Offset anchorOffset = Offset.zero,
     required Widget Function(void Function([T? result]) dismiss) builder,
+    bool? dismissOnRouteChange,
     bool showBarrier = true,
     bool barrierDismissible = true,
     BoxDecoration? decoration,
@@ -487,6 +568,7 @@ abstract class Pop {
         anchorKey: anchorKey,
         anchorOffset: anchorOffset,
         builder: builder,
+        dismissOnRouteChange: dismissOnRouteChange,
         showBarrier: showBarrier,
         barrierDismissible: barrierDismissible,
         decoration: decoration,

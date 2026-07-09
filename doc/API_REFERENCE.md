@@ -7,6 +7,7 @@
 - [Loading API](#loading-api)
 - [Confirm API](#confirm-api)
 - [Sheet API](#sheet-api)
+- [FlowSheet API](#flowsheet-api)
 - [Date API](#date-api)
 - [Menu API](#menu-api)
 - [PopupManager](#popupmanager)
@@ -496,6 +497,13 @@ static Future<T?> sheet<T>({
   Color? barrierColor,
   bool dockToEdge = false,
   double? edgeGap,
+  bool showDragHandle = true,
+  Color? dragHandleColor,
+  bool adjustForKeyboard = true,
+  SheetDragDismissMode dragDismissMode = SheetDragDismissMode.fullBody,
+  ValueListenable<SheetDragDismissMode>? dragDismissModeListenable,
+  bool? dismissOnRouteChange,
+  bool Function()? onBackPressed,
   Duration animationDuration = const Duration(milliseconds: 400),
   Curve? animationCurve,
 })
@@ -528,6 +536,13 @@ static Future<T?> sheet<T>({
 | `barrierColor` | `Color?` | `Colors.black54` | ❌ | 遮罩颜色 |
 | `dockToEdge` | `bool` | `false` | ❌ | bottom/left/right 时是否保留边缘交互区域 |
 | `edgeGap` | `double?` | `kBottomNavigationBarHeight + 4` | ❌ | 预留边缘尺寸 |
+| `showDragHandle` | `bool` | `true` | ❌ | 是否显示顶部拖拽指示器 |
+| `dragHandleColor` | `Color?` | `null` | ❌ | 拖拽指示器颜色 |
+| `adjustForKeyboard` | `bool` | `true` | ❌ | 底部弹窗是否跟随键盘上移 |
+| `dragDismissMode` | `SheetDragDismissMode` | `fullBody` | ❌ | 拖动关闭策略 |
+| `dragDismissModeListenable` | `ValueListenable<SheetDragDismissMode>?` | `null` | ❌ | 动态切换拖动关闭策略 |
+| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭 |
+| `onBackPressed` | `bool Function()?` | `null` | ❌ | 系统返回优先处理；返回 true 表示已消费 |
 | `animationDuration` | `Duration` | `400ms` | ❌ | 动画持续时间 |
 | `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
 
@@ -668,6 +683,53 @@ final result = await Pop.sheet<String>(
       ListTile(title: Text('快速选项 2'), onTap: () => dismiss('option2')),
     ],
   ),
+);
+```
+
+## FlowSheet API
+
+在单个 Sheet 内维护多页栈，适合订单确认、KYC 等多步业务。
+
+### 方法签名
+
+```dart
+static Future<R?> flowSheet<R>({
+  required FlowSheetController<R> controller,
+  required FlowSheetPage initialPage,
+  SheetDirection direction = SheetDirection.bottom,
+  SheetDimension? maxHeight,
+  SheetDimension? maxWidth,
+  Color? backgroundColor,
+  EdgeInsetsGeometry? padding,
+  bool barrierDismissible = false,
+  bool? showBarrier,
+  Color? barrierColor,
+  bool Function()? onBackPressed,
+  bool showDragHandle = true,
+  Color? dragHandleColor,
+  bool adjustForKeyboard = true,
+  Duration animationDuration = const Duration(milliseconds: 400),
+  SheetDragDismissMode dragDismissMode = SheetDragDismissMode.fullBody,
+  Color? pageBackgroundColor,
+  FlowSheetRouteBuilder? routeBuilder,
+})
+```
+
+### 核心类型
+
+- `FlowSheetController<R>`：持有内部页面栈与整 sheet 结果类型
+- `FlowSheetPage` / `FlowSheetPageState`：业务页基类；State 可通过 `nav` 调用 `push` / `pop` / `replace` / `completeCurrent` / `closeAll`
+- 生命周期钩子：`onLoad` / `onShow` / `onHide` / `onRemove` / `onClose`
+- `SheetDragDismissMode`：`fullBody` / `contentWhenAtTop` / `handleOnly`（可按页覆盖）
+
+### 简例
+
+```dart
+final controller = FlowSheetController<String>();
+final result = await Pop.flowSheet<String>(
+  controller: controller,
+  maxHeight: SheetDimension.fraction(0.85),
+  initialPage: MyFirstPage(controller: controller),
 );
 ```
 

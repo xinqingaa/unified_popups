@@ -44,8 +44,18 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
 
   // 月份英文缩写列表
   static const List<String> _monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
   ];
 
   @override
@@ -105,22 +115,18 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
     );
   }
 
-  Widget _buildHeader( BorderRadiusGeometry radius) {
+  Widget _buildHeader(BorderRadiusGeometry radius) {
     return Container(
-      decoration: BoxDecoration(
-        color: widget.headerBg,
-        borderRadius:radius
-      ),
+      decoration: BoxDecoration(color: widget.headerBg, borderRadius: radius),
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           if (widget.cancelText != null)
             _buildButton(
-              onTap: widget.onCancel,
-              text: widget.cancelText!,
-              textAlign: TextAlign.left
-            ),
+                onTap: widget.onCancel,
+                text: widget.cancelText!,
+                textAlign: TextAlign.left),
           Text(
             widget.title,
             style: const TextStyle(
@@ -130,34 +136,32 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
             ),
           ),
           _buildButton(
-            onTap: () {
-              final selectedDateTime = DateTime(
-                _selectedYear,
-                _selectedMonth,
-                _selectedDay,
-              );
-              widget.onConfirm(selectedDateTime);
-            },
-            textAlign: TextAlign.right,
-            text: widget.confirmText
-          )
+              onTap: () {
+                final selectedDateTime = DateTime(
+                  _selectedYear,
+                  _selectedMonth,
+                  _selectedDay,
+                );
+                widget.onConfirm(selectedDateTime);
+              },
+              textAlign: TextAlign.right,
+              text: widget.confirmText)
         ],
       ),
     );
   }
 
-  Widget _buildButton ({
-    required VoidCallback onTap ,
-    required String text,
-    required TextAlign textAlign
-  }){
+  Widget _buildButton(
+      {required VoidCallback onTap,
+      required String text,
+      required TextAlign textAlign}) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Text(
-            text ,
+            text,
             textAlign: textAlign,
             style: const TextStyle(
               fontSize: 14,
@@ -189,8 +193,11 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                     _monthNames[value - 1],
                     style: TextStyle(
                       fontSize: 16,
-                      color: isSelected ? widget.activeColor : widget.noActiveColor,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? widget.activeColor
+                          : widget.noActiveColor,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 );
@@ -213,8 +220,11 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                     value.toString(),
                     style: TextStyle(
                       fontSize: 16,
-                      color: isSelected ? widget.activeColor : widget.noActiveColor,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? widget.activeColor
+                          : widget.noActiveColor,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 );
@@ -235,8 +245,11 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                     value.toString(),
                     style: TextStyle(
                       fontSize: 16,
-                      color: isSelected ? widget.activeColor : widget.noActiveColor,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? widget.activeColor
+                          : widget.noActiveColor,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 );
@@ -249,14 +262,14 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
   }
 }
 
-
 class CustomPicker extends StatefulWidget {
   final double height;
   final int startValue;
   final int endValue;
   final int initialValue;
   final ValueChanged<int> onValueChanged;
-  final Widget Function(BuildContext context, int value, bool isSelected) itemBuilder;
+  final Widget Function(BuildContext context, int value, bool isSelected)
+      itemBuilder;
 
   const CustomPicker({
     super.key,
@@ -298,12 +311,12 @@ class _CustomPickerState extends State<CustomPicker> {
     if (widget.initialValue != oldWidget.initialValue ||
         widget.startValue != oldWidget.startValue ||
         widget.endValue != oldWidget.endValue) {
-
       _selectedValue = widget.initialValue;
       final targetItem = _calculateInitialItem();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients && _scrollController.selectedItem != targetItem) {
+        if (_scrollController.hasClients &&
+            _scrollController.selectedItem != targetItem) {
           _scrollController.animateToItem(
             targetItem,
             duration: const Duration(milliseconds: 300),

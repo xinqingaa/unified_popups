@@ -431,6 +431,12 @@ Future<T?> sheet<T>({
   TextAlign? titleAlign,
   bool dockToEdge = false,
   double? edgeGap,
+  bool showDragHandle = true,
+  Color? dragHandleColor,
+  bool adjustForKeyboard = true,
+  SheetDragDismissMode dragDismissMode = SheetDragDismissMode.fullBody,
+  bool? dismissOnRouteChange,
+  bool Function()? onBackPressed,
   Duration animationDuration = const Duration(milliseconds: 400),
   Curve? animationCurve,
 })
@@ -446,6 +452,8 @@ Future<T?> sheet<T>({
 - `showBarrier` / `barrierDismissible` / `barrierColor`：控制遮罩层是否显示、是否可点击关闭以及遮罩颜色
 - `dockToEdge`：在 `bottom` / `left` / `right` 方向弹出时，是否保留原边缘的交互区域（遮罩和内容都会避开该区域）
 - `edgeGap`：保留边缘区域的尺寸，默认 `kBottomNavigationBarHeight + 4`
+- `showDragHandle` / `dragDismissMode` / `adjustForKeyboard`：拖拽指示器、拖关策略与键盘跟随
+- `onBackPressed`：系统返回优先交给 sheet 处理
 - `animationDuration`：动画持续时间，默认 400ms
 - `animationCurve`：动画曲线，默认 `Curves.easeInOut`
 
@@ -555,6 +563,22 @@ await Pop.sheet<void>(
   ),
 );
 ```
+
+### FlowSheet 多步流程
+
+在单个 Sheet 内维护页面栈，适合订单确认、KYC 等多步业务：
+
+```dart
+final controller = FlowSheetController<String>();
+final result = await Pop.flowSheet<String>(
+  controller: controller,
+  maxHeight: SheetDimension.fraction(0.85),
+  dragDismissMode: SheetDragDismissMode.handleOnly,
+  initialPage: MyFirstPage(controller: controller),
+);
+```
+
+业务页继承 `FlowSheetPage` / `FlowSheetPageState`，通过 `nav.push` / `nav.pop` / `nav.replace` / `nav.completeCurrent` / `nav.closeAll` 导航；可用 `onShow` / `onHide` 管理资源。详见 example 中的「订单交易流」与「KYC 向导」。
 
 ### Date 日期选择器
 

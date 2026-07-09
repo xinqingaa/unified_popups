@@ -43,56 +43,65 @@ class ConfirmWidget extends StatelessWidget {
   final VoidCallback? onCancel;
   final VoidCallback? onClose;
 
-  const ConfirmWidget({
-    super.key,
-    this.imagePath,
-    this.imageHeight,
-    this.imageWidth,
-    this.title,
-    this.titleWidget,
-    this.content,
-    this.contentWidget,
-    this.confirmText,
-    this.confirmButtonWidget,
-    this.cancelText,
-    this.cancelButtonWidget,
-    this.showCloseButton = false,
-    this.textAlign,
-    this.buttonLayout ,
-    this.buttonBorderRadius,
-    this.onConfirm,
-    this.onCancel,
-    this.onClose,
-    this.padding,
-    this.margin,
-    this.decoration,
-    this.titleStyle,
-    this.contentStyle,
-    this.cancelStyle,
-    this.confirmStyle,
-    this.cancelBgColor,
-    this.confirmBgColor,
-    this.confirmBorder,
-    this.cancelBorder,
-    this.confirmChild
-  }) : assert(
-    (content != null || contentWidget != null),
-    'Either content or contentWidget must be provided.',
-  ), assert(
-    (confirmText != null || confirmButtonWidget != null),
-    'Either confirmText or confirmButtonWidget must be provided.',
-  ), assert(
-    cancelText == null || cancelButtonWidget == null || onCancel != null,
-    'onCancel must be provided if cancelText or cancelButtonWidget is not null.',
-  );
-
+  const ConfirmWidget(
+      {super.key,
+      this.imagePath,
+      this.imageHeight,
+      this.imageWidth,
+      this.title,
+      this.titleWidget,
+      this.content,
+      this.contentWidget,
+      this.confirmText,
+      this.confirmButtonWidget,
+      this.cancelText,
+      this.cancelButtonWidget,
+      this.showCloseButton = false,
+      this.textAlign,
+      this.buttonLayout,
+      this.buttonBorderRadius,
+      this.onConfirm,
+      this.onCancel,
+      this.onClose,
+      this.padding,
+      this.margin,
+      this.decoration,
+      this.titleStyle,
+      this.contentStyle,
+      this.cancelStyle,
+      this.confirmStyle,
+      this.cancelBgColor,
+      this.confirmBgColor,
+      this.confirmBorder,
+      this.cancelBorder,
+      this.confirmChild})
+      : assert(
+          (content != null || contentWidget != null),
+          'Either content or contentWidget must be provided.',
+        ),
+        assert(
+          (confirmText != null || confirmButtonWidget != null),
+          'Either confirmText or confirmButtonWidget must be provided.',
+        ),
+        assert(
+          cancelText == null || cancelButtonWidget == null || onCancel != null,
+          'onCancel must be provided if cancelText or cancelButtonWidget is not null.',
+        );
 
   @override
   Widget build(BuildContext context) {
     const defaultPadding = EdgeInsets.fromLTRB(24.0, 28.0, 24.0, 24.0);
     const defaultMargin = EdgeInsets.all(24);
-    const defaultTitleStyle = TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold, height: 1.4);
-    const defaultContentStyle = TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500, height: 1.5);
+    const defaultTitleStyle = TextStyle(
+        color: Colors.black87,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        height: 1.4);
+    const defaultContentStyle = TextStyle(
+        color: Colors.black87,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        height: 1.5);
     final defaultDecoration = BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(32.0),
@@ -131,13 +140,21 @@ class ConfirmWidget extends StatelessWidget {
           titleWidget!,
           const SizedBox(height: 12),
         ] else if (title != null) ...[
-          Text(title!, style: titleStyle ?? defaultTitleStyle, textAlign: textAlign, maxLines: null, overflow: TextOverflow.visible),
+          Text(title!,
+              style: titleStyle ?? defaultTitleStyle,
+              textAlign: textAlign,
+              maxLines: null,
+              overflow: TextOverflow.visible),
           const SizedBox(height: 12),
         ],
         if (contentWidget != null) ...[
           contentWidget!,
         ] else if (content != null) ...[
-          Text(content!, style: contentStyle ?? defaultContentStyle, textAlign: textAlign, maxLines: null, overflow: TextOverflow.visible),
+          Text(content!,
+              style: contentStyle ?? defaultContentStyle,
+              textAlign: textAlign,
+              maxLines: null,
+              overflow: TextOverflow.visible),
         ],
         if (confirmChild != null) ...[
           const SizedBox(height: 12),
@@ -173,7 +190,8 @@ class ConfirmWidget extends StatelessWidget {
                 top: 8,
                 right: 8,
                 child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.black45, size: 20),
+                  icon:
+                      const Icon(Icons.close, color: Colors.black45, size: 20),
                   onPressed: handleClose,
                   splashRadius: 20,
                 ),
@@ -185,15 +203,21 @@ class ConfirmWidget extends StatelessWidget {
   }
 
   /// 根据配置构建按钮布局
-  Widget _buildButtons({required VoidCallback onConfirmTap, VoidCallback? onCancelTap}) {
+  Widget _buildButtons(
+      {required VoidCallback onConfirmTap, VoidCallback? onCancelTap}) {
     // 按钮圆角，提供默认值
-    final effectiveBorderRadius = buttonBorderRadius ?? BorderRadius.circular(24.0);
+    final effectiveBorderRadius =
+        buttonBorderRadius ?? BorderRadius.circular(24.0);
     // 颜色逻辑
     final effectiveConfirmBgColor = confirmBgColor ?? Colors.black87;
     // 确认按钮文字固定为白色
-    const defaultConfirmTextStyle = TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold);
+    const defaultConfirmTextStyle = TextStyle(
+        color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold);
     // 取消按钮文字颜色默认为确认按钮的背景色
-    final defaultCancelTextStyle = TextStyle(color: effectiveConfirmBgColor, fontSize: 14, fontWeight: FontWeight.w500);
+    final defaultCancelTextStyle = TextStyle(
+        color: effectiveConfirmBgColor,
+        fontSize: 14,
+        fontWeight: FontWeight.w500);
 
     Widget buildTextButton({
       required String text,
@@ -267,7 +291,8 @@ class ConfirmWidget extends StatelessWidget {
           cancelButton,
         ],
       );
-    } else { // 默认为 Row 布局
+    } else {
+      // 默认为 Row 布局
       return Row(
         children: [
           Expanded(child: cancelButton),
