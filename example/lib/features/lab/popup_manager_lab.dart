@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
-class PopupManagerPage extends StatefulWidget {
-  const PopupManagerPage({super.key});
+class PopupManagerLabPage extends StatefulWidget {
+  const PopupManagerLabPage({super.key});
 
   @override
-  State<PopupManagerPage> createState() => _PopupManagerPageState();
+  State<PopupManagerLabPage> createState() => _PopupManagerLabPageState();
 }
 
-class _PopupManagerPageState extends State<PopupManagerPage> {
+class _PopupManagerLabPageState extends State<PopupManagerLabPage> {
   String? _currentPopupId;
   int _popupCount = 0;
 
@@ -37,7 +37,7 @@ class _PopupManagerPageState extends State<PopupManagerPage> {
     return PopScopeWidget(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('PopupManager 示例'),
+          title: const Text('Lab · PopupManager'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {

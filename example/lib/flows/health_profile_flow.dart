@@ -3,41 +3,39 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
-/// 演示 B：开户 / KYC 向导。
-///
-/// 资料(replace) → 风险问卷(contentWhenAtTop + 生命周期轮询) → 确认提交(closeAll)
-class KycWizardFlow {
-  KycWizardFlow._();
+/// 健康档案向导：资料(replace) → 风险问卷(lifecycle) → 确认提交。
+class HealthProfileFlow {
+  HealthProfileFlow._();
 
   static Future<void> open() async {
-    final controller = FlowSheetController<_KycResult>();
-    final draft = _KycDraft();
-    final result = await Pop.flowSheet<_KycResult>(
+    final controller = FlowSheetController<_HealthResult>();
+    final draft = _HealthDraft();
+    final result = await Pop.flowSheet<_HealthResult>(
       controller: controller,
       maxHeight: const SheetDimension.fraction(0.9),
       dragDismissMode: SheetDragDismissMode.handleOnly,
       barrierDismissible: false,
-      initialPage: _ProfileStepPage(controller: controller, draft: draft),
+      initialPage: _BasicsStepPage(controller: controller, draft: draft),
     );
     if (result != null) {
       Pop.toast(
-        'KYC 完成：${result.name} / ${result.phone} / 风险${result.riskLevel}',
+        '档案已保存：${result.name} · 风险等级 ${result.riskLevel}',
         toastType: ToastType.success,
       );
     } else {
-      Pop.toast('已退出开户流程');
+      Pop.toast('已退出健康档案');
     }
   }
 }
 
-class _KycDraft {
+class _HealthDraft {
   String name = '';
   String phone = '';
   int riskLevel = 1;
 }
 
-class _KycResult {
-  const _KycResult({
+class _HealthResult {
+  const _HealthResult({
     required this.name,
     required this.phone,
     required this.riskLevel,
@@ -48,23 +46,23 @@ class _KycResult {
   final int riskLevel;
 }
 
-class _ProfileStepPage extends FlowSheetPage<void> {
-  const _ProfileStepPage({
+class _BasicsStepPage extends FlowSheetPage<void> {
+  const _BasicsStepPage({
     required this.controller,
     required this.draft,
   }) : super(
-          id: 'kyc_profile',
+          id: 'health_basics',
           dragDismissMode: SheetDragDismissMode.handleOnly,
         );
 
-  final FlowSheetController<_KycResult> controller;
-  final _KycDraft draft;
+  final FlowSheetController<_HealthResult> controller;
+  final _HealthDraft draft;
 
   @override
-  State<_ProfileStepPage> createState() => _ProfileStepPageState();
+  State<_BasicsStepPage> createState() => _BasicsStepPageState();
 }
 
-class _ProfileStepPageState extends FlowSheetPageState<_ProfileStepPage, void> {
+class _BasicsStepPageState extends FlowSheetPageState<_BasicsStepPage, void> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _phoneCtrl;
   String? _error;
@@ -92,7 +90,6 @@ class _ProfileStepPageState extends FlowSheetPageState<_ProfileStepPage, void> {
     }
     widget.draft.name = name;
     widget.draft.phone = phone;
-    // replace：不可回到过期的资料页
     nav.replace(
       _RiskStepPage(controller: widget.controller, draft: widget.draft),
     );
@@ -109,7 +106,7 @@ class _ProfileStepPageState extends FlowSheetPageState<_ProfileStepPage, void> {
             children: [
               const Expanded(
                 child: Text(
-                  '1/3 基本资料',
+                  '1/3 基本信息',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -120,7 +117,7 @@ class _ProfileStepPageState extends FlowSheetPageState<_ProfileStepPage, void> {
             ],
           ),
           const Text(
-            '下一步使用 nav.replace，栈中不会留下本页，系统返回不会回到过期资料。',
+            '下一步使用 nav.replace，栈中不会留下本页。',
             style: TextStyle(color: Colors.black54, height: 1.3),
           ),
           const SizedBox(height: 16),
@@ -157,12 +154,12 @@ class _RiskStepPage extends FlowSheetPage<void> {
     required this.controller,
     required this.draft,
   }) : super(
-          id: 'kyc_risk',
+          id: 'health_risk',
           dragDismissMode: SheetDragDismissMode.contentWhenAtTop,
         );
 
-  final FlowSheetController<_KycResult> controller;
-  final _KycDraft draft;
+  final FlowSheetController<_HealthResult> controller;
+  final _HealthDraft draft;
 
   @override
   State<_RiskStepPage> createState() => _RiskStepPageState();
@@ -204,13 +201,13 @@ class _RiskStepPageState extends FlowSheetPageState<_RiskStepPage, void> {
             children: [
               const Expanded(
                 child: Text(
-                  '2/3 风险问卷',
+                  '2/3 健康评估',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               Text(
-                '轮询 #$_tick',
-                style: const TextStyle(color: Colors.deepPurple),
+                '监测 #$_tick',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
             ],
           ),
@@ -218,24 +215,29 @@ class _RiskStepPageState extends FlowSheetPageState<_RiskStepPage, void> {
         const Padding(
           padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Text(
-            'onShow 启动假轮询，onHide/离开时停止。滚到顶再下拉可关 Sheet（contentWhenAtTop）。',
+            'onShow 启动假轮询，onHide 停止。滚到顶再下拉可关 Sheet。',
             style: TextStyle(color: Colors.black54, height: 1.3),
           ),
         ),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: 12,
+            itemCount: 10,
             itemBuilder: (context, index) {
               final level = index + 1;
               final selected = widget.draft.riskLevel == level;
               return Card(
-                color: selected ? Colors.deepPurple.shade50 : null,
+                color: selected
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : null,
                 child: ListTile(
-                  title: Text('风险偏好等级 $level'),
-                  subtitle: Text('示例题目 ${index + 1}：请根据自身承受能力选择。'),
+                  title: Text('运动风险等级 $level'),
+                  subtitle: Text('示例题 ${index + 1}：请根据自身情况选择。'),
                   trailing: selected
-                      ? const Icon(Icons.check_circle, color: Colors.deepPurple)
+                      ? Icon(
+                          Icons.check_circle,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
                       : null,
                   onTap: () => setState(() => widget.draft.riskLevel = level),
                 ),
@@ -270,12 +272,12 @@ class _ReviewStepPage extends FlowSheetPage<void> {
     required this.controller,
     required this.draft,
   }) : super(
-          id: 'kyc_review',
+          id: 'health_review',
           dragDismissMode: SheetDragDismissMode.handleOnly,
         );
 
-  final FlowSheetController<_KycResult> controller;
-  final _KycDraft draft;
+  final FlowSheetController<_HealthResult> controller;
+  final _HealthDraft draft;
 
   @override
   State<_ReviewStepPage> createState() => _ReviewStepPageState();
@@ -289,7 +291,7 @@ class _ReviewStepPageState extends FlowSheetPageState<_ReviewStepPage, void> {
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     widget.controller.closeAll(
-      _KycResult(
+      _HealthResult(
         name: widget.draft.name,
         phone: widget.draft.phone,
         riskLevel: widget.draft.riskLevel,
@@ -331,12 +333,12 @@ class _ReviewStepPageState extends FlowSheetPageState<_ReviewStepPage, void> {
           else ...[
             OutlinedButton(
               onPressed: () => widget.controller.closeAll(),
-              child: const Text('取消开户'),
+              child: const Text('取消'),
             ),
             const SizedBox(height: 8),
             FilledButton(
               onPressed: _submit,
-              child: const Text('提交并关闭 FlowSheet'),
+              child: const Text('提交并关闭'),
             ),
           ],
         ],

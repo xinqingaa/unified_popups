@@ -2,14 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
-class AsyncPage extends StatefulWidget {
-  const AsyncPage({super.key});
+class AsyncLabPage extends StatefulWidget {
+  const AsyncLabPage({super.key});
 
   @override
-  State<AsyncPage> createState() => _AsyncPageState();
+  State<AsyncLabPage> createState() => _AsyncLabPageState();
 }
 
-class _AsyncPageState extends State<AsyncPage> {
+class _AsyncLabPageState extends State<AsyncLabPage> {
   String _lastResult = '';
 
   void _updateResult(String result) {
@@ -22,7 +22,7 @@ class _AsyncPageState extends State<AsyncPage> {
   Widget build(BuildContext context) {
     return PopScopeWidget(
       child: Scaffold(
-        appBar: AppBar(title: const Text('异步场景测试')),
+        appBar: AppBar(title: const Text('Lab · 异步边界')),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
