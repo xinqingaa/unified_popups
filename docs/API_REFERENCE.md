@@ -11,6 +11,7 @@
 - [Date API](#date-api)
 - [Menu API](#menu-api)
 - [PopupManager](#popupmanager)
+- [PopupRouteObserver](#popuprouteobserver)
 - [枚举类型](#枚举类型)
 
 ## Pop 类
@@ -21,12 +22,12 @@
 
 ```dart
 abstract class Pop {
-  // 静态方法
   static void toast(...)
   static void loading(...)
   static void hideLoading()
   static Future<bool?> confirm(...)
   static Future<T?> sheet<T>(...)
+  static Future<R?> flowSheet<R>(...)
   static Future<DateTime?> date(...)
   static Future<T?> menu<T>(...)
 }
@@ -40,6 +41,7 @@ abstract class Pop {
 static void toast(
   String? message, {
   PopupPosition position = PopupPosition.center,
+  bool? dismissOnRouteChange,
   Duration duration = const Duration(milliseconds: 1200),
   bool showBarrier = false,
   bool barrierDismissible = false,
@@ -72,6 +74,7 @@ static void toast(
 | `message` | `String?` | - | ❌ | 要显示的消息文本（与 `messageWidget` 二选一） |
 | `messageWidget` | `Widget?` | `null` | ❌ | 自定义消息 Widget，如果提供则优先使用，忽略 `message` |
 | `position` | `PopupPosition` | `center` | ❌ | 显示位置 |
+| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 toast 默认不关闭 |
 | `duration` | `Duration` | `1200ms` | ❌ | 显示时长 |
 | `showBarrier` | `bool` | `false` | ❌ | 是否显示遮罩层 |
 | `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
@@ -181,6 +184,7 @@ Pop.toast(
 ```dart
 static void loading({
   String? message,
+  bool? dismissOnRouteChange,
   Color? backgroundColor,
   double? borderRadius,
   Color? indicatorColor,
@@ -201,6 +205,7 @@ static void loading({
 | 参数 | 类型 | 默认值 | 必填 | 说明 |
 |------|------|--------|------|------|
 | `message` | `String?` | `null` | ❌ | 加载提示文本 |
+| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 loading 默认不关闭 |
 | `backgroundColor` | `Color?` | `null` | ❌ | 背景颜色 |
 | `borderRadius` | `double?` | `null` | ❌ | 圆角半径 |
 | `indicatorColor` | `Color?` | `null` | ❌ | 指示器颜色 |
@@ -229,7 +234,7 @@ Pop.hideLoading();
 // 自定义样式
 Pop.loading(
   message: '自定义样式 Loading',
-  backgroundColor: Colors.purple.withOpacity(0.9),
+  backgroundColor: Colors.purple.withValues(alpha: 0.9),
   borderRadius: 20,
   indicatorColor: Colors.white,
   indicatorStrokeWidth: 3,
@@ -281,6 +286,7 @@ static Future<bool?> confirm({
   String? content,
   Widget? contentWidget,
   PopupPosition position = PopupPosition.center,
+  bool? dismissOnRouteChange,
   String? confirmText,
   Widget? confirmButtonWidget,
   String? cancelText,
@@ -320,6 +326,7 @@ static Future<bool?> confirm({
 | `content` | `String?` | `null` | ❌ | 对话框内容（与 `contentWidget` 二选一） |
 | `contentWidget` | `Widget?` | `null` | ❌ | 自定义内容 Widget，如果提供则优先使用，忽略 `content` |
 | `position` | `PopupPosition` | `center` | ❌ | 显示位置 |
+| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 confirm 默认关闭 |
 | `confirmText` | `String?` | `'confirm'` | ❌ | 确认按钮文本（与 `confirmButtonWidget` 二选一） |
 | `confirmButtonWidget` | `Widget?` | `null` | ❌ | 自定义确认按钮 Widget，如果提供则优先使用，忽略 `confirmText` |
 | `cancelText` | `String?` | `'cancel'` | ❌ | 取消按钮文本（与 `cancelButtonWidget` 二选一） |
@@ -401,7 +408,7 @@ final result = await Pop.confirm(
   confirmText: '删除',
   confirmBgColor: Colors.red,
   confirmBorder: Border.all(color: Colors.redAccent),
-  cancelBorder: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+  cancelBorder: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
   buttonLayout: ConfirmButtonLayout.column,
   showCloseButton: true,
 );
@@ -633,7 +640,7 @@ await Pop.sheet<void>(
   borderRadius: BorderRadius.circular(20),
   boxShadow: [
     BoxShadow(
-      color: Colors.black.withOpacity(0.1),
+      color: Colors.black.withValues(alpha: 0.1),
       blurRadius: 10,
       offset: Offset(0, -2),
     ),
@@ -688,7 +695,7 @@ final result = await Pop.sheet<String>(
 
 ## FlowSheet API
 
-在单个 Sheet 内维护多页栈，适合订单确认、KYC 等多步业务。
+在单个 Sheet 内维护多页栈，适合开始训练、健康档案等多步业务流。底层仍走 `Pop.sheet`；系统返回默认交给 `controller.handleBack`（优先退内部页）。
 
 ### 方法签名
 
@@ -715,12 +722,34 @@ static Future<R?> flowSheet<R>({
 })
 ```
 
-### 核心类型
+### 参数说明
 
-- `FlowSheetController<R>`：持有内部页面栈与整 sheet 结果类型
-- `FlowSheetPage` / `FlowSheetPageState`：业务页基类；State 可通过 `nav` 调用 `push` / `pop` / `replace` / `completeCurrent` / `closeAll`
-- 生命周期钩子：`onLoad` / `onShow` / `onHide` / `onRemove` / `onClose`
-- `SheetDragDismissMode`：`fullBody` / `contentWhenAtTop` / `handleOnly`（可按页覆盖）
+| 参数 | 类型 | 默认值 | 必填 | 说明 |
+|------|------|--------|------|------|
+| `controller` | `FlowSheetController<R>` | - | ✅ | 持有内部页面栈与整 sheet 结果 |
+| `initialPage` | `FlowSheetPage` | - | ✅ | 首屏业务页 |
+| `direction` | `SheetDirection` | `bottom` | ❌ | 滑出方向 |
+| `maxHeight` / `maxWidth` | `SheetDimension?` | `null` | ❌ | 尺寸约束 |
+| `backgroundColor` | `Color?` | `null` | ❌ | Sheet 背景色 |
+| `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
+| `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
+| `showBarrier` | `bool?` | `null` | ❌ | 是否显示遮罩 |
+| `barrierColor` | `Color?` | `null` | ❌ | 遮罩颜色 |
+| `onBackPressed` | `bool Function()?` | `controller.handleBack` | ❌ | 系统返回优先处理；返回 true 表示已消费 |
+| `showDragHandle` | `bool` | `true` | ❌ | 是否显示拖拽指示器 |
+| `dragHandleColor` | `Color?` | `null` | ❌ | 拖拽指示器颜色 |
+| `adjustForKeyboard` | `bool` | `true` | ❌ | 是否跟随键盘上移 |
+| `animationDuration` | `Duration` | `400ms` | ❌ | 动画时长 |
+| `dragDismissMode` | `SheetDragDismissMode` | `fullBody` | ❌ | 默认拖动关闭策略（可被页面覆盖） |
+| `pageBackgroundColor` | `Color?` | `null` | ❌ | 内部页背景色 |
+| `routeBuilder` | `FlowSheetRouteBuilder?` | `null` | ❌ | 自定义内部页转场 |
+
+### 核心类型与生命周期
+
+- `FlowSheetController<R>`：内部栈与结果回传
+- `FlowSheetPage` / `FlowSheetPageState`：通过 `nav` 调用 `push` / `pop` / `replace` / `completeCurrent` / `closeAll`
+- 生命周期钩子：`onLoad` / `onShow` / `onHide` / `onRemove` / `onClose`（适合启停轮询）
+- 结束整条流：优先 `completeCurrent(result)` 或 `closeAll(result)`，避免先 `pop` 再关 sheet 造成双动画
 
 ### 简例
 
@@ -729,9 +758,11 @@ final controller = FlowSheetController<String>();
 final result = await Pop.flowSheet<String>(
   controller: controller,
   maxHeight: SheetDimension.fraction(0.85),
-  initialPage: MyFirstPage(controller: controller),
+  initialPage: StartWorkoutIntroPage(controller: controller),
 );
 ```
+
+详见 example 中的「开始训练」与「健康档案」FlowSheet。
 
 ## Date API
 
@@ -744,6 +775,7 @@ static Future<DateTime?> date({
   DateTime? maxDate,
   String title = 'Date of Birth',
   PopupPosition position = PopupPosition.bottom,
+  bool? dismissOnRouteChange,
   String confirmText = 'Confirm',
   String? cancelText = 'Cancel',
   Color? activeColor = Colors.black,
@@ -765,6 +797,7 @@ static Future<DateTime?> date({
 | `maxDate` | `DateTime?` | `null` | ❌ | 最大可选日期 |
 | `title` | `String` | `'Date of Birth'` | ❌ | 标题 |
 | `position` | `PopupPosition` | `bottom` | ❌ | 显示位置 |
+| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 date 默认不关闭 |
 | `confirmText` | `String` | `'Confirm'` | ❌ | 确认按钮文本 |
 | `cancelText` | `String?` | `'Cancel'` | ❌ | 取消按钮文本 |
 | `activeColor` | `Color?` | `Colors.black` | ❌ | 选中颜色 |
@@ -829,6 +862,7 @@ static Future<T?> menu<T>({
   required GlobalKey anchorKey,
   Offset anchorOffset = Offset.zero,
   required Widget Function(void Function([T? result]) dismiss) builder,
+  bool? dismissOnRouteChange,
   bool showBarrier = true,
   bool barrierDismissible = true,
   Color? barrierColor,
@@ -848,6 +882,7 @@ static Future<T?> menu<T>({
 | `anchorKey` | `GlobalKey` | - | ✅ | 锚定目标的 GlobalKey |
 | `anchorOffset` | `Offset` | `Offset.zero` | ❌ | 相对于目标的偏移 |
 | `builder` | `Widget Function(void Function([T? result]) dismiss)` | - | ✅ | 内容构建器 |
+| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 menu 默认不关闭 |
 | `showBarrier` | `bool` | `true` | ❌ | 是否显示遮罩 |
 | `barrierDismissible` | `bool` | `true` | ❌ | 点击遮罩是否关闭 |
 | `barrierColor` | `Color?` | `Colors.black54` | ❌ | 遮罩颜色 |
@@ -1082,18 +1117,24 @@ if (PopupManager.hasNonToastPopup) {
 static bool hideLastNonToast()
 ```
 
-**说明：** 隐藏最后一个非 Toast 类型的弹窗。
+**说明：** 从最新弹窗开始查找非 Toast。若该弹窗配置了 `onBackPressed` 且返回 `true`，视为已消费（例如 FlowSheet 退内部页），不关闭 Overlay；否则关闭该弹窗。
 
-**返回值：** 如果成功隐藏了弹窗返回 `true`，否则返回 `false`
+**返回值：** 已处理（消费返回或关闭弹窗）返回 `true`，否则 `false`
 
 **使用示例：**
 ```dart
 if (PopupManager.hideLastNonToast()) {
-  print('成功隐藏了非 Toast 弹窗');
-} else {
-  print('没有找到非 Toast 弹窗');
+  // 已由弹窗内部处理，或已关闭最上层非 toast
 }
 ```
+
+#### 路由切换时关闭弹窗
+
+```dart
+static void hidePopupsOnRouteChange()
+```
+
+**说明：** 由 `PopupRouteObserver` 在 push / pop / replace / **didRemove** 时调用。关闭所有应在路由切换时消失的弹窗（默认：confirm / sheet；toast / loading / date / menu 默认保留，可用 `dismissOnRouteChange` 覆盖）。
 
 #### 根据类型隐藏弹窗
 
@@ -1196,39 +1237,32 @@ class _PopupInfo {
 ### 使用示例
 
 ```dart
-// 初始化
+final navigatorKey = GlobalKey<NavigatorState>();
+
 void main() {
-  PopupManager.initialize(
-    navigatorKey: GlobalKey<NavigatorState>(),
-  );
-  runApp(MyApp());
+  runApp(MyApp(navigatorKey: navigatorKey));
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    PopupManager.initialize(navigatorKey: navigatorKey);
+  });
 }
 
-// 全局管理
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: PopupManager.navigatorKey,
-      home: PopScopeWidget(
-        child: HomePage(),
-      ),
-    );
-  }
-}
-
-// 处理返回键
-WillPopScope(
-  onWillPop: () async {
-    if (PopupManager.hasNonToastPopup) {
-      PopupManager.hideLastNonToast();
-      return false;
-    }
-    return true;
-  },
-  child: HomePage(),
-)
+MaterialApp(
+  navigatorKey: navigatorKey,
+  navigatorObservers: [PopupRouteObserver()],
+  builder: (context, child) => PopScopeWidget(
+    child: child ?? const SizedBox.shrink(),
+  ),
+  home: const HomePage(),
+);
 ```
+
+## PopupRouteObserver
+
+```dart
+class PopupRouteObserver extends RouteObserver<PageRoute<dynamic>>
+```
+
+监听 `didPush` / `didPop` / `didReplace` / `didRemove`，调用 `PopupManager.hidePopupsOnRouteChange()`。须注册到 `MaterialApp.navigatorObservers`，并与初始化使用的 `navigatorKey` 为同一 Navigator。
 
 ## 枚举类型
 
@@ -1285,6 +1319,16 @@ enum ToastType {
 enum ConfirmButtonLayout {
   row,    // 水平排列
   column, // 垂直排列
+}
+```
+
+### SheetDragDismissMode
+
+```dart
+enum SheetDragDismissMode {
+  fullBody,         // 非滚动主体：整块可拖关
+  contentWhenAtTop, // 滚动内容到顶后继续下拉可关
+  handleOnly,       // 仅拖条/标题栏可拖关（适合下拉刷新页）
 }
 ```
 

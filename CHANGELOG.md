@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 各 `Pop.*` API 透出可选 `dismissOnRouteChange`
 
 ### Example
-- 新增 FlowSheet 演示：订单交易流、开户/KYC 向导
+- FitPulse 健身健康示例：主路径场景（今日 / 训练 / 数据 / 我的）+ Lab；含开始训练与健康档案 FlowSheet
 
 ---
 

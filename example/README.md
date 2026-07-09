@@ -1,16 +1,23 @@
-# example
+# FitPulse Example
 
-A new Flutter project.
+Fitness-style demo for `unified_popups`: product paths plus a Lab for edge cases.
 
-## Getting Started
+## Run
 
-This project is a starting point for a Flutter application.
+```bash
+cd example
+flutter pub get
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Map
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+| Area | Covers |
+|------|--------|
+| Today | toast / loading / confirm |
+| Workouts | sheet (dockToEdge), menu, start-workout FlowSheet |
+| Progress | date, export loading |
+| Profile | profile sheet, health-profile FlowSheet, settings routes |
+| Lab (AppBar ⋯) | Async / PopupManager regression |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Package docs: [../docs/README.md](../docs/README.md).
