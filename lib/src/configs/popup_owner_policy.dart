@@ -1,0 +1,4 @@
+enum PopupOwnerPolicy {
+  independent,
+  dismissWithParent,
+}
