@@ -9,8 +9,8 @@ Public exports live in `lib/unified_popups.dart`, while implementation details a
 - `flutter pub get` — install dependencies for both the package and the bundled example.
 - `flutter analyze` — run static analysis with the rules defined in `analysis_options.yaml`.
 - `dart format lib test example/lib` — apply the standard 2-space Dart style before committing.
-- `flutter test` — run the suite in `test/` (includes FlowSheet coverage).
-- `cd example && flutter run` — smoke-test UX in the FitPulse demo.
+- `flutter test` — run the suite in `test/` (toast/sheet/flowSheet and related coverage).
+- `cd example && flutter run` — smoke-test UX in the FitPulse demo (all popup types).
 
 ## Coding Style & Naming Conventions
 

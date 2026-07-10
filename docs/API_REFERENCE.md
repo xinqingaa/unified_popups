@@ -695,7 +695,7 @@ final result = await Pop.sheet<String>(
 
 ## FlowSheet API
 
-在单个 Sheet 内维护多页栈，适合开始训练、健康档案等多步业务流。底层仍走 `Pop.sheet`；系统返回默认交给 `controller.handleBack`（优先退内部页）。
+在单个 Sheet 内维护多页栈，适合多步向导。底层仍走 `Pop.sheet`；系统返回默认交给 `controller.handleBack`（优先退内部页）。
 
 ### 方法签名
 
@@ -762,7 +762,7 @@ final result = await Pop.flowSheet<String>(
 );
 ```
 
-详见 example 中的「开始训练」与「健康档案」FlowSheet。
+示例见 `example/lib/flows/`。
 
 ## Date API
 
