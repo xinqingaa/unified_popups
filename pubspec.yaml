@@ -5,8 +5,8 @@ homepage: https://github.com/xinqingaa/unified_popups
 repository: https://github.com/xinqingaa/unified_popups
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  flutter: ">=1.17.0"
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: ">=3.24.0"
 
 dependencies:
   flutter:

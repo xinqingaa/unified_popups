@@ -112,7 +112,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
     Widget container = Container(
       padding: defaultPadding,
       decoration: BoxDecoration(
-        color: widget.backgroundColor ?? Colors.black.withValues(alpha: 0.80),
+        color: widget.backgroundColor ?? const Color(0xCC000000),
         borderRadius: BorderRadius.circular(widget.borderRadius ?? 12.0),
       ),
       child: content,
@@ -139,8 +139,7 @@ class _LoadingWidgetState extends State<LoadingWidget>
               child: Container(
                 padding: defaultPadding,
                 decoration: BoxDecoration(
-                  color: widget.backgroundColor ??
-                      Colors.black.withValues(alpha: 0.80),
+                  color: widget.backgroundColor ?? const Color(0xCC000000),
                   borderRadius:
                       BorderRadius.circular(widget.borderRadius ?? 12.0),
                 ),

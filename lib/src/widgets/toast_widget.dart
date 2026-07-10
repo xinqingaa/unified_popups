@@ -67,7 +67,7 @@ class _ToastWidgetState extends State<ToastWidget> {
   @override
   Widget build(BuildContext context) {
     final defaultDecoration = BoxDecoration(
-      color: Colors.black.withValues(alpha: 0.80),
+      color: const Color(0xCC000000),
       borderRadius: BorderRadius.circular(12.0),
     );
     const defaultStyle = TextStyle(color: Colors.white, fontSize: 16);

@@ -126,7 +126,8 @@ class PopupController extends ChangeNotifier {
       ..routePolicy = request.routePolicy
       ..ownership = request.ownership
       ..lifetime = request.lifetime
-      ..lifecycle = request.lifecycle ?? PopupLifecycleCallbacks<T>();
+      ..lifecycle = request.lifecycle ?? PopupLifecycleCallbacks<T>()
+      ..resolveUpdate = request.resolveUpdate;
     record.generation++;
     _restartLifetime(record);
     _notifySafely();
@@ -135,6 +136,16 @@ class PopupController extends ChangeNotifier {
   void _updateConfig<T, C>(_PopupRecord<T, C> record, C config) {
     if (!record.isActive || !record.updatable) return;
     record.config = config;
+    final update = record.resolveUpdate?.call(config);
+    if (update != null) {
+      record
+        ..tags = Set<String>.unmodifiable(update.tags)
+        ..routePolicy = update.routePolicy
+        ..backPolicy = update.backPolicy
+        ..ownership = update.ownership
+        ..lifetime = update.lifetime
+        ..lifecycle = update.lifecycle;
+    }
     record.generation++;
     _restartLifetime(record);
     _notifySafely();
@@ -216,10 +227,10 @@ class PopupController extends ChangeNotifier {
     return entry.dismissed;
   }
 
-  void _requestClose<T>(
-    _PopupRecord<T, dynamic> entry,
+  void _requestClose(
+    _PopupRecord<dynamic, dynamic> entry,
     PopupDismissReason reason, [
-    T? value,
+    Object? value,
   ]) {
     if (!entry.isActive) return;
 
@@ -236,8 +247,7 @@ class PopupController extends ChangeNotifier {
     final needsVisualExit = entry.state == PopupEntryState.entering ||
         entry.state == PopupEntryState.visible;
     _transition(entry, PopupEntryState.dismissRequested);
-    final outcome = PopupOutcome<T>(reason: reason, value: value);
-    entry.commitOutcome(outcome);
+    entry.commitReason(reason, value);
     if (entry.state.isTerminal) return;
     if (needsVisualExit) {
       _transition(entry, PopupEntryState.exiting);
@@ -319,6 +329,24 @@ class PopupController extends ChangeNotifier {
     final entry = _keyed[key];
     if (entry == null) return Future<void>.value();
     return _dismiss(entry);
+  }
+
+  Future<void> dismissEntry(
+    String id, {
+    PopupDismissReason reason = PopupDismissReason.manual,
+  }) {
+    final entry = _find(id);
+    if (entry == null) return Future<void>.value();
+    _requestClose(entry, reason);
+    return entry.dismissed;
+  }
+
+  Future<void> completeEntry<T>(String id, [T? value]) {
+    final entry = _find(id);
+    if (entry == null || entry.resultType != T) return Future<void>.value();
+    final typed = entry as _PopupRecord<T, dynamic>;
+    _requestClose(typed, PopupDismissReason.completed, value);
+    return typed.dismissed;
   }
 
   Future<int> dismissChannel(PopupChannel channel) async {
@@ -511,6 +539,7 @@ final class _PopupRecord<T, C> {
         updatable = request.updatable,
         initiallyQueued = request.initiallyQueued,
         onBack = request.onBack,
+        resolveUpdate = request.resolveUpdate,
         resultType = T,
         configType = C {
     handle = _ControllerPopupHandle<T, C>(controller, this);
@@ -538,6 +567,7 @@ final class _PopupRecord<T, C> {
   PopupOwnership ownership;
   PopupLifetime lifetime;
   PopupLifecycleCallbacks<T> lifecycle;
+  PopupEntryUpdate<T> Function(C config)? resolveUpdate;
   PopupEntryState state = PopupEntryState.created;
   PopupOutcome<T>? finalOutcome;
   int generation = 0;
@@ -567,6 +597,10 @@ final class _PopupRecord<T, C> {
       () => lifecycle.onOutcome?.call(outcome),
       'while reporting popup outcome',
     );
+  }
+
+  void commitReason(PopupDismissReason reason, [Object? value]) {
+    commitOutcome(PopupOutcome<T>(reason: reason, value: value as T?));
   }
 
   void commitUntypedOutcome(PopupOutcome<dynamic> outcome) {

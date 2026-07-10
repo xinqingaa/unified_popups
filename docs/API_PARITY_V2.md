@@ -162,11 +162,11 @@ MaterialApp(
 - `PopScopeWidget`。
 - `part/part of` 组织方式。
 
-## SDK 基线待阶段 0 Spike 后冻结
+## SDK 基线
 
-v2 将依据最终 Route PopEntry、predictive back 和使用 API 确定最低 Flutter/Dart 版本。CI 至少覆盖：
+v2 最低版本冻结为 Flutter `3.24.0`、Dart `3.5.0`。原因是正式返回桥使用 `PopEntry.onPopInvokedWithResult` 的稳定 API 形态；Flutter `3.16` 中的 `PopEntry` 接口仍不兼容当前实现。
 
-- 最低支持 Flutter stable。
-- 当前开发 Flutter stable。
+完成旧 performance 基线迁移后，CI 矩阵将覆盖：
 
-在基线冻结前不修改 pubspec 的最低版本声明。
+- Flutter `3.24.0`。
+- 当前 Flutter stable。

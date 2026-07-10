@@ -9,18 +9,26 @@ typedef PopupEntryBuilder = Widget Function(
   PopupEntrySnapshot entry,
 );
 
+typedef PopupSceneBuilder = Widget Function(
+  BuildContext context,
+  PopupRuntime runtime,
+  List<PopupEntrySnapshot> entries,
+);
+
 /// Declaratively renders entries above a fixed application child.
 class PopupHost extends StatefulWidget {
   const PopupHost({
     required this.runtime,
     required this.child,
-    required this.entryBuilder,
+    this.entryBuilder,
+    this.sceneBuilder,
     super.key,
-  });
+  }) : assert(entryBuilder != null || sceneBuilder != null);
 
   final PopupRuntime runtime;
   final Widget child;
-  final PopupEntryBuilder entryBuilder;
+  final PopupEntryBuilder? entryBuilder;
+  final PopupSceneBuilder? sceneBuilder;
 
   @override
   State<PopupHost> createState() => _PopupHostState();
@@ -59,6 +67,16 @@ class _PopupHostState extends State<PopupHost> {
         final mounted = widget.runtime.controller.entries
             .where((entry) => entry.state.isMounted)
             .toList(growable: false);
+        final sceneBuilder = widget.sceneBuilder;
+        if (sceneBuilder != null) {
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              child!,
+              sceneBuilder(context, widget.runtime, mounted),
+            ],
+          );
+        }
         return Stack(
           fit: StackFit.expand,
           children: <Widget>[
@@ -68,7 +86,7 @@ class _PopupHostState extends State<PopupHost> {
                 key: ValueKey<String>(entry.id),
                 runtime: widget.runtime,
                 snapshot: entry,
-                builder: widget.entryBuilder,
+                builder: widget.entryBuilder!,
               ),
           ],
         );

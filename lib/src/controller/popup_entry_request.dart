@@ -24,6 +24,7 @@ final class PopupEntryRequest<T, C> {
     this.updatable = false,
     this.initiallyQueued = false,
     this.onBack,
+    this.resolveUpdate,
   });
 
   final PopupChannel channel;
@@ -41,4 +42,26 @@ final class PopupEntryRequest<T, C> {
 
   /// Used only when [backPolicy] is [PopupBackPolicy.delegate].
   final Future<bool> Function()? onBack;
+
+  /// Extracts lifecycle behavior when [UpdatablePopupHandle.update] receives a
+  /// new type-specific config. Key and channel remain immutable.
+  final PopupEntryUpdate<T> Function(C config)? resolveUpdate;
+}
+
+final class PopupEntryUpdate<T> {
+  const PopupEntryUpdate({
+    this.tags = const <String>{},
+    required this.routePolicy,
+    required this.backPolicy,
+    required this.ownership,
+    required this.lifetime,
+    required this.lifecycle,
+  });
+
+  final Set<String> tags;
+  final PopupRoutePolicy routePolicy;
+  final PopupBackPolicy backPolicy;
+  final PopupOwnership ownership;
+  final PopupLifetime lifetime;
+  final PopupLifecycleCallbacks<T> lifecycle;
 }
