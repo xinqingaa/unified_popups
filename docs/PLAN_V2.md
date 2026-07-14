@@ -1,5 +1,10 @@
 # unified_popups v2 重构计划书
 
+> 实施状态（2026-07-14）：核心 Runtime/Controller/Host、各类型 Renderer、
+> Sheet/FlowSheet、Menu Anchor、全局 Pop 门面、Example 迁移、v1 删除和公开文档
+> 已完成。静态分析、包测试与 Example 测试已通过；最终交互验收以运行 Example
+> 的真机/模拟器结果为准。
+
 ## 1. 重构目标
 
 将当前：

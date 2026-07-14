@@ -12,7 +12,7 @@
 | v1 | v2 | 状态 | 说明 |
 | --- | --- | --- | --- |
 | `PopupManager.initialize(navigatorKey:)` | 删除 | 移除 | Popup 不再依赖 navigatorKey。 |
-| `PopScopeWidget` | `Pop.hostBuilder` 内部返回桥 | 替换 | 阶段 0 先验证 Route PopEntry、predictive back 与 iOS 侧滑。 |
+| `PopScopeWidget` | `Pop.routeObserver` 的 Route PopEntry 返回桥 | 替换 | 无需额外包裹页面树。 |
 | `PopupRouteObserver()` | `Pop.routeObserver` | 替换 | Runtime 生命周期内稳定实例。 |
 | 每 Popup 一个 `OverlayEntry` | 单一 `PopupHost` | 替换 | Entry 声明式渲染。 |
 
@@ -56,7 +56,7 @@ MaterialApp(
 | `tMessage` / `tImagePath` / `tToastType` / `tImgColor` / `toggleable` | `ToastToggleConfig` | 迁移 |
 | `onTap` | `ToastConfig.onTap` | 保留 |
 | 每 Toast 一个全屏 Entry | 共享 Toast lane，位置最多 3 个 | 替换 |
-| void 返回 | `ToastHandle`，允许忽略 | 替换 |
+| void 返回 | 便捷 API 仍为 void；`openToast` 返回 OpenResult/Handle | 保留/扩展 |
 
 ## Loading
 
@@ -121,7 +121,7 @@ MaterialApp(
 | `GlobalKey anchorKey` | `PopupAnchorController` + `PopupAnchor` | 替换 |
 | `anchorOffset` | `MenuAnchorConfig.offset` | 保留 |
 | builder/dismiss/result | 保留 | 保留 |
-| barrier、padding、constraints、decoration | `MenuConfig` / `MenuStyle` | 迁移 |
+| barrier、padding、constraints、decoration | `MenuConfig` / `PopupMenuStyle` | 迁移 |
 | animation 参数 | `PopupAnimationConfig` | 迁移 |
 | post-frame RenderBox 重试 | Target/Follower + placement delegate | 替换 |
 | Anchor 滚动后位置不变 | 自动跟随 | 修复 |

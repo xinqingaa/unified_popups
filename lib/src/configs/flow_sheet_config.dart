@@ -82,10 +82,7 @@ final class FlowSheetConfig<R> extends SheetConfigBase {
 
   @override
   Widget buildContent(BuildContext context, PopupHandleBase handle) {
-    final typedHandle = handle as PopupHandle<R>;
-    controller
-      ..configureDragDismissMode(drag.mode)
-      ..attachPopupHandle(typedHandle);
+    controller.configureDragDismissMode(drag.mode);
     return FlowSheetHost(
       controller: controller,
       initialPage: initialPage,

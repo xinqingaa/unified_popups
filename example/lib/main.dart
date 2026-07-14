@@ -4,13 +4,8 @@ import 'package:unified_popups/unified_popups.dart';
 import 'app/shell.dart';
 import 'app/theme.dart';
 
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
 void main() {
   runApp(const FitPulseApp());
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    PopupManager.initialize(navigatorKey: navigatorKey);
-  });
 }
 
 class FitPulseApp extends StatelessWidget {
@@ -19,13 +14,10 @@ class FitPulseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey,
       title: 'FitPulse',
       theme: buildFitPulseTheme(),
-      navigatorObservers: [PopupRouteObserver()],
-      builder: (context, child) => PopScopeWidget(
-        child: child ?? const SizedBox.shrink(),
-      ),
+      navigatorObservers: [Pop.routeObserver],
+      builder: Pop.hostBuilder,
       home: const FitPulseShell(),
     );
   }

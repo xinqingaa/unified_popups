@@ -2,7 +2,9 @@ import 'package:flutter/widgets.dart';
 
 import '../configs/confirm_config.dart';
 import '../configs/date_config.dart';
+import '../configs/custom_popup_config.dart';
 import '../configs/loading_config.dart';
+import '../configs/menu_config.dart';
 import '../configs/popup_visual_config.dart';
 import '../configs/sheet_config.dart';
 import '../configs/toast_config.dart';
@@ -11,7 +13,9 @@ import '../controller/popup_dismiss_reason.dart';
 import '../runtime/popup_runtime.dart';
 import 'confirm_renderer.dart';
 import 'date_renderer.dart';
+import 'custom_popup_renderer.dart';
 import 'loading_renderer.dart';
+import 'menu_renderer.dart';
 import 'sheet_renderer.dart';
 import 'toast_renderer.dart';
 
@@ -52,6 +56,8 @@ final class PopupRendererRegistry {
           ConfirmPopupRendererDelegate(),
           DatePopupRendererDelegate(),
           SheetPopupRendererDelegate(),
+          MenuPopupRendererDelegate(),
+          CustomPopupRendererDelegate(),
         ],
       );
 
@@ -182,6 +188,58 @@ final class SheetPopupRendererDelegate implements PopupRendererDelegate {
       config: entry.config! as SheetConfigBase,
       handle: handle,
       motion: motion,
+    );
+  }
+}
+
+final class MenuPopupRendererDelegate implements PopupRendererDelegate {
+  const MenuPopupRendererDelegate();
+
+  @override
+  bool supports(Object config) => config is MenuConfigBase;
+
+  @override
+  PopupVisualConfig visualConfig(Object config) => config as MenuConfigBase;
+
+  @override
+  Widget build(
+    BuildContext context,
+    PopupRuntime runtime,
+    PopupEntrySnapshot entry,
+    PopupMotionController motion,
+  ) {
+    final handle = runtime.controller.handleForEntry(entry.id);
+    if (handle == null) return const SizedBox.shrink();
+    return MenuRenderer(
+      config: entry.config! as MenuConfigBase,
+      handle: handle,
+      motion: motion,
+    );
+  }
+}
+
+final class CustomPopupRendererDelegate implements PopupRendererDelegate {
+  const CustomPopupRendererDelegate();
+
+  @override
+  bool supports(Object config) => config is CustomPopupConfigBase;
+
+  @override
+  PopupVisualConfig visualConfig(Object config) =>
+      config as CustomPopupConfigBase;
+
+  @override
+  Widget build(
+    BuildContext context,
+    PopupRuntime runtime,
+    PopupEntrySnapshot entry,
+    PopupMotionController motion,
+  ) {
+    final handle = runtime.controller.handleForEntry(entry.id);
+    if (handle == null) return const SizedBox.shrink();
+    return CustomPopupRenderer(
+      config: entry.config! as CustomPopupConfigBase,
+      handle: handle,
     );
   }
 }

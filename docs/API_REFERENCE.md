@@ -1,55 +1,43 @@
-# API 参考文档
+# unified_popups 2.0 API Reference
 
-## 目录
-
-- [Pop 类](#pop-类)
-- [Toast API](#toast-api)
-- [Loading API](#loading-api)
-- [Confirm API](#confirm-api)
-- [Sheet API](#sheet-api)
-- [FlowSheet API](#flowsheet-api)
-- [Date API](#date-api)
-- [Menu API](#menu-api)
-- [PopupManager](#popupmanager)
-- [PopupRouteObserver](#popuprouteobserver)
-- [枚举类型](#枚举类型)
-
-## Pop 类
-
-`Pop` 是统一弹窗库的主要入口类，提供所有弹窗相关的静态方法。
-
-### 类定义
+## 应用接入
 
 ```dart
-abstract class Pop {
-  static void toast(...)
-  static void loading(...)
-  static void hideLoading()
-  static Future<bool?> confirm(...)
-  static Future<T?> sheet<T>(...)
-  static Future<R?> flowSheet<R>(...)
-  static Future<DateTime?> date(...)
-  static Future<T?> menu<T>(...)
-}
+MaterialApp(
+  navigatorObservers: [Pop.routeObserver],
+  builder: Pop.hostBuilder,
+  home: const HomePage(),
+);
 ```
 
-## Toast API
+| API | 作用 |
+| --- | --- |
+| `Pop.routeObserver` | 路由归属、跨路由清理和系统返回桥 |
+| `Pop.hostBuilder` | 在应用树顶层挂载唯一 `PopupHost` |
+| `Pop.isReady` / `Pop.ready` | 查询或等待 Host 就绪 |
+| `Pop.captureRoute()` | 获取当前稳定路由 token |
+| `Pop.runtime` | 高级诊断或测试使用的默认 Runtime |
 
-### 方法签名
+弹窗调用不需要 `BuildContext`。应用不再需要 Popup 专用 `navigatorKey`、
+`PopupManager.initialize` 或 `PopScopeWidget`。
+
+## 便捷 API
+
+### Toast
 
 ```dart
-static void toast(
+Pop.toast(
   String? message, {
+  Widget? messageWidget,
   PopupPosition position = PopupPosition.center,
-  bool? dismissOnRouteChange,
-  Duration duration = const Duration(milliseconds: 1200),
+  ToastType toastType = ToastType.none,
+  Duration? duration,
+  Future<void>? until,
   bool showBarrier = false,
   bool barrierDismissible = false,
-  ToastType toastType = ToastType.none,
-  Duration animationDuration = const Duration(milliseconds: 200),
-  Curve? animationCurve,
+  Color? barrierColor,
   String? customImagePath,
-  double? imageSize,
+  double imageSize = 24,
   Color? imgColor,
   Axis layoutDirection = Axis.horizontal,
   EdgeInsetsGeometry? padding,
@@ -57,1323 +45,233 @@ static void toast(
   Decoration? decoration,
   TextStyle? style,
   TextAlign? textAlign,
-  Widget? messageWidget,
-  String? tMessage,
-  String? tImagePath,
-  ToastType? tToastType,
-  Color? tImgColor,
   VoidCallback? onTap,
-  bool toggleable = false,
-})
+});
 ```
 
-### 参数说明
+无 Barrier 的 Toast 使用共享位置 lane，每个位置同时最多显示三个，超出的条目
+进入队列。高级入口为 `Pop.openToast(ToastConfig)`，返回
+`PopupOpenResult<void>`。
 
-| 参数 | 类型 | 默认值 | 必填 | 说明 |
-|------|------|--------|------|------|
-| `message` | `String?` | - | ❌ | 要显示的消息文本（与 `messageWidget` 二选一） |
-| `messageWidget` | `Widget?` | `null` | ❌ | 自定义消息 Widget，如果提供则优先使用，忽略 `message` |
-| `position` | `PopupPosition` | `center` | ❌ | 显示位置 |
-| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 toast 默认不关闭 |
-| `duration` | `Duration` | `1200ms` | ❌ | 显示时长 |
-| `showBarrier` | `bool` | `false` | ❌ | 是否显示遮罩层 |
-| `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
-| `toastType` | `ToastType` | `none` | ❌ | 提示类型 |
-| `customImagePath` | `String?` | `null` | ❌ | 自定义图片路径，如果提供则覆盖 toastType 的图标 |
-| `imageSize` | `double?` | `24.0` | ❌ | 图片大小 |
-| `imgColor` | `Color?` | `null` | ❌ | 自定义图片的着色，仅在提供 `customImagePath` 时生效 |
-| `layoutDirection` | `Axis` | `Axis.horizontal` | ❌ | 布局方向，`horizontal` 为 Row（图片在左，文字在右），`vertical` 为 Column（图片在上，文字在下） |
-| `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
-| `margin` | `EdgeInsetsGeometry?` | `null` | ❌ | 外边距 |
-| `decoration` | `Decoration?` | `null` | ❌ | 装饰样式 |
-| `style` | `TextStyle?` | `null` | ❌ | 文本样式 |
-| `animationDuration` | `Duration` | `200ms` | ❌ | 动画持续时间 |
-| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
-| `textAlign` | `TextAlign?` | `null` | ❌ | 文本对齐方式 |
-| `tMessage` | `String?` | `null` | ❌ | 切换后的消息文本，用于切换模式 |
-| `tImagePath` | `String?` | `null` | ❌ | 切换后的自定义图片路径，用于切换模式 |
-| `tToastType` | `ToastType?` | `null` | ❌ | 切换后的 Toast 等级，用于切换模式 |
-| `tImgColor` | `Color?` | `null` | ❌ | 切换后的自定义图片的着色，用于切换模式 |
-| `onTap` | `VoidCallback?` | `null` | ❌ | 点击回调函数 |
-| `toggleable` | `bool` | `false` | ❌ | 是否可切换，当设置为 `true` 且提供了 `tMessage` 或 `tImagePath` 时，点击 toast 会在两个状态间切换 |
-
-### 使用示例
+### Loading
 
 ```dart
-// 基本使用
-Pop.toast('操作成功');
-
-// 成功提示
-Pop.toast('保存成功', toastType: ToastType.success);
-
-// 错误提示
-Pop.toast('网络异常', toastType: ToastType.error);
-
-// 自定义位置和时长
-Pop.toast(
-  '自定义提示',
-  position: PopupPosition.bottom,
-  duration: Duration(seconds: 3),
-);
-
-// 自定义样式
-Pop.toast(
-  '自定义样式',
-  decoration: BoxDecoration(
-    gradient: LinearGradient(colors: [Colors.purple, Colors.blue]),
-    borderRadius: BorderRadius.circular(20),
-  ),
-  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-);
-
-// 带遮罩的 Toast
-Pop.toast(
-  '重要提示',
-  showBarrier: true,
-  barrierDismissible: true,
-  duration: Duration(seconds: 5),
-);
-
-// 自定义图片
-Pop.toast(
-  '自定义图片提示',
-  customImagePath: 'assets/custom_icon.png',
-  imageSize: 32.0,
-  imgColor: Colors.orange,
-  layoutDirection: Axis.vertical, // 图片在上，文字在下
-);
-
-// Widget 自定义消息
-Pop.toast(
-  messageWidget: Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Icon(Icons.check_circle, color: Colors.green),
-      SizedBox(width: 8),
-      Text('操作成功', style: TextStyle(fontWeight: FontWeight.bold)),
-    ],
-  ),
-);
-
-// 自定义动画时长
-Pop.toast(
-  '快速提示',
-  animationDuration: Duration(milliseconds: 100),
-);
-
-// 切换模式：平衡锁定和重力感应
-Pop.toast(
-  '平衡锁定',
-  customImagePath: 'assets/img.png',
-  tMessage: '重力感应',
-  tImagePath: 'assets/temp.png',
-  toggleable: true,
-  imageSize: 32,
-  duration: const Duration(seconds: 2),
-  onTap: () {
-    print('Toast 状态已切换');
-  },
-);
-```
-
-## Loading API
-
-### 方法签名
-
-```dart
-static void loading({
+LoadingHandle Pop.loading({
   String? message,
-  bool? dismissOnRouteChange,
-  Color? backgroundColor,
-  double? borderRadius,
-  Color? indicatorColor,
-  double? indicatorStrokeWidth,
-  TextStyle? textStyle,
+  Widget? messageWidget,
   Widget? customIndicator,
-  Duration rotationDuration = const Duration(seconds: 1),
-  bool showBarrier = true,
-  bool barrierDismissible = false,
-  Color barrierColor = Colors.black54,
-  Duration animationDuration = const Duration(milliseconds: 150),
-  Curve? animationCurve,
-})
+  Duration? duration,
+  Future<void>? until,
+});
+
+Future<void> Pop.hideLoading();
 ```
 
-### 参数说明
+高级入口 `Pop.openLoading(LoadingConfig)` 返回 `LoadingHandle`。默认 loading
+key 为 `PopupKeys.globalLoading`，冲突策略为 `updateExisting`。
+重复调用更新同一逻辑条目及其生命周期条件，而不是先退出再创建。
 
-| 参数 | 类型 | 默认值 | 必填 | 说明 |
-|------|------|--------|------|------|
-| `message` | `String?` | `null` | ❌ | 加载提示文本 |
-| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 loading 默认不关闭 |
-| `backgroundColor` | `Color?` | `null` | ❌ | 背景颜色 |
-| `borderRadius` | `double?` | `null` | ❌ | 圆角半径 |
-| `indicatorColor` | `Color?` | `null` | ❌ | 指示器颜色 |
-| `indicatorStrokeWidth` | `double?` | `null` | ❌ | 指示器线宽 |
-| `textStyle` | `TextStyle?` | `null` | ❌ | 文本样式 |
-| `customIndicator` | `Widget?` | `null` | ❌ | 自定义 Widget（通常是图片），如果提供则替代默认的 CircularProgressIndicator，并自动添加旋转动画 |
-| `rotationDuration` | `Duration` | `1秒` | ❌ | 旋转动画持续时间，仅在使用 customIndicator 时生效 |
-| `showBarrier` | `bool` | `true` | ❌ | 是否显示遮罩 |
-| `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
-| `barrierColor` | `Color` | `Colors.black54` | ❌ | 遮罩颜色 |
-| `animationDuration` | `Duration` | `150ms` | ❌ | 动画持续时间 |
-| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
-
-### 返回值
-
-返回 `void`。整个应用同时只能有一个 loading，调用此方法会自动关闭之前的 loading（如果存在）。不需要手动管理 loading ID。
-
-### 使用示例
+### Confirm
 
 ```dart
-// 基本使用
-Pop.loading(message: '加载中...');
-await someAsyncOperation();
-Pop.hideLoading();
-
-// 自定义样式
-Pop.loading(
-  message: '自定义样式 Loading',
-  backgroundColor: Colors.purple.withValues(alpha: 0.9),
-  borderRadius: 20,
-  indicatorColor: Colors.white,
-  indicatorStrokeWidth: 3,
-  textStyle: TextStyle(
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-  ),
-);
-
-// 可关闭的 Loading
-Pop.loading(
-  message: '可点击遮罩关闭',
-  showBarrier: true,
-  barrierDismissible: true,
-  barrierColor: Colors.black26,
-);
-
-// 使用自定义图片作为 loading 图标
-Pop.loading(
-  message: '加载中',
-  customIndicator: Image.asset('assets/loading.png'),
-  rotationDuration: Duration(milliseconds: 800),
-);
-
-// 快速显示的 Loading
-Pop.loading(
-  message: '快速加载',
-  animationDuration: Duration(milliseconds: 100),
-);
-```
-
-### hideLoading 方法
-
-```dart
-static void hideLoading()
-```
-
-用于关闭当前显示的 Loading 弹窗。不需要参数，会自动关闭当前显示的 loading（如果存在）。
-
-## Confirm API
-
-### 方法签名
-
-```dart
-static Future<bool?> confirm({
+Future<bool?> Pop.confirm({
   String? title,
   Widget? titleWidget,
   String? content,
   Widget? contentWidget,
-  PopupPosition position = PopupPosition.center,
-  bool? dismissOnRouteChange,
-  String? confirmText,
+  String confirmText = 'confirm',
   Widget? confirmButtonWidget,
   String? cancelText,
   Widget? cancelButtonWidget,
   bool showCloseButton = true,
-  TextStyle? titleStyle,
-  TextStyle? contentStyle,
-  TextStyle? confirmStyle,
-  TextStyle? cancelStyle,
-  String? imagePath,
-  double? imageHeight = 80,
-  double? imageWidth,
-  TextAlign? textAlign = TextAlign.center,
-  ConfirmButtonLayout? buttonLayout = ConfirmButtonLayout.row,
-  BorderRadiusGeometry? buttonBorderRadius,
-  BoxBorder? confirmBorder,
-  BoxBorder? cancelBorder,
-  Color? confirmBgColor,
-  Color? cancelBgColor,
-  EdgeInsetsGeometry? padding,
-  EdgeInsetsGeometry? margin,
-  Decoration? decoration,
   Widget? confirmChild,
   VoidCallback? onConfirm,
   VoidCallback? onCancel,
-  Duration animationDuration = const Duration(milliseconds: 250),
-  Curve? animationCurve,
-})
+  ConfirmButtonLayout buttonLayout = ConfirmButtonLayout.row,
+  Color? confirmBgColor,
+  Color? cancelBgColor,
+});
 ```
 
-### 参数说明
+确认按钮完成 `true`，取消按钮完成 `false`，其他关闭方式返回 `null`。
+`onConfirm` / `onCancel` 仅由对应按钮触发。高级入口
+`Pop.openConfirm(ConfirmConfig)` 返回 `PopupHandle<bool>`。
 
-| 参数 | 类型 | 默认值 | 必填 | 说明 |
-|------|------|--------|------|------|
-| `title` | `String?` | `null` | ❌ | 对话框标题（与 `titleWidget` 二选一） |
-| `titleWidget` | `Widget?` | `null` | ❌ | 自定义标题 Widget，如果提供则优先使用，忽略 `title` |
-| `content` | `String?` | `null` | ❌ | 对话框内容（与 `contentWidget` 二选一） |
-| `contentWidget` | `Widget?` | `null` | ❌ | 自定义内容 Widget，如果提供则优先使用，忽略 `content` |
-| `position` | `PopupPosition` | `center` | ❌ | 显示位置 |
-| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 confirm 默认关闭 |
-| `confirmText` | `String?` | `'confirm'` | ❌ | 确认按钮文本（与 `confirmButtonWidget` 二选一） |
-| `confirmButtonWidget` | `Widget?` | `null` | ❌ | 自定义确认按钮 Widget，如果提供则优先使用，忽略 `confirmText` |
-| `cancelText` | `String?` | `'cancel'` | ❌ | 取消按钮文本（与 `cancelButtonWidget` 二选一） |
-| `cancelButtonWidget` | `Widget?` | `null` | ❌ | 自定义取消按钮 Widget，如果提供则优先使用，忽略 `cancelText` |
-| `onConfirm` | `VoidCallback?` | `null` | ❌ | 确认按钮点击回调，在内部关闭逻辑之前执行 |
-| `onCancel` | `VoidCallback?` | `null` | ❌ | 取消按钮点击回调，在内部关闭逻辑之前执行 |
-| `showCloseButton` | `bool` | `true` | ❌ | 是否显示关闭按钮 |
-| `titleStyle` | `TextStyle?` | `null` | ❌ | 标题样式 |
-| `contentStyle` | `TextStyle?` | `null` | ❌ | 内容样式 |
-| `confirmStyle` | `TextStyle?` | `null` | ❌ | 确认按钮文本样式 |
-| `cancelStyle` | `TextStyle?` | `null` | ❌ | 取消按钮文本样式 |
-| `imagePath` | `String?` | `null` | ❌ | 图片路径 |
-| `imageHeight` | `double?` | `80` | ❌ | 图片高度 |
-| `imageWidth` | `double?` | `null` | ❌ | 图片宽度 |
-| `textAlign` | `TextAlign` | `center` | ❌ | 文本对齐方式 |
-| `buttonLayout` | `ConfirmButtonLayout` | `row` | ❌ | 按钮布局方式 |
-| `buttonBorderRadius` | `BorderRadiusGeometry?` | `null` | ❌ | 按钮圆角 |
-| `confirmBorder` | `BoxBorder?` | `null` | ❌ | 确认按钮边框样式 |
-| `cancelBorder` | `BoxBorder?` | `null` | ❌ | 取消按钮边框样式 |
-| `confirmBgColor` | `Color?` | `null` | ❌ | 确认按钮背景色 |
-| `cancelBgColor` | `Color?` | `null` | ❌ | 取消按钮背景色 |
-| `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
-| `margin` | `EdgeInsetsGeometry?` | `null` | ❌ | 外边距 |
-| `decoration` | `Decoration?` | `null` | ❌ | 装饰样式 |
-| `confirmChild` | `Widget?` | `null` | ❌ | 在内容与按钮之间插入的自定义组件 |
-| `animationDuration` | `Duration` | `250ms` | ❌ | 动画持续时间 |
-| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
-
-> 提示：确认与取消按钮现使用容器进行渲染，可同时定制背景色与边框，便于保持样式一致性。
-
-### 返回值
-
-- `true`：用户点击确认按钮
-- `false`：用户点击取消按钮
-- `null`：用户点击遮罩或关闭按钮
-
-### 使用示例
+### Sheet
 
 ```dart
-// 基本确认对话框
-final result = await Pop.confirm(
-  title: '删除确认',
-  content: '删除后将不可恢复，是否继续？',
-  confirmText: '删除',
-  cancelText: '取消',
-);
-
-// 单按钮对话框
-final result = await Pop.confirm(
-  content: '操作已完成',
-  confirmText: '知道了',
-  cancelText: null, // 不显示取消按钮
-);
-
-// 带图片的对话框
-final result = await Pop.confirm(
-  title: '操作成功',
-  content: '您的操作已完成',
-  imagePath: 'assets/success.png',
-  imageHeight: 100,
-);
-
-// 带输入框的对话框
-final result = await Pop.confirm(
-  title: '输入信息',
-  content: '请填写以下信息：',
-  confirmChild: Column(
-    children: [
-      TextField(decoration: InputDecoration(labelText: '姓名')),
-      TextField(decoration: InputDecoration(labelText: '邮箱')),
-    ],
-  ),
-);
-
-// 危险操作确认
-final result = await Pop.confirm(
-  title: '危险操作',
-  content: '此操作不可撤销！',
-  confirmText: '删除',
-  confirmBgColor: Colors.red,
-  confirmBorder: Border.all(color: Colors.redAccent),
-  cancelBorder: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
-  buttonLayout: ConfirmButtonLayout.column,
-  showCloseButton: true,
-);
-
-// 自定义样式
-final result = await Pop.confirm(
-  title: '自定义样式',
-  content: '这是一个自定义样式的对话框',
-  decoration: BoxDecoration(
-    gradient: LinearGradient(colors: [Colors.teal, Colors.white]),
-    borderRadius: BorderRadius.circular(24),
-  ),
-  titleStyle: TextStyle(color: Colors.blue, fontSize: 20),
-  confirmBgColor: Colors.green,
-  cancelBgColor: Colors.pink,
-);
-
-// Widget 自定义 Confirm
-final result = await Pop.confirm(
-  titleWidget: Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Icon(Icons.warning, color: Colors.orange),
-      SizedBox(width: 8),
-      Text('Widget 标题'),
-    ],
-  ),
-  contentWidget: Column(
-    children: [
-      Text('这是自定义内容 Widget'),
-      SizedBox(height: 8),
-      Icon(Icons.info, color: Colors.blue),
-    ],
-  ),
-  confirmButtonWidget: Container(
-    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-    decoration: BoxDecoration(
-      color: Colors.green,
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.check, color: Colors.white),
-        SizedBox(width: 4),
-        Text('确认', style: TextStyle(color: Colors.white)),
-      ],
-    ),
-  ),
-  cancelButtonWidget: Text('取消', style: TextStyle(color: Colors.grey)),
-  onConfirm: () {
-    print('确认按钮被点击');
-  },
-  onCancel: () {
-    print('取消按钮被点击');
-  },
-);
-
-// 自定义动画时长
-final result = await Pop.confirm(
-  title: '快速确认',
-  content: '快速确认对话框',
-  animationDuration: Duration(milliseconds: 150),
-);
-```
-
-## Sheet API
-
-### 方法签名
-
-```dart
-static Future<T?> sheet<T>({
+Future<T?> Pop.sheet<T>({
   required Widget Function(void Function([T? result]) dismiss) childBuilder,
   String? title,
   Widget? titleWidget,
   SheetDirection direction = SheetDirection.bottom,
   bool showCloseButton = false,
-  bool? useSafeArea,
   SheetDimension? width,
   SheetDimension? height,
   SheetDimension? maxWidth,
   SheetDimension? maxHeight,
-  String? imgPath,
-  Color? backgroundColor,
-  BorderRadius? borderRadius,
-  List<BoxShadow>? boxShadow,
-  EdgeInsetsGeometry? padding,
-  EdgeInsetsGeometry? titlePadding,
-  TextStyle? titleStyle,
-  TextAlign? titleAlign,
-  bool? showBarrier,
-  bool? barrierDismissible,
-  Color? barrierColor,
+  bool showBarrier = true,
+  bool barrierDismissible = true,
   bool dockToEdge = false,
-  double? edgeGap,
+  double edgeGap = 16,
   bool showDragHandle = true,
-  Color? dragHandleColor,
   bool adjustForKeyboard = true,
   SheetDragDismissMode dragDismissMode = SheetDragDismissMode.fullBody,
   ValueListenable<SheetDragDismissMode>? dragDismissModeListenable,
-  bool? dismissOnRouteChange,
   bool Function()? onBackPressed,
-  Duration animationDuration = const Duration(milliseconds: 400),
-  Curve? animationCurve,
-})
+  // 另有颜色、圆角、阴影、padding 等样式参数
+});
 ```
 
-### 参数说明
+`SheetDimension` 支持固定值和屏幕比例。高级入口
+`Pop.openSheet<T>(SheetConfig<T>)` 返回 `PopupHandle<T>`。
 
-| 参数 | 类型 | 默认值 | 必填 | 说明 |
-|------|------|--------|------|------|
-| `childBuilder` | `Widget Function(void Function([T? result]) dismiss)` | - | ✅ | 内容构建器 |
-| `title` | `String?` | `null` | ❌ | 面板标题（与 `titleWidget` 二选一） |
-| `titleWidget` | `Widget?` | `null` | ❌ | 自定义标题 Widget，如果提供则优先使用，忽略 `title` |
-| `direction` | `SheetDirection` | `bottom` | ❌ | 滑出方向 |
-| `showCloseButton` | `bool` | `false` | ❌ | 是否显示关闭按钮 |
-| `useSafeArea` | `bool?` | `null` | ❌ | 是否使用安全区域 |
-| `width` | `SheetDimension?` | `null` | ❌ | 宽度 |
-| `height` | `SheetDimension?` | `null` | ❌ | 高度 |
-| `maxWidth` | `SheetDimension?` | `null` | ❌ | 最大宽度 |
-| `maxHeight` | `SheetDimension?` | `null` | ❌ | 最大高度 |
-| `imgPath` | `String?` | `null` | ❌ | 图片路径 |
-| `backgroundColor` | `Color?` | `null` | ❌ | 背景颜色 |
-| `borderRadius` | `BorderRadius?` | `null` | ❌ | 圆角 |
-| `boxShadow` | `List<BoxShadow>?` | `null` | ❌ | 阴影 |
-| `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
-| `titlePadding` | `EdgeInsetsGeometry?` | `null` | ❌ | 标题内边距 |
-| `titleStyle` | `TextStyle?` | `null` | ❌ | 标题样式 |
-| `titleAlign` | `TextAlign?` | `null` | ❌ | 标题对齐方式 |
-| `showBarrier` | `bool?` | `true` | ❌ | 是否显示遮罩 |
-| `barrierDismissible` | `bool?` | `true` | ❌ | 点击遮罩是否关闭 |
-| `barrierColor` | `Color?` | `Colors.black54` | ❌ | 遮罩颜色 |
-| `dockToEdge` | `bool` | `false` | ❌ | bottom/left/right 时是否保留边缘交互区域 |
-| `edgeGap` | `double?` | `kBottomNavigationBarHeight + 4` | ❌ | 预留边缘尺寸 |
-| `showDragHandle` | `bool` | `true` | ❌ | 是否显示顶部拖拽指示器 |
-| `dragHandleColor` | `Color?` | `null` | ❌ | 拖拽指示器颜色 |
-| `adjustForKeyboard` | `bool` | `true` | ❌ | 底部弹窗是否跟随键盘上移 |
-| `dragDismissMode` | `SheetDragDismissMode` | `fullBody` | ❌ | 拖动关闭策略 |
-| `dragDismissModeListenable` | `ValueListenable<SheetDragDismissMode>?` | `null` | ❌ | 动态切换拖动关闭策略 |
-| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭 |
-| `onBackPressed` | `bool Function()?` | `null` | ❌ | 系统返回优先处理；返回 true 表示已消费 |
-| `animationDuration` | `Duration` | `400ms` | ❌ | 动画持续时间 |
-| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
-
-> `dockToEdge` 仅在 `bottom` / `left` / `right` 方向生效，启用后预留区域可透传点击。
-
-### 返回值
-
-- 通过 `dismiss(result)` 关闭时返回 `result`
-- 点击遮罩关闭时返回 `null`
-
-### 使用示例
+### FlowSheet
 
 ```dart
-// 底部选择面板
-final result = await Pop.sheet<String>(
-  title: '选择操作',
-  childBuilder: (dismiss) => ListView(
-    children: [
-      ListTile(
-        title: Text('复制'),
-        onTap: () => dismiss('copy'),
-      ),
-      ListTile(
-        title: Text('删除'),
-        onTap: () => dismiss('delete'),
-      ),
-    ],
-  ),
-);
-
-// 左侧抽屉
-final result = await Pop.sheet<String>(
-  direction: SheetDirection.left,
-  maxWidth: SheetDimension.fraction(0.75),
-  title: '菜单',
-  childBuilder: (dismiss) => ListView(
-    children: [
-      ListTile(
-        leading: Icon(Icons.home),
-        title: Text('首页'),
-        onTap: () => dismiss('home'),
-      ),
-      ListTile(
-        leading: Icon(Icons.settings),
-        title: Text('设置'),
-        onTap: () => dismiss('settings'),
-      ),
-    ],
-  ),
-);
-
-// 表单面板
-await Pop.sheet<void>(
-  title: '用户信息',
-  childBuilder: (dismiss) => Padding(
-    padding: EdgeInsets.all(16),
-    child: Column(
-      children: [
-        TextField(decoration: InputDecoration(labelText: '姓名')),
-        TextField(decoration: InputDecoration(labelText: '邮箱')),
-        ElevatedButton(
-          onPressed: () => dismiss(),
-          child: Text('提交'),
-        ),
-      ],
-    ),
-  ),
-);
-
-// TabBar 顶部弹出，保留底部导航点击
-await Pop.sheet<void>(
-  title: 'TabBar 顶部弹出',
-  dockToEdge: true,
-  edgeGap: 64,
-  childBuilder: (dismiss) => ListView(
-    shrinkWrap: true,
-    children: [
-      ListTile(title: Text('收藏'), onTap: () => dismiss()),
-      ListTile(title: Text('分享'), onTap: () => dismiss()),
-    ],
-  ),
-);
-
-// 自定义样式面板
-await Pop.sheet<void>(
-  title: '自定义样式',
-  backgroundColor: Colors.grey[100],
-  borderRadius: BorderRadius.circular(20),
-  boxShadow: [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.1),
-      blurRadius: 10,
-      offset: Offset(0, -2),
-    ),
-  ],
-  childBuilder: (dismiss) => Container(
-    padding: EdgeInsets.all(16),
-    child: Text('自定义内容'),
-  ),
-);
-
-// 长列表面板
-final result = await Pop.sheet<String>(
-  title: '长列表',
-  maxHeight: SheetDimension.pixel(400),
-  childBuilder: (dismiss) => ListView.builder(
-    itemCount: 50,
-    itemBuilder: (context, index) => ListTile(
-      title: Text('选项 ${index + 1}'),
-      onTap: () => dismiss('option_${index + 1}'),
-    ),
-  ),
-);
-
-// Widget 自定义标题
-await Pop.sheet<void>(
-  titleWidget: Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Icon(Icons.settings, color: Colors.blue),
-      SizedBox(width: 8),
-      Text('设置面板', style: TextStyle(fontWeight: FontWeight.bold)),
-    ],
-  ),
-  childBuilder: (dismiss) => Container(
-    padding: EdgeInsets.all(16),
-    child: Text('自定义标题内容'),
-  ),
-);
-
-// 自定义动画时长
-final result = await Pop.sheet<String>(
-  title: '快速面板',
-  animationDuration: Duration(milliseconds: 200),
-  childBuilder: (dismiss) => ListView(
-    children: [
-      ListTile(title: Text('快速选项 1'), onTap: () => dismiss('option1')),
-      ListTile(title: Text('快速选项 2'), onTap: () => dismiss('option2')),
-    ],
-  ),
-);
-```
-
-## FlowSheet API
-
-在单个 Sheet 内维护多页栈，适合多步向导。底层仍走 `Pop.sheet`；系统返回默认交给 `controller.handleBack`（优先退内部页）。
-
-### 方法签名
-
-```dart
-static Future<R?> flowSheet<R>({
+Future<R?> Pop.flowSheet<R>({
   required FlowSheetController<R> controller,
   required FlowSheetPage initialPage,
   SheetDirection direction = SheetDirection.bottom,
   SheetDimension? maxHeight,
   SheetDimension? maxWidth,
-  Color? backgroundColor,
-  EdgeInsetsGeometry? padding,
   bool barrierDismissible = false,
-  bool? showBarrier,
-  Color? barrierColor,
-  bool Function()? onBackPressed,
-  bool showDragHandle = true,
-  Color? dragHandleColor,
-  bool adjustForKeyboard = true,
-  Duration animationDuration = const Duration(milliseconds: 400),
   SheetDragDismissMode dragDismissMode = SheetDragDismissMode.fullBody,
   Color? pageBackgroundColor,
   FlowSheetRouteBuilder? routeBuilder,
-})
+  // 另有 Barrier、样式、拖拽和键盘参数
+});
 ```
 
-### 参数说明
+一个 `FlowSheetController` 只承载一个 Popup Session。页面通过 state 中的 `nav`
+执行：
 
-| 参数 | 类型 | 默认值 | 必填 | 说明 |
-|------|------|--------|------|------|
-| `controller` | `FlowSheetController<R>` | - | ✅ | 持有内部页面栈与整 sheet 结果 |
-| `initialPage` | `FlowSheetPage` | - | ✅ | 首屏业务页 |
-| `direction` | `SheetDirection` | `bottom` | ❌ | 滑出方向 |
-| `maxHeight` / `maxWidth` | `SheetDimension?` | `null` | ❌ | 尺寸约束 |
-| `backgroundColor` | `Color?` | `null` | ❌ | Sheet 背景色 |
-| `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
-| `barrierDismissible` | `bool` | `false` | ❌ | 点击遮罩是否关闭 |
-| `showBarrier` | `bool?` | `null` | ❌ | 是否显示遮罩 |
-| `barrierColor` | `Color?` | `null` | ❌ | 遮罩颜色 |
-| `onBackPressed` | `bool Function()?` | `controller.handleBack` | ❌ | 系统返回优先处理；返回 true 表示已消费 |
-| `showDragHandle` | `bool` | `true` | ❌ | 是否显示拖拽指示器 |
-| `dragHandleColor` | `Color?` | `null` | ❌ | 拖拽指示器颜色 |
-| `adjustForKeyboard` | `bool` | `true` | ❌ | 是否跟随键盘上移 |
-| `animationDuration` | `Duration` | `400ms` | ❌ | 动画时长 |
-| `dragDismissMode` | `SheetDragDismissMode` | `fullBody` | ❌ | 默认拖动关闭策略（可被页面覆盖） |
-| `pageBackgroundColor` | `Color?` | `null` | ❌ | 内部页背景色 |
-| `routeBuilder` | `FlowSheetRouteBuilder?` | `null` | ❌ | 自定义内部页转场 |
+| 方法 | 语义 |
+| --- | --- |
+| `push<T>(page)` | 压入页面并等待该页业务结果 |
+| `pop<T>(result)` | 完成并移除当前页 |
+| `completeCurrent<T>(result)` | 完成当前页等待者但不退页 |
+| `replace(page)` | 替换当前页 |
+| `closeAll(result)` | 关闭整个 FlowSheet |
+| `handleBack()` | 有内部页时先退页，否则交给外层关闭 |
 
-### 核心类型与生命周期
+高级入口为 `Pop.openFlowSheet<R>(FlowSheetConfig<R>)`。
 
-- `FlowSheetController<R>`：内部栈与结果回传
-- `FlowSheetPage` / `FlowSheetPageState`：通过 `nav` 调用 `push` / `pop` / `replace` / `completeCurrent` / `closeAll`
-- 生命周期钩子：`onLoad` / `onShow` / `onHide` / `onRemove` / `onClose`（适合启停轮询）
-- 结束整条流：优先 `completeCurrent(result)` 或 `closeAll(result)`，避免先 `pop` 再关 sheet 造成双动画
-
-### 简例
+### Date
 
 ```dart
-final controller = FlowSheetController<String>();
-final result = await Pop.flowSheet<String>(
-  controller: controller,
-  maxHeight: SheetDimension.fraction(0.85),
-  initialPage: StartWorkoutIntroPage(controller: controller),
-);
-```
-
-示例见 `example/lib/flows/`。
-
-## Date API
-
-### 方法签名
-
-```dart
-static Future<DateTime?> date({
+Future<DateTime?> Pop.date({
   DateTime? initialDate,
   DateTime? minDate,
   DateTime? maxDate,
   String title = 'Date of Birth',
-  PopupPosition position = PopupPosition.bottom,
-  bool? dismissOnRouteChange,
   String confirmText = 'Confirm',
-  String? cancelText = 'Cancel',
-  Color? activeColor = Colors.black,
-  Color? noActiveColor = Colors.black38,
-  Color? headerBg = Colors.blue,
-  double? height = 180.0,
-  double? radius = 24.0,
-  Duration animationDuration = const Duration(milliseconds: 250),
-  Curve? animationCurve,
-})
+  String? cancelText,
+  // 另有颜色、高度和圆角参数
+});
 ```
 
-### 参数说明
+高级入口 `Pop.openDate(DateConfig)` 返回 `PopupHandle<DateTime>`。
 
-| 参数 | 类型 | 默认值 | 必填 | 说明 |
-|------|------|--------|------|------|
-| `initialDate` | `DateTime?` | `null` | ❌ | 初始选中日期 |
-| `minDate` | `DateTime?` | `null` | ❌ | 最小可选日期 |
-| `maxDate` | `DateTime?` | `null` | ❌ | 最大可选日期 |
-| `title` | `String` | `'Date of Birth'` | ❌ | 标题 |
-| `position` | `PopupPosition` | `bottom` | ❌ | 显示位置 |
-| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 date 默认不关闭 |
-| `confirmText` | `String` | `'Confirm'` | ❌ | 确认按钮文本 |
-| `cancelText` | `String?` | `'Cancel'` | ❌ | 取消按钮文本 |
-| `activeColor` | `Color?` | `Colors.black` | ❌ | 选中颜色 |
-| `noActiveColor` | `Color?` | `Colors.black38` | ❌ | 未选中颜色 |
-| `headerBg` | `Color?` | `Colors.blue` | ❌ | 头部背景色 |
-| `height` | `double?` | `180.0` | ❌ | 高度 |
-| `radius` | `double?` | `24.0` | ❌ | 圆角 |
-| `animationDuration` | `Duration` | `250ms` | ❌ | 动画持续时间 |
-| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
-
-### 返回值
-
-- 点击确认返回选中的 `DateTime`
-- 点击取消或遮罩返回 `null`
-
-### 使用示例
+### Menu
 
 ```dart
-// 基本日期选择
-final date = await Pop.date(
-  title: '选择生日',
-  minDate: DateTime(1900, 1, 1),
-  maxDate: DateTime.now(),
-);
-
-// 自定义样式
-final date = await Pop.date(
-  title: '选择入职日期',
-  initialDate: DateTime.now(),
-  minDate: DateTime(2020, 1, 1),
-  maxDate: DateTime.now(),
-  confirmText: '确定',
-  cancelText: '取消',
-  activeColor: Colors.green,
-  noActiveColor: Colors.grey,
-  headerBg: Colors.green,
-  height: 200,
-  radius: 16,
-);
-
-// 居中显示
-final date = await Pop.date(
-  title: '选择日期',
-  position: PopupPosition.center,
-  activeColor: Colors.blue,
-  headerBg: Colors.blue,
-);
-
-// 自定义动画时长
-final date = await Pop.date(
-  title: '快速选择日期',
-  animationDuration: Duration(milliseconds: 150),
-);
-```
-
-## Menu API
-
-### 方法签名
-
-```dart
-static Future<T?> menu<T>({
-  required GlobalKey anchorKey,
-  Offset anchorOffset = Offset.zero,
+Future<T?> Pop.menu<T>({
+  required PopupAnchorController anchor,
   required Widget Function(void Function([T? result]) dismiss) builder,
-  bool? dismissOnRouteChange,
-  bool showBarrier = true,
-  bool barrierDismissible = true,
-  Color? barrierColor,
-  PopupAnimation animation = PopupAnimation.fade,
-  Duration animationDuration = const Duration(milliseconds: 200),
-  BoxDecoration? decoration,
+  MenuPlacement placement = MenuPlacement.auto,
+  Offset offset = Offset.zero,
   EdgeInsetsGeometry? padding,
   BoxConstraints? constraints,
-  Curve? animationCurve,
-})
+  Decoration? decoration,
+  bool barrierDismissible = true,
+});
 ```
 
-### 参数说明
+触发 Widget 必须由 `PopupAnchor(controller: anchor, child: ...)` 包裹。
+`auto` 会根据 Anchor 的全局位置选择上方或下方；Follower 会在滚动时持续跟随。
+高级入口 `Pop.openMenu<T>(MenuConfig<T>)` 返回 `PopupHandle<T>`，样式类型为
+`PopupMenuStyle`。
 
-| 参数 | 类型 | 默认值 | 必填 | 说明 |
-|------|------|--------|------|------|
-| `anchorKey` | `GlobalKey` | - | ✅ | 锚定目标的 GlobalKey |
-| `anchorOffset` | `Offset` | `Offset.zero` | ❌ | 相对于目标的偏移 |
-| `builder` | `Widget Function(void Function([T? result]) dismiss)` | - | ✅ | 内容构建器 |
-| `dismissOnRouteChange` | `bool?` | `null` | ❌ | 路由切换时是否关闭；`null` 时 menu 默认不关闭 |
-| `showBarrier` | `bool` | `true` | ❌ | 是否显示遮罩 |
-| `barrierDismissible` | `bool` | `true` | ❌ | 点击遮罩是否关闭 |
-| `barrierColor` | `Color?` | `Colors.black54` | ❌ | 遮罩颜色 |
-| `animation` | `PopupAnimation` | `fade` | ❌ | 动画类型 |
-| `animationDuration` | `Duration` | `200ms` | ❌ | 动画时长 |
-| `animationCurve` | `Curve?` | `Curves.easeInOut` | ❌ | 动画曲线 |
-| `decoration` | `BoxDecoration?` | `null` | ❌ | 容器装饰 |
-| `padding` | `EdgeInsetsGeometry?` | `null` | ❌ | 内边距 |
-| `constraints` | `BoxConstraints?` | `null` | ❌ | 容器约束 |
-
-### 返回值
-
-- 通过 `dismiss(result)` 关闭时返回 `result`
-- 点击遮罩关闭时返回 `null`
-
-### 使用示例
+### Custom
 
 ```dart
-// 基本菜单
-final GlobalKey buttonKey = GlobalKey();
-
-ElevatedButton(
-  key: buttonKey,
-  onPressed: () async {
-    final result = await Pop.menu<String>(
-      anchorKey: buttonKey,
-      anchorOffset: Offset(0, 8),
-      builder: (dismiss) => Column(
-        children: [
-          ListTile(
-            title: Text('复制'),
-            onTap: () => dismiss('copy'),
-          ),
-          ListTile(
-            title: Text('删除'),
-            onTap: () => dismiss('delete'),
-          ),
-        ],
-      ),
-    );
-  },
-  child: Text('显示菜单'),
-);
-
-// 带图标的菜单
-final result = await Pop.menu<String>(
-  anchorKey: buttonKey,
-  builder: (dismiss) => Column(
-    children: [
-      ListTile(
-        leading: Icon(Icons.copy),
-        title: Text('复制'),
-        onTap: () => dismiss('copy'),
-      ),
-      ListTile(
-        leading: Icon(Icons.delete, color: Colors.red),
-        title: Text('删除', style: TextStyle(color: Colors.red)),
-        onTap: () => dismiss('delete'),
-      ),
-    ],
-  ),
-);
-
-// 自定义样式菜单
-final result = await Pop.menu<String>(
-  anchorKey: buttonKey,
-  anchorOffset: Offset(10, 40),
-  builder: (dismiss) => Container(
-    padding: EdgeInsets.all(8),
-    child: Column(
-      children: [
-        _buildCustomMenuItem(
-          icon: Icons.share,
-          title: '分享',
-          subtitle: '分享到社交媒体',
-          onTap: () => dismiss('share'),
-        ),
-        Divider(height: 1),
-        _buildCustomMenuItem(
-          icon: Icons.favorite,
-          title: '收藏',
-          subtitle: '添加到收藏夹',
-          onTap: () => dismiss('favorite'),
-        ),
-      ],
+final handle = Pop.custom<void>(
+  CustomPopupConfig<void>(
+    builder: (context, handle) => MyPopup(
+      onClose: handle.complete,
     ),
   ),
 );
 ```
 
-## PopupManager
+Custom 同样必须显式使用 Config，并自动接入统一动画、Barrier、返回键、路由和
+Handle 生命周期。
 
-PopupManager 是弹窗管理器，提供全局弹窗管理功能。它基于 Flutter 的 `Overlay` 系统实现，支持同时显示多个弹窗并独立管理它们的生命周期。
+## PopupHandle
 
-### 核心特性
+| 成员 | 语义 |
+| --- | --- |
+| `id` / `key` / `channel` | 稳定身份与查询维度 |
+| `state` / `isActive` / `isMounted` | 逻辑和渲染状态 |
+| `complete([value])` | 产生 completed outcome 并退场 |
+| `dismiss()` | 以 manual 原因请求关闭 |
+| `result` | `Future<T?>`，业务结果完成时结束 |
+| `outcome` | `Future<PopupOutcome<T>>`，包含值与关闭原因 |
+| `dismissed` | 退场完成、视觉节点移除时结束 |
 
-- **单例模式**：全局唯一的弹窗管理器实例
-- **ID 管理**：每个弹窗都有唯一的 `popupId` 用于精确控制
-- **类型区分**：支持不同类型的弹窗（Toast、Loading、Confirm、Sheet、Date、Menu）
-- **动画控制**：独立的动画控制器，支持进入和退出动画
-- **自动清理**：自动管理资源释放，防止内存泄漏
+`UpdatablePopupHandle<T, C>.update(C)` 可更新支持更新的逻辑条目。Loading
+默认支持；带稳定 key 的 Toast 可通过高级配置启用。
 
-### 静态方法
+常见 `PopupDismissReason`：`completed`、`manual`、`timeout`、
+`externalEvent`、`barrier`、`drag`、`back`、`routeChanged`、`replaced`、
+`anchorDetached`、`parentDismissed`、`hostDetached`。
 
-#### 初始化
+## 生命周期与策略
 
-```dart
-static void initialize({required GlobalKey<NavigatorState> navigatorKey})
-```
-
-**说明：** 初始化 PopupManager，必须在 `main()` 函数中调用。
-
-**参数：**
-- `navigatorKey`：MaterialApp 的 navigatorKey，用于获取 Overlay
-
-**使用示例：**
-```dart
-void main() {
-  PopupManager.initialize(
-    navigatorKey: GlobalKey<NavigatorState>(),
-  );
-  runApp(MyApp());
-}
-```
-
-#### 显示弹窗
+### PopupLifetime
 
 ```dart
-static String show(PopupConfig config)
+const PopupLifetime.manual();
+PopupLifetime.after(const Duration(seconds: 2));
+PopupLifetime.until(requestFinished);
+PopupLifetime.anyOf([after, until]);
 ```
 
-**说明：** 显示弹窗并返回唯一的 popupId。
+更新现有 Loading 时，旧 lifetime 监听会失效，新 lifetime 从更新时重新开始。
 
-**参数：**
-- `config`：弹窗配置对象
+### PopupBehaviorConfig
 
-**返回值：** 弹窗的唯一 ID
+| 字段 | 作用 |
+| --- | --- |
+| `channel` | 类型查询/批量操作，不驱动其他行为 |
+| `key` | 唯一身份及冲突匹配 |
+| `tags` | 业务分组 |
+| `conflictPolicy` | stack / update / replace / toggle / reject 等冲突行为 |
+| `routePolicy` | persist / owner route change / any route change |
+| `backPolicy` | dismiss / block / ignore / delegate |
 
-**使用示例：**
-```dart
-final popupId = PopupManager.show(PopupConfig(
-  child: CustomWidget(),
-  position: PopupPosition.center,
-  animation: PopupAnimation.fade,
-  showBarrier: true,
-  barrierDismissible: true,
-));
-```
+### PopupLifecycleCallbacks
 
-#### 隐藏弹窗
+- `onPresented`：进入动画完成。
+- `onOutcome`：业务 outcome 确定。
+- `onDismissed`：退场结束、节点移除。
 
-```dart
-static void hide(String popupId)
-```
-
-**说明：** 根据 popupId 隐藏指定的弹窗。
-
-**参数：**
-- `popupId`：要隐藏的弹窗 ID
-
-**使用示例：**
-```dart
-PopupManager.hide(popupId);
-```
-
-#### 隐藏最后一个弹窗
+## 全局控制与查询
 
 ```dart
-static void hideLast()
+Pop.dismissTop();
+Pop.dismissAll();
+Pop.dismissChannel(PopupChannel.sheet);
+Pop.dismissTags({'checkout'});
+Pop.handleBack();
+
+Pop.isVisibleKey('key');
+Pop.isActiveKey('key');
+Pop.hasChannel(PopupChannel.loading);
+Pop.countChannel(PopupChannel.toast);
 ```
 
-**说明：** 隐藏最新显示的弹窗（任何类型）。
-
-**使用示例：**
-```dart
-PopupManager.hideLast();
-```
-
-#### 隐藏所有弹窗
-
-```dart
-static void hideAll()
-```
-
-**说明：** 隐藏所有当前显示的弹窗。
-
-**使用示例：**
-```dart
-PopupManager.hideAll();
-```
-
-#### 检查弹窗可见性
-
-```dart
-static bool isVisible(String popupId)
-```
-
-**说明：** 检查指定 ID 的弹窗是否仍然可见。
-
-**参数：**
-- `popupId`：要检查的弹窗 ID
-
-**返回值：** 如果弹窗可见返回 `true`，否则返回 `false`
-
-**使用示例：**
-```dart
-if (PopupManager.isVisible(popupId)) {
-  print('弹窗仍然可见');
-}
-```
-
-#### 检查非 Toast 弹窗
-
-```dart
-static bool get hasNonToastPopup
-```
-
-**说明：** 检查是否存在非 Toast 类型的弹窗。
-
-**返回值：** 如果有非 Toast 弹窗返回 `true`，否则返回 `false`
-
-**使用示例：**
-```dart
-if (PopupManager.hasNonToastPopup) {
-  // 处理返回键逻辑
-}
-```
-
-#### 隐藏最后一个非 Toast 弹窗
-
-```dart
-static bool hideLastNonToast()
-```
-
-**说明：** 从最新弹窗开始查找非 Toast。若该弹窗配置了 `onBackPressed` 且返回 `true`，视为已消费（例如 FlowSheet 退内部页），不关闭 Overlay；否则关闭该弹窗。
-
-**返回值：** 已处理（消费返回或关闭弹窗）返回 `true`，否则 `false`
-
-**使用示例：**
-```dart
-if (PopupManager.hideLastNonToast()) {
-  // 已由弹窗内部处理，或已关闭最上层非 toast
-}
-```
-
-#### 路由切换时关闭弹窗
-
-```dart
-static void hidePopupsOnRouteChange()
-```
-
-**说明：** 由 `PopupRouteObserver` 在 push / pop / replace / **didRemove** 时调用。关闭所有应在路由切换时消失的弹窗（默认：confirm / sheet；toast / loading / date / menu 默认保留，可用 `dismissOnRouteChange` 覆盖）。
-
-#### 根据类型隐藏弹窗
-
-```dart
-static bool hideByType(PopupType type)
-```
-
-**说明：** 根据类型隐藏指定类型的弹窗。从最新的弹窗开始查找，找到第一个匹配类型的弹窗并关闭。主要用于单一实例的弹窗类型，如 loading。
-
-**参数：**
-- `type`：要关闭的弹窗类型（`PopupType.loading`、`PopupType.toast` 等）
-
-**返回值：** 如果找到并关闭了弹窗返回 `true`，否则返回 `false`
-
-**使用示例：**
-```dart
-// 关闭当前的 loading
-if (PopupManager.hideByType(PopupType.loading)) {
-  print('成功关闭了 loading');
-}
-
-// 关闭当前的 toast
-PopupManager.hideByType(PopupType.toast);
-```
-
-#### 智能返回
-
-```dart
-static void maybePop(BuildContext context)
-```
-
-**说明：** 智能返回方法。如果有非 Toast 弹窗，则关闭最上层的弹窗；否则执行标准的 Navigator.pop()。
-
-**参数：**
-- `context`：BuildContext
-
-**使用示例：**
-```dart
-// 在自定义返回按钮中使用
-AppBar(
-  leading: IconButton(
-    icon: Icon(Icons.arrow_back),
-    onPressed: () => PopupManager.maybePop(context),
-  ),
-)
-```
-
-### popupId 使用规则
-
-#### ✅ 可以通过 popupId 关闭的弹窗
-
-1. **Loading 弹窗**：`Pop.loading()` 现在不需要返回 popupId，内部自动管理
-2. **手动创建的弹窗**：通过 `PopupManager.show()` 直接创建
-
-#### ❌ 不能通过 popupId 关闭的弹窗
-
-1. **Toast 弹窗**：`Pop.toast()` 不返回 popupId，自动管理
-2. **Confirm 弹窗**：`Pop.confirm()` 通过用户交互关闭
-3. **Sheet 弹窗**：`Pop.sheet()` 通过 dismiss() 函数关闭
-4. **Date 弹窗**：`Pop.date()` 通过用户选择关闭
-5. **Menu 弹窗**：`Pop.menu()` 通过 dismiss() 函数关闭
-
-### 内部工作原理
-
-#### 弹窗 ID 生成
-
-```dart
-final popupId = 'popup_${DateTime.now().microsecondsSinceEpoch}_${_instance._popups.length}';
-```
-
-#### 弹窗信息存储
-
-```dart
-class _PopupInfo {
-  final OverlayEntry entry;        // UI 组件
-  final AnimationController controller;  // 动画控制器
-  final VoidCallback? onDismissCallback; // 关闭回调
-  final PopupType type;            // 弹窗类型
-  Timer? dismissTimer;             // 自动关闭定时器
-}
-```
-
-#### 弹窗显示流程
-
-1. 创建独立的 `AnimationController` 和 `OverlayEntry`
-2. 将弹窗信息存储在 `_popups` Map 中
-3. 按显示顺序记录在 `_popupOrder` 列表中
-4. 插入到 Flutter 的 Overlay 系统中
-5. 播放进入动画
-6. 启动自动关闭定时器（如果设置了 duration）
-
-#### 弹窗关闭流程
-
-1. 从管理器中立即移除弹窗信息
-2. 取消自动关闭定时器
-3. 播放退出动画
-4. 动画完成后清理资源
-5. 触发 onDismiss 回调
-
-### 使用示例
-
-```dart
-final navigatorKey = GlobalKey<NavigatorState>();
-
-void main() {
-  runApp(MyApp(navigatorKey: navigatorKey));
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    PopupManager.initialize(navigatorKey: navigatorKey);
-  });
-}
-
-MaterialApp(
-  navigatorKey: navigatorKey,
-  navigatorObservers: [PopupRouteObserver()],
-  builder: (context, child) => PopScopeWidget(
-    child: child ?? const SizedBox.shrink(),
-  ),
-  home: const HomePage(),
-);
-```
-
-## PopupRouteObserver
-
-```dart
-class PopupRouteObserver extends RouteObserver<PageRoute<dynamic>>
-```
-
-监听 `didPush` / `didPop` / `didReplace` / `didRemove`，调用 `PopupManager.hidePopupsOnRouteChange()`。须注册到 `MaterialApp.navigatorObservers`，并与初始化使用的 `navigatorKey` 为同一 Navigator。
-
-## 枚举类型
-
-### PopupPosition
-
-```dart
-enum PopupPosition {
-  top,    // 顶部
-  center, // 居中
-  bottom, // 底部
-  left,   // 左侧
-  right,  // 右侧
-}
-```
-
-### PopupAnimation
-
-```dart
-enum PopupAnimation {
-  none,      // 无动画
-  fade,      // 淡入淡出
-  slideDown, // 从上往下滑入
-  slideUp,   // 从下往上滑入
-  slideLeft, // 从左往右滑入
-  slideRight,// 从右往左滑入
-}
-```
-
-### SheetDirection
-
-```dart
-enum SheetDirection {
-  top,    // 顶部
-  bottom, // 底部
-  left,   // 左侧
-  right,  // 右侧
-}
-```
-
-### ToastType
-
-```dart
-enum ToastType {
-  success, // 成功
-  warn,    // 警告
-  error,   // 错误
-  none,    // 无类型
-}
-```
-
-### ConfirmButtonLayout
-
-```dart
-enum ConfirmButtonLayout {
-  row,    // 水平排列
-  column, // 垂直排列
-}
-```
-
-### SheetDragDismissMode
-
-```dart
-enum SheetDragDismissMode {
-  fullBody,         // 非滚动主体：整块可拖关
-  contentWhenAtTop, // 滚动内容到顶后继续下拉可关
-  handleOnly,       // 仅拖条/标题栏可拖关（适合下拉刷新页）
-}
-```
-
-### PopupType
-
-```dart
-enum PopupType {
-  toast,   // Toast 类型
-  loading, // Loading 类型
-  confirm, // Confirm 类型
-  sheet,   // Sheet 类型
-  date,    // Date 类型
-  menu,    // Menu 类型
-  other,   // 其他类型
-}
-```
-
-## SheetDimension
-
-用于定义弹窗尺寸的工具类。
-
-### 构造方法
-
-```dart
-// 固定像素值
-SheetDimension.pixel(double value)
-
-// 占屏幕可用空间的分数（0.0 to 1.0）
-SheetDimension.fraction(double value)
-```
-
-### 使用示例
-
-```dart
-// 固定像素
-width: SheetDimension.pixel(300)
-
-// 百分比
-width: SheetDimension.fraction(0.8) // 80%
-
-// 在 Sheet 中使用
-await Pop.sheet(
-  maxWidth: SheetDimension.fraction(0.75),
-  maxHeight: SheetDimension.pixel(400),
-  childBuilder: (dismiss) => ...,
-);
-```
-
+默认 Runtime 是全局且可替换的 facade 实现；测试可直接构造 `PopupRuntime` 与
+`PopupHost` 获得完全隔离的实例。`Pop.shutdown()` 用于应用级永久收口，
+`Pop.resetForTest()` 只用于测试。

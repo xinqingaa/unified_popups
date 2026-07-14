@@ -16,10 +16,9 @@ import '../pages/flow_sheet_page.dart';
 ///
 /// 生命周期分两个独立阶段：
 /// 1. 业务关闭（[_closeBusiness]）：完成所有 pending Future、触发页面 onHide/onClose。
-///    在 [closeAll] 或底层 sheet Future 完成时同步发生，不依赖任何动画/widget 回调。
-/// 2. 对象销毁（[dispose]）：释放 notifier。底层 `Pop.sheet` 的 Future 在 dismiss 时
-///    就会完成，而 overlay 退场动画期间 [FlowSheetHost] 仍持有本对象，因此销毁
-///    延迟到「sheet Future 已完成」且「Host 已卸载」两个条件都满足时才执行，
+///    在 [closeAll] 或统一 Popup outcome 完成时同步发生。
+/// 2. 对象销毁（[dispose]）：释放 notifier。退场动画期间 [FlowSheetHost] 仍持有
+///    本对象，因此销毁延迟到「Popup 已移除」且「Host 已卸载」两个条件都满足，
 ///    避免 "used after being disposed"。
 ///
 /// [R] 为整个 sheet（[closeAll]）的最终结果类型。
@@ -30,7 +29,6 @@ class FlowSheetController<R> extends ChangeNotifier
   final ValueNotifier<SheetDragDismissMode> dragDismissModeNotifier =
       ValueNotifier<SheetDragDismissMode>(SheetDragDismissMode.fullBody);
 
-  void Function([R? result])? _dismiss;
   PopupHandle<R>? _popupHandle;
   bool _sessionClaimed = false;
   SheetDragDismissMode _defaultDragDismissMode = SheetDragDismissMode.fullBody;
@@ -54,19 +52,13 @@ class FlowSheetController<R> extends ChangeNotifier
   @override
   FlowSheetNavigator get navigator => this;
 
-  /// 底层 Pop.sheet 的 Future 是否已完成（dismiss 已发生，退场动画可能还在播）。
-  bool _sheetDismissed = false;
+  /// 统一 Popup 是否已完成退场并从 Host 移除。
+  bool _popupDismissed = false;
 
   bool _hostAttached = false;
   bool _hostDetached = false;
   bool _isHandlingBack = false;
   Object? _host;
-
-  /// 由 [FlowSheetHost] 注入底层 sheet 的 dismiss 回调。
-  void attachDismiss(void Function([R? result]) dismiss) {
-    if (!_sessionClaimed) _sessionClaimed = true;
-    _dismiss = dismiss;
-  }
 
   void claimPopupSession() {
     if (_sessionClaimed || _disposed || _closed) {
@@ -87,7 +79,7 @@ class FlowSheetController<R> extends ChangeNotifier
     _popupHandle = handle;
     handle.outcome.then((_) => _closeBusiness());
     handle.dismissed.then((_) {
-      _sheetDismissed = true;
+      _popupDismissed = true;
       _maybeDispose();
     });
   }
@@ -112,17 +104,6 @@ class FlowSheetController<R> extends ChangeNotifier
     _maybeDispose();
   }
 
-  /// 底层 `Pop.sheet` 的 Future 完成时由 `Pop.flowSheet` 调用。
-  ///
-  /// 兜底两类不经过 [closeAll] 的关闭路径（路由切换自动 dismiss、
-  /// PopupManager.hideByType 等外部关闭）：先同步收口业务，
-  /// 再按「Host 是否已卸载」决定是否立即销毁对象。
-  void handleSheetDismissed() {
-    _closeBusiness();
-    _sheetDismissed = true;
-    _maybeDispose();
-  }
-
   /// 业务关闭：完成所有 pending Future、触发 onHide/onClose。幂等。
   void _closeBusiness() {
     if (_closed) return;
@@ -135,10 +116,10 @@ class FlowSheetController<R> extends ChangeNotifier
     _syncDragDismissMode();
   }
 
-  /// 仅当「sheet Future 已完成」且「Host 已卸载（或从未挂载）」时销毁对象。
+  /// 仅当「Popup 已移除」且「Host 已卸载（或从未挂载）」时销毁对象。
   void _maybeDispose() {
     if (_disposed) return;
-    if (!_sheetDismissed) return;
+    if (!_popupDismissed) return;
     if (_hostAttached && !_hostDetached) return;
     dispose();
   }
@@ -222,8 +203,7 @@ class FlowSheetController<R> extends ChangeNotifier
 
   /// 处理系统返回/侧滑返回。
   ///
-  /// FlowSheet 承载在 overlay sheet 中，外层页面也可能通过 PopupManager
-  /// 拦截返回；这里提供一个幂等入口，确保多页时优先退内部页面。
+  /// 外层 Popup 返回桥会委托到这里，确保多页时优先退内部页面。
   @override
   bool handleBack([Object? result]) {
     if (_closed) return true;
@@ -241,12 +221,7 @@ class FlowSheetController<R> extends ChangeNotifier
   void closeAll([Object? result]) {
     if (_closed) return;
     _closeBusiness();
-    final popupHandle = _popupHandle;
-    if (popupHandle != null) {
-      popupHandle.complete(result as R?);
-    } else {
-      _dismiss?.call(result as R?);
-    }
+    _popupHandle?.complete(result as R?);
   }
 
   /// 路由真正从栈移除时调用（程序化 pop / 系统返回 / iOS 侧滑均收口于此）。

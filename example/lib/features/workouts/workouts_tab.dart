@@ -10,12 +10,12 @@ class _Course {
   const _Course({
     required this.title,
     required this.meta,
-    required this.menuKey,
+    required this.menuAnchor,
   });
 
   final String title;
   final String meta;
-  final GlobalKey menuKey;
+  final PopupAnchorController menuAnchor;
 }
 
 class WorkoutsTab extends StatefulWidget {
@@ -33,17 +33,17 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
     _Course(
       title: '晨间激活',
       meta: '初级 · 20 分钟',
-      menuKey: GlobalKey(),
+      menuAnchor: PopupAnchorController(),
     ),
     _Course(
       title: '力量循环',
       meta: '中级 · 35 分钟',
-      menuKey: GlobalKey(),
+      menuAnchor: PopupAnchorController(),
     ),
     _Course(
       title: 'HIIT 燃脂',
       meta: '进阶 · 25 分钟',
-      menuKey: GlobalKey(),
+      menuAnchor: PopupAnchorController(),
     ),
   ];
 
@@ -137,9 +137,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
     );
   }
 
-  Future<void> _openCourseMenu(GlobalKey key) async {
+  Future<void> _openCourseMenu(PopupAnchorController anchor) async {
     final action = await Pop.menu<String>(
-      anchorKey: key,
+      anchor: anchor,
       builder: (dismiss) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -182,15 +182,8 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
   }
 
   void _toggleReminder() {
-    Pop.toast(
-      _vibrateReminder ? '震动提醒' : '静音提醒',
-      toggleable: true,
-      tMessage: _vibrateReminder ? '静音提醒' : '震动提醒',
-      toastType: ToastType.none,
-      onTap: () {
-        setState(() => _vibrateReminder = !_vibrateReminder);
-      },
-    );
+    setState(() => _vibrateReminder = !_vibrateReminder);
+    Pop.toast(_vibrateReminder ? '已开启震动提醒' : '已切换为静音提醒');
   }
 
   @override
@@ -233,10 +226,12 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
             child: ListTile(
               title: Text(course.title),
               subtitle: Text(course.meta),
-              trailing: IconButton(
-                key: course.menuKey,
-                icon: const Icon(Icons.more_horiz),
-                onPressed: () => _openCourseMenu(course.menuKey),
+              trailing: PopupAnchor(
+                controller: course.menuAnchor,
+                child: IconButton(
+                  icon: const Icon(Icons.more_horiz),
+                  onPressed: () => _openCourseMenu(course.menuAnchor),
+                ),
               ),
               onTap: () {
                 Navigator.of(context).push(

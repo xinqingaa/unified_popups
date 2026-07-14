@@ -20,86 +20,82 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScopeWidget(
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Lab · 异步边界')),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_lastResult.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: _lastResult.contains('成功')
-                        ? Colors.green.withValues(alpha: 0.1)
-                        : Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _lastResult.contains('成功')
-                          ? Colors.green
-                          : Colors.red,
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    '上次结果: $_lastResult',
-                    style: TextStyle(
-                      color: _lastResult.contains('成功')
-                          ? Colors.green
-                          : Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Lab · 异步边界')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_lastResult.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: _lastResult.contains('成功')
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        _lastResult.contains('成功') ? Colors.green : Colors.red,
+                    width: 1,
                   ),
                 ),
-              ],
-              _buildTestButton(
-                title: '场景1: Future.then() 回调',
-                subtitle: '模拟网络请求完成后的回调中调用 loading',
-                onPressed: _testFutureThen,
-              ),
-              const SizedBox(height: 12),
-              _buildTestButton(
-                title: '场景2: async/await 中间调用',
-                subtitle: '在异步操作中间调用 loading',
-                onPressed: _testAsyncAwait,
-              ),
-              const SizedBox(height: 12),
-              _buildTestButton(
-                title: '场景3: Stream 监听',
-                subtitle: '在 Stream 监听回调中调用 loading',
-                onPressed: _testStream,
-              ),
-              const SizedBox(height: 12),
-              _buildTestButton(
-                title: '场景4: Timer 回调',
-                subtitle: '在 Timer 回调中调用 loading',
-                onPressed: _testTimer,
-              ),
-              const SizedBox(height: 12),
-              _buildTestButton(
-                title: '场景5: postFrameCallback',
-                subtitle: '最关键的测试：在构建阶段调用 loading',
-                onPressed: _testPostFrameCallback,
-                isCritical: true,
-              ),
-              const SizedBox(height: 12),
-              _buildTestButton(
-                title: '场景6: initState 异步调用',
-                subtitle: '在 StatefulWidget 初始化时异步调用 loading',
-                onPressed: _testInitStateAsync,
-              ),
-              const SizedBox(height: 12),
-              _buildTestButton(
-                title: '场景7: build() 中直接调用',
-                subtitle: '模拟路由构建过程中（如 Get.put() 立即初始化）调用 loading',
-                onPressed: _testBuildDirect,
-                isCritical: true,
+                child: Text(
+                  '上次结果: $_lastResult',
+                  style: TextStyle(
+                    color:
+                        _lastResult.contains('成功') ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
-          ),
+            _buildTestButton(
+              title: '场景1: Future.then() 回调',
+              subtitle: '模拟网络请求完成后的回调中调用 loading',
+              onPressed: _testFutureThen,
+            ),
+            const SizedBox(height: 12),
+            _buildTestButton(
+              title: '场景2: async/await 中间调用',
+              subtitle: '在异步操作中间调用 loading',
+              onPressed: _testAsyncAwait,
+            ),
+            const SizedBox(height: 12),
+            _buildTestButton(
+              title: '场景3: Stream 监听',
+              subtitle: '在 Stream 监听回调中调用 loading',
+              onPressed: _testStream,
+            ),
+            const SizedBox(height: 12),
+            _buildTestButton(
+              title: '场景4: Timer 回调',
+              subtitle: '在 Timer 回调中调用 loading',
+              onPressed: _testTimer,
+            ),
+            const SizedBox(height: 12),
+            _buildTestButton(
+              title: '场景5: postFrameCallback',
+              subtitle: '最关键的测试：在构建阶段调用 loading',
+              onPressed: _testPostFrameCallback,
+              isCritical: true,
+            ),
+            const SizedBox(height: 12),
+            _buildTestButton(
+              title: '场景6: initState 异步调用',
+              subtitle: '在 StatefulWidget 初始化时异步调用 loading',
+              onPressed: _testInitStateAsync,
+            ),
+            const SizedBox(height: 12),
+            _buildTestButton(
+              title: '场景7: build() 中直接调用',
+              subtitle: '模拟路由构建过程中（如 Get.put() 立即初始化）调用 loading',
+              onPressed: _testBuildDirect,
+              isCritical: true,
+            ),
+          ],
         ),
       ),
     );
@@ -356,11 +352,12 @@ class _TestBuildDirectWidgetState extends State<_TestBuildDirectWidget> {
       // 直接调用，模拟在路由构建过程中立即初始化并调用 loading
       // 这会在构建阶段触发 overlay.insert()，需要延迟执行
       Pop.loading(message: 'build() 中直接调用 loading...');
+      final navigator = Navigator.of(context);
       // 延迟关闭，验证弹窗是否正常显示
       Future.delayed(const Duration(seconds: 2)).then((_) {
         Pop.hideLoading();
         if (mounted) {
-          Navigator.of(context).pop(true);
+          navigator.pop(true);
         }
       });
     }

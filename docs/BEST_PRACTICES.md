@@ -1,189 +1,122 @@
-# 最佳实践指南
+# unified_popups 2.0 最佳实践
 
-面向整套 `Pop` API 的使用建议：选型、初始化、各类型注意点，以及返回键 / 路由 / 异步等横切行为。
-
-## 目录
-
-- [选型](#选型)
-- [初始化](#初始化)
-- [各类型实践](#各类型实践)
-- [返回键与路由](#返回键与路由)
-- [异步与资源](#异步与资源)
-- [常见错误](#常见错误)
-
-## 选型
-
-| 需求 | 推荐 |
-|------|------|
-| 操作结果轻提示 | `Pop.toast` |
-| 阻塞等待（请求中） | `Pop.loading` + `try/finally` |
-| 危险 / 不可逆确认 | `Pop.confirm` |
-| 单页筛选、表单、抽屉 | `Pop.sheet` |
-| 多步向导 | `Pop.flowSheet` |
-| 选日期 | `Pop.date` |
-| 锚定「更多」菜单 | `Pop.menu` |
-
-同一交互不要叠多种反馈（例如 confirm 成功后再用超长 toast 复述全文）。
-
-## 初始化
-
-使用**同一个** `navigatorKey`，并同时注册 `PopupRouteObserver` 与 `PopScopeWidget`：
+## 1. 应用只接入一次
 
 ```dart
-final navigatorKey = GlobalKey<NavigatorState>();
-
-void main() {
-  runApp(MyApp(navigatorKey: navigatorKey));
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    PopupManager.initialize(navigatorKey: navigatorKey);
-  });
-}
-
 MaterialApp(
-  navigatorKey: navigatorKey,
-  navigatorObservers: [PopupRouteObserver()],
-  builder: (context, child) => PopScopeWidget(
-    child: child ?? const SizedBox.shrink(),
-  ),
-  home: const HomePage(),
+  navigatorObservers: [Pop.routeObserver],
+  builder: Pop.hostBuilder,
 );
 ```
 
-常见错误：`MaterialApp` 里又 `GlobalKey()` 了一个新 key，Overlay 挂不上。
+不要在业务模块重复创建 Host，也不要把 Popup Controller 注入 Service。
+Service、Flow 和页面统一调用 `Pop.*`。
 
-## 各类型实践
+## 2. 便捷 API 与高级 API 分工
 
-### Toast
+- 只关心返回值：使用 `Pop.confirm`、`Pop.sheet` 等便捷 API。
+- 需要外部关闭、准确关闭原因、key/tags、生命周期：使用
+  `Pop.openXxx(Config)` 并保存 `PopupHandle`。
+- 完全自定义内容：使用 `Pop.custom(CustomPopupConfig)`。
 
-- 短文案 + `ToastType`；不要塞长说明或复杂交互。
-- 需要自定义布局时用 `messageWidget`，而不是把一整页塞进 toast。
-- 默认不因路由切换关闭；若页面离开后不应残留，显式传 `dismissOnRouteChange: true`。
+不要依赖字符串 id。Handle 是类型安全且包含完整生命周期的稳定引用。
+
+## 3. 正确理解完成与关闭
 
 ```dart
-Pop.toast('保存成功', toastType: ToastType.success);
+handle.complete(result); // 完成业务 Future，并启动退场
+await handle.dismissed;  // 等待视觉彻底移除
 ```
 
-### Loading
+提交业务后通常等待 `result`；必须在动画结束后执行的 UI 操作才等待
+`dismissed`。需要区分取消、超时、返回键和路由变化时读取 `outcome`。
 
-- **必须** `try/finally`，避免异常后卡住。
-- 全局单例：重复调用会关掉旧的再开新的，不要自己缓存「loading id」。
-- 默认不因路由切换关闭；长任务跨页时要想清楚是否应手动 `hideLoading`。
+## 4. Loading 和 Toast 的外部事件
 
 ```dart
-Pop.loading(message: '导出中...');
-try {
-  await exportReport();
-  Pop.toast('导出完成', toastType: ToastType.success);
-} finally {
-  Pop.hideLoading();
-}
+final request = repository.refresh();
+Pop.loading(message: '刷新中', until: request.then((_) {}));
+await request;
 ```
 
-### Confirm
+若同时配置 `duration` 与 `until`，任一条件先到即关闭。Loading 重复调用会
+更新同一条目并重启新配置的计时；不需要先 `hideLoading()`。
 
-- 删除、清空、不可逆操作用 confirm；纯告知用 toast。
-- 需要输入时用 `confirmChild`，不要另开一层 sheet 套 confirm。
-- 自定义按钮外观优先 `confirmButtonWidget` / `cancelButtonWidget`；接管点击用 `onConfirm` / `onCancel`（在内部关闭逻辑之前执行）。
-- 默认路由切换会关闭。
+无法把请求 Future 直接作为关闭信号时，使用 Completer：
 
 ```dart
-final ok = await Pop.confirm(
-  title: '删除确认',
-  content: '删除后不可恢复',
-  confirmText: '删除',
-  confirmBgColor: Colors.red,
-);
+final done = Completer<void>();
+Pop.toast('处理中', duration: const Duration(seconds: 30), until: done.future);
+eventBus.once('finished', (_) => done.complete());
 ```
 
-### Sheet
+## 5. Confirm 回调不替代返回值
 
-- 内容通过 `dismiss(result)` 关闭，不要再叠一层 Navigator。
-- **dockToEdge**：需保留底部 / 侧边导航点击时开启；`edgeGap` 对齐导航栏实际高度（example 用 `FitPulseMetrics.sheetDockEdgeGap`）。
-- **拖拽**：静态列表用 `fullBody`；可滚动内容用 `contentWhenAtTop`；带下拉刷新用 `handleOnly`。
-- 表单保持 `adjustForKeyboard: true`（默认）。
-- 默认路由切换会关闭。
+`onConfirm` 和 `onCancel` 适合埋点或按钮专属副作用；真正业务分支继续读取
+`Future<bool?>`。遮罩、关闭按钮和系统返回不会触发 `onCancel`。
 
-```dart
-await Pop.sheet<void>(
-  title: '筛选',
-  dockToEdge: true,
-  edgeGap: 84,
-  dragDismissMode: SheetDragDismissMode.contentWhenAtTop,
-  childBuilder: (dismiss) => FilterList(onApply: () => dismiss()),
-);
-```
+## 6. Menu 必须使用 Anchor
 
-### FlowSheet
-
-- 多步流程再用；单页筛选继续用 `sheet`。
-- 结束整条流：`nav.completeCurrent(result)` 或 `nav.closeAll(result)`，避免先 `pop` 到空栈再关 sheet（双动画）。
-- 同级步骤用 `replace`；需要返回上一页用 `push` / `pop`。
-- 在 `onShow` / `onHide` / `onRemove` 启停轮询或订阅。
-- 系统返回默认 `controller.handleBack`（先退内部页）。
+每个可同时存在的触发点持有独立的 `PopupAnchorController`：
 
 ```dart
-final controller = FlowSheetController<bool>();
-final ok = await Pop.flowSheet<bool>(
-  controller: controller,
-  maxHeight: SheetDimension.fraction(0.9),
-  initialPage: WizardFirstPage(controller: controller),
-);
-```
+final anchor = PopupAnchorController();
 
-### Date
-
-- 约束用 `minDate` / `maxDate`；文案用 `title` / `confirmText` / `cancelText`。
-- 默认不因路由切换关闭。
-
-```dart
-final date = await Pop.date(
-  title: '选择生日',
-  minDate: DateTime(1970, 1, 1),
-  maxDate: DateTime.now(),
-);
-```
-
-### Menu
-
-- 必须提供稳定的 `anchorKey`（挂在触发按钮上）。
-- 菜单项通过 `dismiss(result)` 回传；点击空白 / 遮罩返回 `null`。
-- 默认不因路由切换关闭。
-
-```dart
-final result = await Pop.menu<String>(
-  anchorKey: moreKey,
-  builder: (dismiss) => ListTile(
-    title: Text('删除'),
-    onTap: () => dismiss('delete'),
+PopupAnchor(
+  controller: anchor,
+  child: IconButton(
+    onPressed: () => Pop.menu<void>(
+      anchor: anchor,
+      builder: (dismiss) => MenuContent(onDone: dismiss),
+    ),
+    icon: const Icon(Icons.more_horiz),
   ),
 );
 ```
 
-## 返回键与路由
+不要再用 `GlobalKey + RenderBox` 手算位置。Anchor/Follower 能随滚动、布局和
+Transform 更新；Anchor 卸载会自动关闭 Menu。
 
-- **返回键**：`PopScopeWidget` → `hideLastNonToast()`。若配置了 `onBackPressed` 且返回 `true`，不关 Overlay（例如 flowSheet 退页）。
-- **路由切换默认**：关闭 confirm / sheet；保留 toast / loading / date / menu。用各 API 的 `dismissOnRouteChange` 覆盖。
-- **Observer**：须注册，并覆盖 `didRemove`（二级页 `remove` 路由时同样清理）。
+## 7. 路由与返回键
 
-自定义 AppBar 返回可用 `PopupManager.maybePop(context)`。
+- 日常模态弹窗使用 `dismissWhenOwnerRouteChanges`。
+- 真正的全局状态提示才使用 `persist`。
+- 系统返回由 `Pop.routeObserver` 自动桥接，无需页面包 `PopScope`。
+- 自定义 AppBar 若需要同样语义，可先 `await Pop.handleBack()`；返回 false 时
+  再由业务 Navigator 退出页面。
+- FlowSheet 有内部页面时优先退内部页。
 
-## 异步与资源
+弹窗上再开弹窗是允许的。返回键总是从最上层开始处理，不要在业务层自行维护
+一份并行栈。
 
-`SafeOverlayEntry` 会在 build 阶段延迟 `markNeedsBuild`，因此可在 `Future.then`、`async`、`Timer`、甚至 `build` 中直接 `Pop.*`。仍建议：
+## 8. 选择 key、tags 与 channel
 
-- loading 用 `try/finally`
-- 页面 dispose 后不要再依赖该页 `setState`；多步流用生命周期钩子清理
-- 动画时长按场景调：toast / loading 宜短，sheet 可稍长
+- `key`：一个逻辑资源，如全局 Loading 或某个唯一同步状态。
+- `tags`：一个业务域，如 `checkout`，适合流程结束时批量关闭。
+- `channel`：弹窗类型统计和批量管理。
 
-## 常见错误
+Channel 不决定动画、Barrier、返回键或路由策略；这些行为必须显式配置。
 
-| 现象 | 排查 |
-|------|------|
-| 弹窗不显示 | `navigatorKey` 是否同一实例；是否在首帧后 `initialize` |
-| 返回直接出 App | 是否包了 `PopScopeWidget` |
-| 跳转后弹窗残留 / 误关 | 检查该类型默认策略与 `dismissOnRouteChange` |
-| loading 关不掉 | 是否缺少 `finally` |
-| dockToEdge 挡导航 | `edgeGap` 是否小于真实导航高度 |
-| flowSheet 退出动画抖两下 | 是否用了 `completeCurrent` / `closeAll` |
+## 9. Sheet 与 FlowSheet
 
-更多参数见 [API_REFERENCE.md](API_REFERENCE.md)；场景演示见 [example/](../example/)。
+- 单页选择/表单使用 Sheet。
+- 多步且需要页面结果、保活、内部返回栈时使用 FlowSheet。
+- `contentWhenAtTop` 适合含滚动内容的底部 Sheet。
+- `handleOnly` 适合正文包含横向手势或复杂拖拽的内容。
+- 一个 `FlowSheetController` 只用于一次显示，下一次流程创建新 Controller。
+
+## 10. 测试与诊断
+
+Widget 测试优先构造隔离的 `PopupRuntime`；测试默认全局 facade 时在 teardown
+调用 `Pop.resetForTest()`。断言异步生命周期时分别检查 outcome 与 dismissed，
+不要用任意长延迟代替 `pumpAndSettle`。
+
+常见问题：
+
+| 现象 | 检查项 |
+| --- | --- |
+| 弹窗不显示 | `builder: Pop.hostBuilder` 是否接入；是否存在第二个 Host |
+| 返回键直接退出页面 | `Pop.routeObserver` 是否注册在同一个根 Navigator |
+| Menu 无法打开 | Anchor 是否已挂载；触发 Widget 是否被 `PopupAnchor` 包裹 |
+| 路由切换未关闭 | Config 的 `routePolicy` 是否为 `persist` |
+| Loading 不消失 | 是否配置 duration/until，或是否调用 handle/`hideLoading` |

@@ -1,32 +1,39 @@
 library unified_popups;
 
-// 导出核心 API
-export 'src/apis/pop.dart' show Pop;
-
-// 导出核心管理器和配置（如果需要外部直接访问）
-export 'src/core/popup_manager.dart'
-    show
-        PopupManager,
-        PopupConfig,
-        PopupPosition,
-        PopupAnimation,
-        PopupType,
-        ToastType,
-        ConfirmButtonLayout;
-
+export 'src/api/pop.dart' show Pop;
+export 'src/api/popup_type_api.dart'
+    show LoadingHandle, PopupTypeApi, ToastHandle;
+export 'src/configs/confirm_config.dart';
+export 'src/configs/custom_popup_config.dart';
+export 'src/configs/date_config.dart';
+export 'src/configs/flow_sheet_config.dart';
+export 'src/configs/loading_config.dart';
+export 'src/configs/menu_config.dart';
+export 'src/configs/popup_animation_config.dart';
+export 'src/configs/popup_back_policy.dart';
+export 'src/configs/popup_barrier_config.dart';
+export 'src/configs/popup_behavior_config.dart';
+export 'src/configs/popup_channel.dart';
+export 'src/configs/popup_conflict_policy.dart';
+export 'src/configs/popup_owner_policy.dart';
+export 'src/configs/popup_position.dart';
+export 'src/configs/popup_route_policy.dart';
+export 'src/configs/sheet_config.dart';
 export 'src/configs/sheet_types.dart';
-
-// 工具函数
+export 'src/configs/toast_config.dart';
+export 'src/controller/popup_dismiss_reason.dart';
+export 'src/controller/popup_controller.dart' show PopupController;
+export 'src/controller/popup_entry_state.dart';
+export 'src/controller/popup_handle.dart';
+export 'src/controller/popup_lifecycle_callbacks.dart';
+export 'src/controller/popup_lifetime.dart';
+export 'src/controller/popup_open_result.dart';
+export 'src/controller/popup_outcome.dart';
+export 'src/controller/popup_ownership.dart';
+export 'src/flow_sheets/flow_sheet.dart';
+export 'src/host/popup_host.dart' show PopupHost;
+export 'src/navigation/popup_route_token.dart';
+export 'src/renderers/popup_scene.dart' show PopupScene;
+export 'src/runtime/popup_runtime.dart';
 export 'src/utils/sheet_dimension.dart';
-
-export 'src/widgets/pop_scope_widget.dart';
-
-export 'src/core/popup_route_observer.dart' show PopupRouteObserver;
-
-export 'src/flow_sheets/flow_sheet.dart'
-    show
-        FlowSheetController,
-        FlowSheetNavigator,
-        FlowSheetPage,
-        FlowSheetPageState,
-        FlowSheetRouteBuilder;
+export 'src/widgets/popup_anchor.dart';

@@ -1,7 +1,9 @@
 import '../configs/confirm_config.dart';
 import '../configs/date_config.dart';
+import '../configs/custom_popup_config.dart';
 import '../configs/flow_sheet_config.dart';
 import '../configs/loading_config.dart';
+import '../configs/menu_config.dart';
 import '../configs/popup_barrier_config.dart';
 import '../configs/popup_channel.dart';
 import '../configs/popup_position.dart';
@@ -221,7 +223,59 @@ final class PopupTypeApi {
           'FlowSheetConfig was not opened by its conflict policy.',
         ),
     };
+    config.controller.attachPopupHandle(handle);
     return handle;
+  }
+
+  PopupHandle<T> menu<T>(MenuConfig<T> config) {
+    final behavior = config.behavior;
+    if (!config.anchor.attached.value) {
+      throw StateError('PopupAnchor must be mounted before opening a menu.');
+    }
+    final result = runtime.controller.open<T, MenuConfig<T>>(
+      PopupEntryRequest<T, MenuConfig<T>>(
+        channel: PopupChannel.menu,
+        config: config,
+        key: behavior.key,
+        tags: behavior.tags,
+        conflictPolicy: behavior.conflictPolicy,
+        routePolicy: behavior.routePolicy,
+        backPolicy: behavior.backPolicy,
+        ownership: _captureOwnership(config.ownership),
+        lifecycle: config.lifecycle,
+      ),
+    );
+    return switch (result) {
+      PopupOpened<T>(:final handle) => handle,
+      PopupUpdated<T>(:final handle) => handle,
+      PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
+          'MenuConfig was not opened by its conflict policy.',
+        ),
+    };
+  }
+
+  PopupHandle<T> custom<T>(CustomPopupConfig<T> config) {
+    final behavior = config.behavior;
+    final result = runtime.controller.open<T, CustomPopupConfig<T>>(
+      PopupEntryRequest<T, CustomPopupConfig<T>>(
+        channel: PopupChannel.custom,
+        config: config,
+        key: behavior.key,
+        tags: behavior.tags,
+        conflictPolicy: behavior.conflictPolicy,
+        routePolicy: behavior.routePolicy,
+        backPolicy: behavior.backPolicy,
+        ownership: _captureOwnership(config.ownership),
+        lifecycle: config.lifecycle,
+      ),
+    );
+    return switch (result) {
+      PopupOpened<T>(:final handle) => handle,
+      PopupUpdated<T>(:final handle) => handle,
+      PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
+          'CustomPopupConfig was not opened by its conflict policy.',
+        ),
+    };
   }
 
   Future<void> hideLoading({String key = PopupKeys.globalLoading}) {

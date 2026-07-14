@@ -277,7 +277,9 @@ class _SheetRendererState extends State<SheetRenderer> {
     final hasHeader = header.title != null ||
         header.titleWidget != null ||
         header.showCloseButton;
-    final expand = _horizontal || config.size.height != null;
+    final expand = _horizontal ||
+        config.size.height != null ||
+        config.size.maxHeight != null;
     return Padding(
       padding: config.style.padding,
       child: Column(

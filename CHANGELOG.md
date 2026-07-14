@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0]
+
+### Architecture
+
+- Replaced the global `PopupManager`, navigator key initialization, and one-fullscreen-overlay-per-popup model with `Pop` + replaceable `PopupRuntime` + one declarative `PopupHost`.
+- Added typed Config/Renderer pairs and a unified `PopupHandle`, separating business outcome from visual dismissal.
+- Removed `AnimationControllerPool`, `PopupConfig`, `PopupType` behavior branching, `PopScopeWidget`, legacy route observer, and `part` APIs.
+
+### Behavior
+
+- Added one-time setup through `Pop.hostBuilder` and `Pop.routeObserver`; all business calls remain global and context-free.
+- Added explicit key/channel/tags, conflict, route, back, ownership, barrier, lifetime, and lifecycle policies.
+- Loading now updates the same logical entry and restarts its lifetime; Toast and Loading can close from a timer, external Future, or handle.
+- Confirm exposes button-specific `onConfirm` and `onCancel` callbacks while preserving `Future<bool?>`.
+- Sheet and FlowSheet share the four-direction renderer and drag system; popup types can stack above either.
+- Menu now uses `PopupAnchorController` + `PopupAnchor` and follows layout/scroll changes automatically.
+
+### Migration
+
+- Migrated the FitPulse example and Lab to v2, including external handle closing, stacking, back handling, route ownership, Loading update, and external-event lifetime examples.
+- Rewrote public documentation and added the v1 → v2 parity table.
+
 ## [1.3.0]
 
 ### Added

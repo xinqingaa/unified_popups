@@ -18,6 +18,6 @@ flutter run
 | Workouts | sheet (dockToEdge), menu, start-workout FlowSheet |
 | Progress | date, export loading |
 | Profile | profile sheet, health-profile FlowSheet, settings routes |
-| Lab (AppBar ⋯) | Async / PopupManager regression |
+| Lab (AppBar ⋯) | Context-free async calls, handles, stacking, back, routes |
 
 Package docs: [../docs/README.md](../docs/README.md).

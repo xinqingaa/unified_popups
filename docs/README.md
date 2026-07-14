@@ -1,55 +1,33 @@
-# Unified Popups 文档中心
+# unified_popups 文档
 
-面向 Flutter 的统一弹窗方案。所有能力通过 `Pop` 静态 API 调用：
+推荐阅读顺序：
 
-`toast` · `loading` · `confirm` · `sheet` · `flowSheet` · `date` · `menu`
+1. [根 README](../README.md)：安装、初始化和主要调用方式。
+2. [API Reference](API_REFERENCE.md)：v2 公共 API、Handle、策略和生命周期。
+3. [Best Practices](BEST_PRACTICES.md)：Service 调用、外部关闭、路由和堆叠建议。
+4. [v1 → v2 API Parity](API_PARITY_V2.md)：破坏性升级映射。
+5. [Migration Guide](MIGRATION_V1_TO_V2.md)：项目迁移步骤与风险检查。
+6. [v2 Architecture](ARCHITECTURE_V2.md)：Runtime、Controller、Host 和生命周期。
+7. [v2 Architecture Plan](PLAN_V2.md)：架构决策和阶段计划归档。
 
-## 文档导航
+可运行示例位于 [`example/lib`](../example/lib)：
 
-| 文档 | 说明 |
-|------|------|
-| [根 README（中文）](../README.md) | 快速开始与 API 速览 |
-| [English README](../README_EN.md) | English quick start |
-| [API 参考](API_REFERENCE.md) | 参数表与返回值（权威） |
-| [最佳实践](BEST_PRACTICES.md) | 选型、各类型注意点、返回键与路由 |
-| [Example](../example/) | FitPulse 场景演示 |
+| 页面 | 覆盖能力 |
+| --- | --- |
+| 今日 | Loading / Toast / Confirm |
+| 训练 | Sheet / Menu Anchor / FlowSheet |
+| 数据 | Date / Loading |
+| 我的 | Confirm / Date / 业务 Flow |
+| Lab | 异步无 context 调用、Handle 外部关闭、堆叠、返回键与全局批量关闭 |
 
-## 安装
+最小接入：
 
-```yaml
-dependencies:
-  unified_popups:
+```dart
+MaterialApp(
+  navigatorObservers: [Pop.routeObserver],
+  builder: Pop.hostBuilder,
+);
 ```
 
-## 初始化要点
-
-- 使用**同一个** `navigatorKey` 传给 `MaterialApp` 与 `PopupManager.initialize`
-- 注册 `PopupRouteObserver`
-- 用 `PopScopeWidget` 拦截系统返回
-
-完整示例见 [根 README · 初始化](../README.md#初始化)。
-
-## 能力矩阵
-
-| API | 典型场景 | 多实例 | 默认路由切换关闭 |
-|-----|----------|--------|------------------|
-| `Pop.toast` | 轻反馈 | 是 | 否 |
-| `Pop.loading` | 阻塞等待 | 否（单例） | 否 |
-| `Pop.confirm` | 确认 / 危险操作 | 是 | 是 |
-| `Pop.sheet` | 筛选、表单、抽屉 | 是 | 是 |
-| `Pop.flowSheet` | 多步向导 | 是 | 随底层 sheet |
-| `Pop.date` | 选日期 | 是 | 否 |
-| `Pop.menu` | 锚定菜单 | 是 | 否 |
-| `PopupManager.show` | 完全自定义 Overlay | 是 | 可配 |
-
-全局控制还包括：`hide` / `hideLast` / `hideAll` / `hideByType` / `hideLastNonToast` / `maybePop` / `isVisible` / `hasNonToastPopup` 等，见 [根 README · PopupManager](../README.md#popupmanager底层与全局控制) 与 [API 参考](API_REFERENCE.md#popupmanager)。
-
-## Example 地图
-
-| 入口 | 覆盖 |
-|------|------|
-| 今日 | toast / loading / confirm |
-| 训练 | sheet、menu、flowSheet |
-| 数据 | date、loading |
-| 我的 | sheet、flowSheet、设置页（路由关弹框） |
-| Lab（AppBar ⋯） | 异步 / PopupManager 边界 |
+迁移到 v2 后，不再初始化 `PopupManager`，也不再需要 Popup 专用
+`navigatorKey` 或 `PopScopeWidget`。

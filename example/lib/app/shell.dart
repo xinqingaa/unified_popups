@@ -44,7 +44,7 @@ class _FitPulseShellState extends State<FitPulseShell> {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.science_outlined),
                   title: Text('技术实验室'),
-                  subtitle: Text('Async / PopupManager 回归'),
+                  subtitle: Text('Async / Popup Runtime 回归'),
                 ),
               ),
             ],
