@@ -95,8 +95,7 @@ void main() {
     expect(childBuilds, 1);
   });
 
-  testWidgets(
-      'horizontal handleOnly ignores body drag; title chrome dismisses',
+  testWidgets('horizontal handleOnly ignores body drag; title chrome dismisses',
       (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
@@ -210,12 +209,95 @@ void main() {
     );
     await tester.pump();
 
-    final panelTop =
-        tester.getTopLeft(find.byKey(SheetRendererKeys.panel)).dy;
+    final panelTop = tester.getTopLeft(find.byKey(SheetRendererKeys.panel)).dy;
     final handleTop =
         tester.getTopLeft(find.byKey(SheetRendererKeys.dragHandle)).dy;
     // Handle vertical padding is 6; must not also absorb status-bar top (59).
     expect(handleTop - panelTop, lessThan(20));
+  });
+
+  testWidgets('full-height bottom sheet clears status bar via outer SafeArea',
+      (tester) async {
+    const topInset = 59.0;
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    PopupTypeApi(runtime).sheet<void>(
+      SheetConfig<void>(
+        size: const SheetSizeConfig(
+          maxHeight: SheetDimension.fraction(1),
+          height: SheetDimension.fraction(1),
+        ),
+        animation: const PopupAnimationConfig(
+          type: PopupAnimationType.slideUp,
+          duration: Duration.zero,
+          slideOffset: 1,
+        ),
+        builder: (context, handle) => const Text('fullscreen'),
+      ),
+    );
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(
+          padding: EdgeInsets.only(top: topInset, bottom: 34),
+          size: Size(400, 800),
+        ),
+        child: _SheetApp(runtime: runtime),
+      ),
+    );
+    await tester.pump();
+
+    final panelTop = tester.getTopLeft(find.byKey(SheetRendererKeys.panel)).dy;
+    expect(panelTop, greaterThanOrEqualTo(topInset));
+    expect(find.text('fullscreen'), findsOneWidget);
+  });
+
+  testWidgets('top/left/right sheets clear status bar via inner SafeArea',
+      (tester) async {
+    const topInset = 59.0;
+    for (final direction in [
+      SheetDirection.top,
+      SheetDirection.left,
+      SheetDirection.right,
+    ]) {
+      final runtime = PopupRuntime();
+      addTearDown(runtime.shutdown);
+      PopupTypeApi(runtime).sheet<void>(
+        SheetConfig<void>(
+          direction: direction,
+          header: SheetHeaderConfig(title: 't-${direction.name}'),
+          size: SheetSizeConfig(
+            maxHeight: direction == SheetDirection.top
+                ? const SheetDimension.fraction(0.45)
+                : null,
+            maxWidth: direction == SheetDirection.top
+                ? null
+                : const SheetDimension.fraction(0.75),
+          ),
+          animation: const PopupAnimationConfig(duration: Duration.zero),
+          builder: (context, handle) => Text('body-${direction.name}'),
+        ),
+      );
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(
+            padding: EdgeInsets.only(top: topInset, bottom: 34),
+            size: Size(400, 800),
+          ),
+          child: _SheetApp(runtime: runtime),
+        ),
+      );
+      await tester.pump();
+
+      final titleTop = tester.getTopLeft(find.text('t-${direction.name}')).dy;
+      expect(
+        titleTop,
+        greaterThanOrEqualTo(topInset),
+        reason: '${direction.name} title under status bar',
+      );
+      expect(find.text('body-${direction.name}'), findsOneWidget);
+      runtime.shutdown();
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
   });
 }
 

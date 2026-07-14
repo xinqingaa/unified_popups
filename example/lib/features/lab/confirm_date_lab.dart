@@ -31,8 +31,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
           ),
           const SizedBox(height: 8),
           LabStatusBar(extra: _last.isEmpty ? null : '最近：$_last'),
-          if (_last.isEmpty)
-            const LabNote('操作后这里会显示 result / outcome.reason'),
+          if (_last.isEmpty) const LabNote('操作后这里会显示 result / outcome.reason'),
           LabGroup(
             title: 'Confirm 结果语义',
             children: [
@@ -122,7 +121,8 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                           Text('自定义标题'),
                         ],
                       ),
-                      contentWidget: const Text('contentWidget + bodyExtension'),
+                      contentWidget:
+                          const Text('contentWidget + bodyExtension'),
                       bodyExtension: Container(
                         margin: const EdgeInsets.only(top: 12),
                         padding: const EdgeInsets.all(8),
@@ -149,7 +149,8 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     childBuilder: (dismiss) => Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Confirm 默认 dismissWithParent：关 Sheet 会带走 Confirm。'),
+                        const Text(
+                            'Confirm 默认 dismissWithParent：关 Sheet 会带走 Confirm。'),
                         const SizedBox(height: 12),
                         FilledButton(
                           onPressed: () async {
@@ -164,7 +165,8 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                           },
                           child: const Text('打开 Confirm'),
                         ),
-                        TextButton(onPressed: dismiss, child: const Text('关闭 Sheet')),
+                        TextButton(
+                            onPressed: dismiss, child: const Text('关闭 Sheet')),
                       ],
                     ),
                   );
@@ -211,6 +213,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 label: '自定义 Date 样式',
                 outlined: true,
                 onPressed: () async {
+                  final scheme = Theme.of(context).colorScheme;
                   final date = await Pop.openDate(
                     DateConfig(
                       range: DateRangeConfig(
@@ -224,9 +227,9 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                         cancel: '取消',
                       ),
                       style: DateStyle(
-                        activeColor: Colors.teal,
-                        inactiveColor: Colors.grey,
-                        headerBackgroundColor: Colors.teal.shade50,
+                        activeColor: scheme.primary,
+                        inactiveColor: scheme.onSurfaceVariant,
+                        headerBackgroundColor: scheme.primaryContainer,
                         height: 200,
                         radius: 20,
                       ),

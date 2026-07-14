@@ -32,6 +32,8 @@
   `Future<bool?>` 业务结果。
 - Sheet 与 FlowSheet 统一四方向 Renderer、拖拽进度和退出动画；重业务 child
   不随拖拽指针反复重建。拖拽指示器仅底部方向渲染。
+- 恢复 Sheet 双层 SafeArea（对齐层扣状态栏 + panel 内始终 SafeArea），修复
+  `fraction(1)` 全屏底部 Sheet 顶到刘海，以及上/左/右方向内容顶入状态栏的问题。
 - FlowSheet 接入统一外层 Handle，同时保留内部页面栈、页面结果和生命周期。
 - Menu 改为 `PopupAnchorController + PopupAnchor`，随滚动和布局变化自动跟随，
   Anchor 卸载时自动关闭；**默认无全屏遮罩**（`showBarrier: false`），需要点外部

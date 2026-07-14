@@ -68,7 +68,8 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                   });
                   await Future<void>.delayed(const Duration(seconds: 1));
                   if (!mounted) return;
-                  handle.update(const LoadingConfig(message: 'Handle.update()'));
+                  handle
+                      .update(const LoadingConfig(message: 'Handle.update()'));
                   setState(() => _note = '已 update');
                   await Future<void>.delayed(const Duration(seconds: 1));
                   if (!mounted) return;

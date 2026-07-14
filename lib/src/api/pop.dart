@@ -237,7 +237,7 @@ abstract final class Pop {
           backgroundColor: backgroundColor,
           borderRadius: borderRadius,
           boxShadow: boxShadow,
-          padding: padding ?? const EdgeInsets.all(16),
+          padding: padding ?? const EdgeInsets.fromLTRB(16, 8, 16, 8),
         ),
         dock: SheetDockConfig(enabled: dockToEdge, edgeGap: edgeGap),
         drag: SheetDragConfig(
@@ -296,7 +296,7 @@ abstract final class Pop {
             ),
             style: SheetStyle(
               backgroundColor: backgroundColor,
-              padding: padding ?? const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              padding: padding ?? const EdgeInsets.fromLTRB(16, 8, 16, 8),
             ),
             drag: SheetDragConfig(
               mode: dragDismissMode,

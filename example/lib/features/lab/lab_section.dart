@@ -10,11 +10,15 @@ class LabBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final style = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: scheme.onSecondaryContainer,
+          height: 1.4,
+        );
     return Card(
       color: scheme.secondaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Text(text, style: const TextStyle(height: 1.4)),
+        child: Text(text, style: style),
       ),
     );
   }
@@ -114,6 +118,9 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (subtitle == null) return Text(label);
+    // Inherit button foreground (onPrimary / onSecondaryContainer / primary)
+    // instead of onSurfaceVariant — avoids dark-on-dark on FilledButton.
+    final base = DefaultTextStyle.of(context).style;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -122,7 +129,8 @@ class _Label extends StatelessWidget {
         Text(
           subtitle!,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: base.color?.withValues(alpha: 0.8),
+                height: 1.25,
               ),
         ),
       ],
@@ -140,9 +148,8 @@ class LabEntryBadge extends StatelessWidget {
       animation: Pop.runtime.controller,
       builder: (context, _) {
         final entries = Pop.runtime.controller.entries;
-        final active = entries
-            .where((e) => e.state.isActive || e.state.isMounted)
-            .length;
+        final active =
+            entries.where((e) => e.state.isActive || e.state.isMounted).length;
         final queued =
             entries.where((e) => e.state == PopupEntryState.queued).length;
         final label = queued > 0 ? '$active+$queued' : '$active';
@@ -157,6 +164,10 @@ class LabEntryBadge extends StatelessWidget {
               size: 16,
               color: Theme.of(context).colorScheme.onSecondaryContainer,
             ),
+            labelStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            ),
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
           ),
         );
       },

@@ -48,10 +48,11 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
   ];
 
   Future<void> _openFilter() async {
+    final scheme = Theme.of(context).colorScheme;
     final picked = await Pop.sheet<String>(
       title: '筛选课程',
       showDragHandle: true,
-      dragHandleColor: const Color(0xFF0D9488),
+      dragHandleColor: scheme.primary,
       dragDismissMode: SheetDragDismissMode.contentWhenAtTop,
       maxHeight: const SheetDimension.fraction(0.55),
       dockToEdge: true,
@@ -62,7 +63,7 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
             ListTile(
               title: Text(label),
               trailing: _filter == label
-                  ? const Icon(Icons.check, color: Color(0xFF0D9488))
+                  ? Icon(Icons.check, color: scheme.primary)
                   : null,
               onTap: () => dismiss(label),
             ),

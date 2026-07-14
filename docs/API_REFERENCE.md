@@ -359,7 +359,7 @@ Future<T?> Pop.sheet<T>({
 | `title` / `titleWidget` | `null` | 标题；Widget 优先。 |
 | `direction` | `bottom` | 从 `top`、`bottom`、`left`、`right` 进入并向同一边缘拖拽关闭。 |
 | `showCloseButton` | `false` | 标题区域是否显示关闭按钮。 |
-| `useSafeArea` | bottom 默认 true，其余 false | 是否使用安全区。 |
+| `useSafeArea` | bottom 默认 true，其余 false | 控制**外层**对齐 SafeArea（底部 Sheet 扣状态栏，避免全屏顶到刘海）。panel 内始终有 SafeArea（对齐 v1），因此上/左/右即使默认 false，标题与内容仍会避开状态栏与 Home Indicator。 |
 | `width` / `height` | 自动 | 固定或比例尺寸。 |
 | `maxWidth` / `maxHeight` | 屏幕尺寸 | 最大尺寸约束。只设置最大高度时内容仍可按实际高度收缩。 |
 | `showBarrier` | `true` | 是否显示遮罩。 |

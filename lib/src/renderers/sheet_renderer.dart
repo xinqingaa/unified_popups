@@ -230,17 +230,12 @@ class _SheetRendererState extends State<SheetRenderer> {
           ),
           child: Material(
             color: Colors.transparent,
-            child: config.resolvedUseSafeArea
-                ? SafeArea(
-                    // Only pad the docked edge. Full SafeArea would apply the
-                    // opposite inset (e.g. status-bar top on a bottom sheet).
-                    top: config.direction == SheetDirection.top,
-                    bottom: config.direction == SheetDirection.bottom,
-                    left: config.direction == SheetDirection.left,
-                    right: config.direction == SheetDirection.right,
-                    child: body,
-                  )
-                : body,
+            // Always inset content (v1 SheetWidget). For bottom sheets the
+            // outer PopupScene SafeArea consumes status-bar padding first, so
+            // this does not push the drag handle down on short panels.
+            // Top/left/right default useSafeArea=false (no outer layer) and
+            // still need this inner SafeArea to clear the notch / home indicator.
+            child: SafeArea(child: body),
           ),
         ),
       ),

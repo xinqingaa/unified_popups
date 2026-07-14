@@ -79,9 +79,6 @@ class FlowSheetLabPage extends StatelessWidget {
       controller: controller,
       maxHeight: const SheetDimension.fraction(1),
       barrierDismissible: false,
-      showDragHandle: false,
-      backgroundColor: Colors.white,
-      dragDismissMode: SheetDragDismissMode.handleOnly,
       initialPage: _MiniPageA(controller: controller),
     );
     Pop.toast(
@@ -96,7 +93,6 @@ class FlowSheetLabPage extends StatelessWidget {
       controller: controller,
       maxHeight: const SheetDimension.fraction(0.55),
       barrierDismissible: true,
-      dragDismissMode: SheetDragDismissMode.handleOnly,
       initialPage: _MiniPageA(controller: controller),
     );
     Pop.toast(
@@ -119,22 +115,19 @@ class _MiniPageA extends FlowSheetPage<void> {
 class _MiniPageAState extends FlowSheetPageState<_MiniPageA, void> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('第 1 页', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text('按系统返回应关闭整个 Flow（栈底）。点下方进入第 2 页后再返回，应只退回本页。'),
-          const Spacer(),
-          FilledButton(
-            onPressed: () =>
-                widget.controller.push(_MiniPageB(controller: widget.controller)),
-            child: const Text('进入第 2 页'),
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('第 1 页', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        const Text('按系统返回应关闭整个 Flow（栈底）。点下方进入第 2 页后再返回，应只退回本页。'),
+        const Spacer(),
+        FilledButton(
+          onPressed: () =>
+              widget.controller.push(_MiniPageB(controller: widget.controller)),
+          child: const Text('进入第 2 页'),
+        ),
+      ],
     );
   }
 }
@@ -152,28 +145,25 @@ class _MiniPageB extends FlowSheetPage<String> {
 class _MiniPageBState extends FlowSheetPageState<_MiniPageB, String> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('第 2 页', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text('系统返回 → 回到第 1 页。完成则 closeAll。'),
-          const Spacer(),
-          FilledButton(
-            onPressed: () {
-              widget.controller.completeCurrent('lab-ok');
-              widget.controller.closeAll('lab-ok');
-            },
-            child: const Text('completeCurrent + closeAll'),
-          ),
-          TextButton(
-            onPressed: () => widget.controller.pop(),
-            child: const Text('pop 回上一页'),
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('第 2 页', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        const Text('系统返回 → 回到第 1 页。完成则 closeAll。'),
+        const Spacer(),
+        FilledButton(
+          onPressed: () {
+            widget.controller.completeCurrent('lab-ok');
+            widget.controller.closeAll('lab-ok');
+          },
+          child: const Text('completeCurrent + closeAll'),
+        ),
+        TextButton(
+          onPressed: () => widget.controller.pop(),
+          child: const Text('pop 回上一页'),
+        ),
+      ],
     );
   }
 }

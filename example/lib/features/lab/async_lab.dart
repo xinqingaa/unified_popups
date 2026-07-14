@@ -123,25 +123,31 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
     required VoidCallback onPressed,
     bool isCritical = false,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     return Card(
-      elevation: isCritical ? 4 : 2,
-      color: isCritical ? Colors.orange.withValues(alpha: 0.1) : null,
+      color: isCritical ? scheme.errorContainer : null,
       child: ListTile(
         title: Text(
           title,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isCritical ? Colors.orange.shade700 : null,
+            color: isCritical ? scheme.onErrorContainer : null,
           ),
         ),
         subtitle: Text(subtitle),
-        trailing: ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: isCritical ? Colors.orange : null,
-          ),
-          child: const Text('测试'),
-        ),
+        trailing: isCritical
+            ? FilledButton(
+                onPressed: onPressed,
+                style: FilledButton.styleFrom(
+                  backgroundColor: scheme.error,
+                  foregroundColor: scheme.onError,
+                ),
+                child: const Text('测试'),
+              )
+            : FilledButton.tonal(
+                onPressed: onPressed,
+                child: const Text('测试'),
+              ),
       ),
     );
   }
@@ -382,20 +388,23 @@ class _TestBuildDirectWidgetState extends State<_TestBuildDirectWidget> {
       appBar: AppBar(
         title: const Text('build() 直接调用测试'),
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               '这个页面在 build() 方法中直接调用了 loading',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               '模拟 Get.put() 立即初始化 Controller 的场景',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

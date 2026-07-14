@@ -109,9 +109,12 @@ class _WorkoutListPageState extends FlowSheetPageState<_WorkoutListPage, void> {
             ),
           ],
         ),
-        const Text(
+        Text(
           '仅拖条/标题可下拉关闭（handleOnly）。选中后 push 详情，列表 maintainState 保活。',
-          style: TextStyle(color: Colors.black54, height: 1.3),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.3,
+          ),
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -307,7 +310,9 @@ class _ConfirmCodePageState extends FlowSheetPageState<_ConfirmCodePage, bool> {
           ),
           Text(
             '${widget.plan.title} · ${widget.sets} 组',
-            style: const TextStyle(color: Colors.black54),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -323,9 +328,12 @@ class _ConfirmCodePageState extends FlowSheetPageState<_ConfirmCodePage, bool> {
             onSubmitted: (_) => _submit(),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '键盘弹出时 Sheet 会上移。本页 handleOnly，避免与输入冲突。',
-            style: TextStyle(color: Colors.black54, height: 1.3),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.3,
+            ),
           ),
           const Spacer(),
           FilledButton(

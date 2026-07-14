@@ -61,6 +61,7 @@ class _DirectionGroup extends StatelessWidget {
                   children: [
                     Text('当前方向：${direction.name}'),
                     const SizedBox(height: 12),
+                    const Spacer(),
                     FilledButton(onPressed: dismiss, child: const Text('关闭')),
                   ],
                 ),
@@ -132,8 +133,7 @@ class _DragModeGroup extends StatelessWidget {
                   const ListTile(
                     title: Text('无底部指示器；请拖标题栏关闭'),
                   ),
-                  for (var i = 0; i < 12; i++)
-                    ListTile(title: Text('项 $i')),
+                  for (var i = 0; i < 12; i++) ListTile(title: Text('项 $i')),
                   ListTile(
                     title: FilledButton(
                       onPressed: dismiss,
@@ -246,7 +246,8 @@ class _KeyboardDockGroup extends StatelessWidget {
               showDragHandle: false,
               showCloseButton: true,
               backgroundColor: const Color(0xFF1B2A41),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
               maxHeight: const SheetDimension.fraction(0.35),
               childBuilder: (dismiss) => const Text(
                 '自定义 SheetStyle',
@@ -286,9 +287,8 @@ class _StackGroup extends StatelessWidget {
                       );
                       Pop.toast(
                         ok == true ? '已确认' : '未确认 ($ok)',
-                        toastType: ok == true
-                            ? ToastType.success
-                            : ToastType.warn,
+                        toastType:
+                            ok == true ? ToastType.success : ToastType.warn,
                       );
                     },
                     child: const Text('打开 Confirm'),

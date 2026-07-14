@@ -103,7 +103,8 @@ class ToastLabPage extends StatelessWidget {
               LabAction(
                 label: '短 duration（800ms）',
                 onPressed: () {
-                  Pop.toast('800ms 后关闭', duration: const Duration(milliseconds: 800));
+                  Pop.toast('800ms 后关闭',
+                      duration: const Duration(milliseconds: 800));
                 },
               ),
               LabAction(

@@ -129,14 +129,16 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                       duration: const Duration(seconds: 8));
                   await Future<void>.delayed(const Duration(milliseconds: 300));
                   final n = await Pop.dismissChannel(PopupChannel.toast);
-                  if (mounted) setState(() => _note = 'dismissChannel(toast)=$n');
+                  if (mounted)
+                    setState(() => _note = 'dismissChannel(toast)=$n');
                 },
               ),
               LabAction(
                 label: 'dismissTop / dismissAll',
                 outlined: true,
                 onPressed: () async {
-                  Pop.toast('将被 dismissTop', duration: const Duration(seconds: 10));
+                  Pop.toast('将被 dismissTop',
+                      duration: const Duration(seconds: 10));
                   await Pop.sheet<void>(
                     title: '上层 Sheet',
                     maxHeight: const SheetDimension.fraction(0.35),
@@ -176,7 +178,9 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                 label: '查询 isVisibleKey / countChannel',
                 tonal: true,
                 onPressed: () {
-                  Pop.loading(message: '查询用 Loading', duration: const Duration(seconds: 3));
+                  Pop.loading(
+                      message: '查询用 Loading',
+                      duration: const Duration(seconds: 3));
                   final visible = Pop.isVisibleKey(PopupKeys.globalLoading);
                   final active = Pop.isActiveKey(PopupKeys.globalLoading);
                   final count = Pop.countChannel(PopupChannel.loading);

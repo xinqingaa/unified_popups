@@ -164,7 +164,8 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                         title: '离开后再弹',
                         hint: '1s 后尝试用旧 token 弹 Confirm，应被 routeChanged 收口。',
                         onReady: () async {
-                          await Future<void>.delayed(const Duration(seconds: 1));
+                          await Future<void>.delayed(
+                              const Duration(seconds: 1));
                           Pop.openConfirm(
                             ConfirmConfig(
                               title: '不应出现',

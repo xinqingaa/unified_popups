@@ -116,9 +116,12 @@ class _BasicsStepPageState extends FlowSheetPageState<_BasicsStepPage, void> {
               ),
             ],
           ),
-          const Text(
+          Text(
             '下一步使用 nav.replace，栈中不会留下本页。',
-            style: TextStyle(color: Colors.black54, height: 1.3),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.3,
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -212,11 +215,14 @@ class _RiskStepPageState extends FlowSheetPageState<_RiskStepPage, void> {
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Text(
             'onShow 启动假轮询，onHide 停止。滚到顶再下拉可关 Sheet。',
-            style: TextStyle(color: Colors.black54, height: 1.3),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.3,
+            ),
           ),
         ),
         Expanded(

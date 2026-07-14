@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../configs/popup_animation_config.dart';
 import '../configs/popup_position.dart';
 import '../configs/popup_visual_config.dart';
+import '../configs/sheet_config.dart';
 import '../configs/toast_config.dart';
 import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_entry_snapshot.dart';
@@ -280,6 +281,25 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     if (!widget.fullScreen) return content;
 
     final barrier = _visual.barrier;
+    // Sheet: outer SafeArea shrinks the Align viewport (v1 popup_layout).
+    // Bottom sheets pad top only so a full-height panel clears the status bar
+    // without pushing a short panel's chrome away from the panel top edge.
+    // Inner SheetRenderer still pads only the docked edge (e.g. home indicator).
+    Widget aligned = Align(
+      alignment: _alignment(_visual.position),
+      child: content,
+    );
+    final config = widget.entry.config;
+    if (config is SheetConfigBase && config.resolvedUseSafeArea) {
+      aligned = _visual.position == PopupPosition.bottom
+          ? SafeArea(
+              bottom: false,
+              left: false,
+              right: false,
+              child: aligned,
+            )
+          : SafeArea(child: aligned);
+    }
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
@@ -304,7 +324,7 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
               ),
             ),
           ),
-        Align(alignment: _alignment(_visual.position), child: content),
+        aligned,
       ],
     );
   }
