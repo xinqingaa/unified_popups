@@ -172,7 +172,9 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
         content: '删除后不可恢复，确定继续？',
         confirmText: '删除',
         cancelText: '取消',
-        confirmBgColor: Colors.red,
+        style: const ConfirmStyle(
+          confirmStyle: TextStyle(color: Colors.red),
+        ),
       );
       if (ok == true) {
         Pop.toast('计划已删除', toastType: ToastType.success);

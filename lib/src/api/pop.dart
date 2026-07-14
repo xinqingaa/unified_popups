@@ -160,9 +160,12 @@ abstract final class Pop {
     VoidCallback? onConfirm,
     VoidCallback? onCancel,
     ConfirmButtonLayout buttonLayout = ConfirmButtonLayout.row,
+    ConfirmButtonStyle buttonStyle = ConfirmButtonStyle.divider,
     Color? confirmBgColor,
     Color? cancelBgColor,
+    ConfirmStyle? style,
   }) {
+    final base = style ?? const ConfirmStyle();
     return _api
         .confirm(
           ConfirmConfig(
@@ -180,8 +183,25 @@ abstract final class Pop {
             onConfirm: onConfirm,
             onCancel: onCancel,
             style: ConfirmStyle(
-              confirmBackgroundColor: confirmBgColor,
-              cancelBackgroundColor: cancelBgColor,
+              buttonStyle: buttonStyle,
+              titleStyle: base.titleStyle,
+              contentStyle: base.contentStyle,
+              confirmStyle: base.confirmStyle,
+              cancelStyle: base.cancelStyle,
+              padding: base.padding,
+              margin: base.margin,
+              decoration: base.decoration,
+              textAlign: base.textAlign,
+              buttonBorderRadius: base.buttonBorderRadius,
+              confirmBackgroundColor:
+                  confirmBgColor ?? base.confirmBackgroundColor,
+              cancelBackgroundColor:
+                  cancelBgColor ?? base.cancelBackgroundColor,
+              confirmBorder: base.confirmBorder,
+              cancelBorder: base.cancelBorder,
+              dividerColor: base.dividerColor,
+              dividerWidth: base.dividerWidth,
+              buttonSpacing: base.buttonSpacing,
             ),
           ),
         )

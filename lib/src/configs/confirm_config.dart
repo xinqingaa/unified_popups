@@ -17,13 +17,23 @@ enum ConfirmButtonLayout {
   column,
 }
 
+/// Confirm 底部按钮视觉风格。
+///
+/// - [divider]：贴底分割线按钮（默认，对齐常见「线条」确认框）
+/// - [filled]：圆角填充 / 胶囊按钮
+enum ConfirmButtonStyle {
+  divider,
+  filled,
+}
+
 final class ConfirmStyle {
   const ConfirmStyle({
+    this.buttonStyle = ConfirmButtonStyle.divider,
     this.titleStyle,
     this.contentStyle,
     this.confirmStyle,
     this.cancelStyle,
-    this.padding = const EdgeInsets.all(24),
+    this.padding = const EdgeInsets.fromLTRB(16, 16, 16, 16),
     this.margin = const EdgeInsets.symmetric(horizontal: 32),
     this.decoration,
     this.textAlign = TextAlign.center,
@@ -32,21 +42,42 @@ final class ConfirmStyle {
     this.cancelBackgroundColor,
     this.confirmBorder,
     this.cancelBorder,
+    this.dividerColor,
+    this.dividerWidth = 0.5,
+    this.buttonSpacing = 12,
   });
 
+  /// 按钮风格；默认 [ConfirmButtonStyle.divider]。
+  final ConfirmButtonStyle buttonStyle;
   final TextStyle? titleStyle;
   final TextStyle? contentStyle;
   final TextStyle? confirmStyle;
   final TextStyle? cancelStyle;
+
+  /// 内容区内边距（标题 / 正文 / 扩展区）。
+  ///
+  /// [ConfirmButtonStyle.divider] 下不作用于按钮区（按钮贴底铺满）。
+  /// [ConfirmButtonStyle.filled] 下同时包住按钮区。
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
   final Decoration? decoration;
   final TextAlign textAlign;
+
+  /// 填充按钮圆角；线条风格下按钮本身无圆角（由卡片裁剪）。
   final BorderRadiusGeometry buttonBorderRadius;
   final Color? confirmBackgroundColor;
   final Color? cancelBackgroundColor;
   final BoxBorder? confirmBorder;
   final BoxBorder? cancelBorder;
+
+  /// 线条风格分割线颜色；默认使用主题 `dividerColor`。
+  final Color? dividerColor;
+
+  /// 线条风格分割线宽度。
+  final double dividerWidth;
+
+  /// 填充风格下按钮间距（横排为水平间距，竖排为垂直间距）。
+  final double buttonSpacing;
 }
 
 final class ConfirmConfig implements PopupVisualConfig {

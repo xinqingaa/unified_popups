@@ -36,7 +36,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
             title: 'Confirm 结果语义',
             children: [
               LabAction(
-                label: '标准确认框',
+                label: '标准确认框（默认线条）',
                 subtitle: '试确认 / 取消 / 遮罩 / 返回',
                 onPressed: () async {
                   final result = await Pop.confirm(
@@ -46,9 +46,28 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     cancelText: '取消',
                     onConfirm: () => _setLast('onConfirm 已执行'),
                     onCancel: () => _setLast('onCancel 已执行'),
-                    confirmBgColor: Colors.redAccent,
                   );
                   _setLast('便捷 result=$result（另看上方 onConfirm/onCancel）');
+                },
+              ),
+              LabAction(
+                label: '胶囊填充按钮',
+                subtitle: 'buttonStyle = filled',
+                outlined: true,
+                onPressed: () async {
+                  final result = await Pop.confirm(
+                    title: '删除记录',
+                    content: '填充 / 胶囊风格（非默认）。',
+                    confirmText: '删除',
+                    cancelText: '取消',
+                    buttonStyle: ConfirmButtonStyle.filled,
+                    confirmBgColor: Colors.redAccent,
+                    style: const ConfirmStyle(
+                      buttonBorderRadius: BorderRadius.all(Radius.circular(24)),
+                      padding: EdgeInsets.all(24),
+                    ),
+                  );
+                  _setLast('胶囊 result=$result');
                 },
               ),
               LabAction(

@@ -99,6 +99,19 @@ if (confirmed == true) {
 `onConfirm` 和 `onCancel` 只对应各自按钮。遮罩、关闭按钮、返回键等关闭原因
 不会伪装成取消按钮点击；业务仍可用 `Future<bool?>` 获取结果。
 
+默认底部为分割线按钮（`ConfirmButtonStyle.divider`）。需要胶囊/填充风格时：
+
+```dart
+await Pop.confirm(
+  title: '删除记录',
+  content: '删除后无法恢复。',
+  confirmText: '删除',
+  cancelText: '取消',
+  buttonStyle: ConfirmButtonStyle.filled,
+  confirmBgColor: Colors.redAccent,
+);
+```
+
 ### Sheet 与 FlowSheet
 
 ```dart

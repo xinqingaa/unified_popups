@@ -16,6 +16,59 @@ import 'package:unified_popups/src/renderers/popup_scene.dart';
 import 'package:unified_popups/src/runtime/popup_runtime.dart';
 
 void main() {
+  testWidgets('confirm defaults to divider button style', (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final api = PopupTypeApi(runtime);
+    api.confirm(
+      const ConfirmConfig(
+        content: 'divider?',
+        confirmText: 'yes',
+        cancelText: 'no',
+        animationConfig: PopupAnimationConfig(duration: Duration.zero),
+      ),
+    );
+    await tester.pumpWidget(_ConfirmApp(runtime: runtime));
+    await tester.pump();
+
+    final ink = tester.widgetList<Ink>(find.byType(Ink)).toList();
+    expect(ink, isNotEmpty);
+    final decoration = ink.first.decoration! as BoxDecoration;
+    expect(decoration.border, isNotNull);
+    expect(decoration.color, Colors.transparent);
+  });
+
+  testWidgets('confirm filled style uses solid backgrounds without divider',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final api = PopupTypeApi(runtime);
+    api.confirm(
+      const ConfirmConfig(
+        content: 'filled?',
+        confirmText: 'yes',
+        cancelText: 'no',
+        animationConfig: PopupAnimationConfig(duration: Duration.zero),
+        style: ConfirmStyle(
+          buttonStyle: ConfirmButtonStyle.filled,
+          confirmBackgroundColor: Colors.red,
+        ),
+      ),
+    );
+    await tester.pumpWidget(_ConfirmApp(runtime: runtime));
+    await tester.pump();
+
+    final confirmInk = tester
+        .widgetList<Ink>(find.ancestor(
+          of: find.text('yes'),
+          matching: find.byType(Ink),
+        ))
+        .first;
+    final decoration = confirmInk.decoration! as BoxDecoration;
+    expect(decoration.color, Colors.red);
+    expect(decoration.border, isNull);
+  });
+
   testWidgets('confirm and cancel callbacks only follow their own buttons',
       (tester) async {
     final runtime = PopupRuntime();

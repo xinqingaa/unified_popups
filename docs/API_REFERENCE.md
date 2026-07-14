@@ -274,8 +274,10 @@ Future<bool?> Pop.confirm({
   VoidCallback? onConfirm,
   VoidCallback? onCancel,
   ConfirmButtonLayout buttonLayout = ConfirmButtonLayout.row,
+  ConfirmButtonStyle buttonStyle = ConfirmButtonStyle.divider,
   Color? confirmBgColor,
   Color? cancelBgColor,
+  ConfirmStyle? style,
 })
 ```
 
@@ -292,8 +294,10 @@ Future<bool?> Pop.confirm({
 | `onConfirm` | `null` | 只在确认按钮点击时执行。 |
 | `onCancel` | `null` | 只在取消按钮点击时执行。遮罩、关闭按钮和返回键不会触发它。 |
 | `buttonLayout` | `row` | 按钮横排或竖排。 |
-| `confirmBgColor` | 主题 primary | 确认按钮背景色。 |
-| `cancelBgColor` | 主题 surfaceContainerHighest | 取消按钮背景色。 |
+| `buttonStyle` | `divider` | 按钮风格：`divider` 贴底分割线（默认），`filled` 圆角填充/胶囊。 |
+| `confirmBgColor` | 见下 | 确认按钮背景色；`filled` 默认主题 primary，`divider` 默认透明。 |
+| `cancelBgColor` | 见下 | 取消按钮背景色；`filled` 默认 surfaceContainerHighest，`divider` 默认透明。 |
+| `style` | `ConfirmStyle()` | 细调标题/正文/分割线/圆角/内边距等；`buttonStyle` / `*BgColor` 会覆盖其中对应字段。 |
 
 结果语义：确认按钮返回 `true`；取消按钮返回 `false`；关闭按钮、遮罩、返回键、
 路由切换等返回 `null`。需要知道具体原因时使用 `openConfirm` 的 `outcome`。
@@ -308,16 +312,20 @@ Future<bool?> Pop.confirm({
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
+| `buttonStyle` | `divider` | `divider` 线条贴底按钮；`filled` 圆角填充/胶囊。 |
 | `titleStyle` | 主题 titleLarge | 标题样式。 |
 | `contentStyle` | 默认文本样式 | 内容样式。 |
 | `confirmStyle` / `cancelStyle` | 自动前景色 | 两个按钮的文字样式。 |
-| `padding` | `EdgeInsets.all(24)` | 弹窗内边距。 |
+| `padding` | `16` 四周 | 内容区内边距；`divider` 下不作用于按钮区，`filled` 下包住按钮。 |
 | `margin` | 水平 32 | 相对屏幕外边距。 |
-| `decoration` | 主题 surface、圆角 16 | 整体装饰。 |
+| `decoration` | 主题 surface、圆角 12 | 整体装饰。 |
 | `textAlign` | `center` | 标题和内容对齐。 |
-| `buttonBorderRadius` | 圆角 10 | 按钮圆角。 |
-| `confirmBackgroundColor` / `cancelBackgroundColor` | 主题色 | 按钮背景色。 |
-| `confirmBorder` / `cancelBorder` | `null` | 按钮边框。 |
+| `buttonBorderRadius` | 圆角 10 | 仅 `filled` 生效；线条按钮无独立圆角（由卡片裁剪）。 |
+| `confirmBackgroundColor` / `cancelBackgroundColor` | 随 `buttonStyle` | 按钮背景色。 |
+| `confirmBorder` / `cancelBorder` | `null` | 自定义按钮边框；未设时 `divider` 自动画分割线。 |
+| `dividerColor` | 主题 dividerColor | 线条风格分割线颜色。 |
+| `dividerWidth` | `0.5` | 线条风格分割线宽度。 |
+| `buttonSpacing` | `12` | 仅 `filled`：横排水平间距 / 竖排垂直间距。 |
 
 ## Sheet
 

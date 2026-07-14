@@ -38,7 +38,9 @@ class CourseDetailPage extends StatelessWidget {
       content: '确定删除「$title」？删除后不可恢复。',
       confirmText: '删除',
       cancelText: '取消',
-      confirmBgColor: Colors.red,
+      style: const ConfirmStyle(
+        confirmStyle: TextStyle(color: Colors.red),
+      ),
     );
     if (ok == true && context.mounted) {
       Pop.toast('计划已删除', toastType: ToastType.success);

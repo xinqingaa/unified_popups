@@ -30,6 +30,9 @@
 - Toast 和 Loading 支持倒计时、外部 Future、Handle 手动关闭或组合条件。
 - Confirm 新增按钮专属 `onConfirm` 与 `onCancel`，同时保留
   `Future<bool?>` 业务结果。
+- Confirm 默认改为贴底分割线按钮（`ConfirmButtonStyle.divider`）；可通过
+  `buttonStyle: ConfirmButtonStyle.filled` 恢复圆角填充/胶囊风格，并支持
+  `dividerColor`、`dividerWidth`、`buttonSpacing` 等细调。
 - Sheet 与 FlowSheet 统一四方向 Renderer、拖拽进度和退出动画；重业务 child
   不随拖拽指针反复重建。拖拽指示器仅底部方向渲染。
 - 恢复 Sheet 双层 SafeArea（对齐层扣状态栏 + panel 内始终 SafeArea），修复
@@ -47,6 +50,7 @@
   计数，并新增「通用 Config」页说明两层 API。
 - Loading 有文案时自适应宽高；`LoadingConfig.position` 可错开多实例。
 - 技术实验室按类型分页覆盖整库能力；业务 Tab 保留真实用法示例。
+- Confirm Lab 增加默认线条与胶囊填充对照示例。
 - 重写 README、API 参数参考、最佳实践、架构说明和 v1 → v2 迁移指南。
 - 项目使用文档统一为中文。
 

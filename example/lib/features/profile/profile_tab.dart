@@ -76,7 +76,9 @@ class _ProfileTabState extends State<ProfileTab> {
       content: '退出后本地训练缓存将保留。请输入 EXIT 确认。',
       confirmText: '退出',
       cancelText: '取消',
-      confirmBgColor: Colors.red,
+      style: const ConfirmStyle(
+        confirmStyle: TextStyle(color: Colors.red),
+      ),
       confirmChild: TextField(
         onChanged: (value) => typed = value,
         decoration: const InputDecoration(
