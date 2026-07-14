@@ -13,6 +13,7 @@ enum PopupDismissReason {
   parentDismissed,
   hostDetached,
   hostUnavailable,
+  rendererUnavailable,
   queueOverflow,
   conflictRejected,
   runtimeDisposed,

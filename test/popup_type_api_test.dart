@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_popups/src/api/popup_type_api.dart';
 import 'package:unified_popups/src/configs/loading_config.dart';
+import 'package:unified_popups/src/configs/popup_barrier_config.dart';
+import 'package:unified_popups/src/configs/popup_behavior_config.dart';
+import 'package:unified_popups/src/configs/popup_channel.dart';
+import 'package:unified_popups/src/configs/popup_conflict_policy.dart';
 import 'package:unified_popups/src/configs/popup_position.dart';
 import 'package:unified_popups/src/configs/toast_config.dart';
 import 'package:unified_popups/src/controller/popup_dismiss_reason.dart';
@@ -121,5 +125,68 @@ void main() {
     current.complete();
     expect((await handle.outcome).reason, PopupDismissReason.externalEvent);
     runtime.controller.markDisposed(handle.id);
+  });
+
+  test('toast update rejects immutable position and barrier topology',
+      () async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    runtime.attachHost(Object());
+    final api = PopupTypeApi(runtime);
+    const behavior = PopupBehaviorConfig(
+      channel: PopupChannel.toast,
+      key: 'status',
+      conflictPolicy: PopupConflictPolicy.updateExisting,
+    );
+    final result = api.openToast(
+      const ToastConfig(
+        message: 'first',
+        behavior: behavior,
+        lifetime: PopupLifetime.manual(),
+      ),
+    ) as PopupOpened<void>;
+    final handle = result.handle as ToastHandle;
+    runtime.controller.markPresented(handle.id);
+
+    expect(
+      handle.update(
+        const ToastConfig(
+          message: 'moved',
+          position: PopupPosition.bottom,
+          behavior: behavior,
+          lifetime: PopupLifetime.manual(),
+        ),
+      ),
+      isFalse,
+    );
+    expect(
+      handle.update(
+        const ToastConfig(
+          message: 'modal',
+          behavior: behavior,
+          barrier: PopupBarrierConfig(),
+          lifetime: PopupLifetime.manual(),
+        ),
+      ),
+      isFalse,
+    );
+    final current = runtime.controller.entries.single.config! as ToastConfig;
+    expect(current.message, 'first');
+    expect(runtime.controller.entries.single.generation, 0);
+
+    expect(
+      handle.update(
+        const ToastConfig(
+          message: 'second',
+          behavior: behavior,
+          lifetime: PopupLifetime.manual(),
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      (runtime.controller.entries.single.config! as ToastConfig).message,
+      'second',
+    );
   });
 }

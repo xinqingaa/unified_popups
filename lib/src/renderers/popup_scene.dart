@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../configs/confirm_config.dart';
-import '../configs/loading_config.dart';
 import '../configs/popup_animation_config.dart';
 import '../configs/popup_position.dart';
 import '../configs/popup_visual_config.dart';
@@ -10,9 +8,7 @@ import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_entry_snapshot.dart';
 import '../controller/popup_entry_state.dart';
 import '../runtime/popup_runtime.dart';
-import 'loading_renderer.dart';
-import 'confirm_renderer.dart';
-import 'toast_renderer.dart';
+import 'popup_renderer_delegate.dart';
 
 /// Default declaration scene used by the global host.
 ///
@@ -22,11 +18,18 @@ class PopupScene extends StatelessWidget {
   const PopupScene({
     required this.runtime,
     required this.entries,
+    this.registry,
     super.key,
   });
 
   final PopupRuntime runtime;
   final List<PopupEntrySnapshot> entries;
+  final PopupRendererRegistry? registry;
+
+  PopupRendererRegistry get _registry => registry ?? _defaultRegistry;
+
+  static final PopupRendererRegistry _defaultRegistry =
+      PopupRendererRegistry.builtIn();
 
   @override
   Widget build(BuildContext context) {
@@ -40,25 +43,50 @@ class PopupScene extends StatelessWidget {
       fit: StackFit.expand,
       children: <Widget>[
         for (final entry in entries)
-          if (!laneIds.contains(entry.id))
-            _AnimatedPopupEntry(
-              key: ValueKey<String>(entry.id),
-              runtime: runtime,
-              entry: entry,
-              fullScreen: true,
-            ),
+          if (!laneIds.contains(entry.id)) _buildEntry(entry, fullScreen: true),
         if (laneToasts.isNotEmpty)
-          _ToastLanes(runtime: runtime, entries: laneToasts),
+          _ToastLanes(
+            runtime: runtime,
+            entries: laneToasts,
+            registry: _registry,
+          ),
       ],
+    );
+  }
+
+  Widget _buildEntry(
+    PopupEntrySnapshot entry, {
+    required bool fullScreen,
+  }) {
+    final config = entry.config;
+    final delegate = config == null ? null : _registry.resolve(config);
+    if (delegate == null) {
+      return _UnsupportedPopupEntry(
+        key: ValueKey<String>(entry.id),
+        runtime: runtime,
+        entry: entry,
+      );
+    }
+    return _AnimatedPopupEntry(
+      key: ValueKey<String>(entry.id),
+      runtime: runtime,
+      entry: entry,
+      renderer: delegate,
+      fullScreen: fullScreen,
     );
   }
 }
 
 class _ToastLanes extends StatelessWidget {
-  const _ToastLanes({required this.runtime, required this.entries});
+  const _ToastLanes({
+    required this.runtime,
+    required this.entries,
+    required this.registry,
+  });
 
   final PopupRuntime runtime;
   final List<PopupEntrySnapshot> entries;
+  final PopupRendererRegistry registry;
 
   @override
   Widget build(BuildContext context) {
@@ -76,16 +104,30 @@ class _ToastLanes extends StatelessWidget {
                 children: <Widget>[
                   for (final entry in entries)
                     if ((entry.config! as ToastConfig).position == position)
-                      _AnimatedPopupEntry(
-                        key: ValueKey<String>(entry.id),
-                        runtime: runtime,
-                        entry: entry,
-                        fullScreen: false,
-                      ),
+                      _buildEntry(entry),
                 ],
               ),
             ),
       ],
+    );
+  }
+
+  Widget _buildEntry(PopupEntrySnapshot entry) {
+    final config = entry.config!;
+    final delegate = registry.resolve(config);
+    if (delegate == null) {
+      return _UnsupportedPopupEntry(
+        key: ValueKey<String>(entry.id),
+        runtime: runtime,
+        entry: entry,
+      );
+    }
+    return _AnimatedPopupEntry(
+      key: ValueKey<String>(entry.id),
+      runtime: runtime,
+      entry: entry,
+      renderer: delegate,
+      fullScreen: false,
     );
   }
 }
@@ -94,12 +136,14 @@ class _AnimatedPopupEntry extends StatefulWidget {
   const _AnimatedPopupEntry({
     required this.runtime,
     required this.entry,
+    required this.renderer,
     required this.fullScreen,
     super.key,
   });
 
   final PopupRuntime runtime;
   final PopupEntrySnapshot entry;
+  final PopupRendererDelegate renderer;
   final bool fullScreen;
 
   @override
@@ -112,7 +156,8 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
   FocusNode? _entryFocus;
   FocusNode? _previousFocus;
 
-  PopupVisualConfig get _visual => widget.entry.config! as PopupVisualConfig;
+  PopupVisualConfig get _visual =>
+      widget.renderer.visualConfig(widget.entry.config!);
 
   @override
   void initState() {
@@ -143,6 +188,23 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
   }
 
   void _syncState({bool initial = false}) {
+    if (_visual.animationConfig.type == PopupAnimationType.none) {
+      final entering = widget.entry.state == PopupEntryState.entering;
+      final exiting = widget.entry.state == PopupEntryState.exiting ||
+          widget.entry.state == PopupEntryState.dismissRequested;
+      _controller.value = entering ? 1 : 0;
+      if (entering || exiting) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (entering) {
+            widget.runtime.controller.markPresented(widget.entry.id);
+          } else {
+            widget.runtime.controller.markDisposed(widget.entry.id);
+          }
+        });
+      }
+      return;
+    }
     switch (widget.entry.state) {
       case PopupEntryState.entering:
         _controller.forward(from: initial ? 0 : null).whenCompleteOrCancel(() {
@@ -188,7 +250,11 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
       curve: animationConfig.curve,
       reverseCurve: animationConfig.reverseCurve,
     );
-    Widget content = _content(widget.entry.config!);
+    Widget content = widget.renderer.build(
+      context,
+      widget.runtime,
+      widget.entry,
+    );
     final entryFocus = _entryFocus;
     if (entryFocus != null) {
       content = Focus(focusNode: entryFocus, child: content);
@@ -219,17 +285,6 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
       ],
     );
   }
-
-  Widget _content(Object config) => switch (config) {
-        ToastConfig() => ToastRenderer(config: config),
-        LoadingConfig() => LoadingRenderer(config: config),
-        ConfirmConfig() => ConfirmRenderer(
-            runtime: widget.runtime,
-            entryId: widget.entry.id,
-            config: config,
-          ),
-        _ => const SizedBox.shrink(),
-      };
 
   Widget _transition(
     Widget child,
@@ -276,6 +331,51 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
         ),
     };
   }
+}
+
+class _UnsupportedPopupEntry extends StatefulWidget {
+  const _UnsupportedPopupEntry({
+    required this.runtime,
+    required this.entry,
+    super.key,
+  });
+
+  final PopupRuntime runtime;
+  final PopupEntrySnapshot entry;
+
+  @override
+  State<_UnsupportedPopupEntry> createState() => _UnsupportedPopupEntryState();
+}
+
+class _UnsupportedPopupEntryState extends State<_UnsupportedPopupEntry> {
+  @override
+  void initState() {
+    super.initState();
+    assert(() {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: FlutterError(
+            'No PopupRendererDelegate supports '
+            '${widget.entry.config.runtimeType}.',
+          ),
+          library: 'unified_popups',
+          context: ErrorDescription('while resolving a popup renderer'),
+        ),
+      );
+      return true;
+    }());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.runtime.controller.dismissEntry(
+        widget.entry.id,
+        reason: PopupDismissReason.rendererUnavailable,
+      );
+      // No renderer exists to acknowledge the end of an exit animation.
+      widget.runtime.controller.markDisposed(widget.entry.id);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 Alignment _alignment(PopupPosition position) => switch (position) {

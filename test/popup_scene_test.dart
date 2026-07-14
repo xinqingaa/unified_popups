@@ -3,8 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_popups/src/api/popup_type_api.dart';
 import 'package:unified_popups/src/configs/loading_config.dart';
 import 'package:unified_popups/src/configs/popup_animation_config.dart';
+import 'package:unified_popups/src/configs/popup_channel.dart';
 import 'package:unified_popups/src/configs/popup_position.dart';
 import 'package:unified_popups/src/configs/toast_config.dart';
+import 'package:unified_popups/src/controller/popup_dismiss_reason.dart';
+import 'package:unified_popups/src/controller/popup_entry_request.dart';
 import 'package:unified_popups/src/controller/popup_lifetime.dart';
 import 'package:unified_popups/src/controller/popup_handle.dart';
 import 'package:unified_popups/src/controller/popup_open_result.dart';
@@ -72,6 +75,35 @@ void main() {
     await tester.pump();
     expect(find.byType(ToastRenderer), findsNWidgets(3));
     expect(find.text('toast-3'), findsOneWidget);
+  });
+
+  testWidgets('missing renderer reports and completes instead of hanging',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final previous = FlutterError.onError;
+    FlutterErrorDetails? reported;
+    FlutterError.onError = (details) => reported = details;
+    addTearDown(() => FlutterError.onError = previous);
+    final handle = (runtime.controller.open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.custom,
+        config: 'unsupported',
+      ),
+    ) as PopupOpened<void>)
+        .handle;
+
+    await tester.pumpWidget(_TestApp(runtime: runtime));
+    await tester.pump();
+    await tester.pump();
+
+    expect(reported?.exception, isA<FlutterError>());
+    expect(
+      (await handle.outcome).reason,
+      PopupDismissReason.rendererUnavailable,
+    );
+    await handle.dismissed;
+    expect(runtime.controller.entries, isEmpty);
   });
 }
 

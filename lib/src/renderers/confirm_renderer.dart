@@ -61,6 +61,10 @@ class ConfirmRenderer extends StatelessWidget {
                       style: style.contentStyle,
                       textAlign: style.textAlign,
                     ),
+                if (config.bodyExtension != null) ...<Widget>[
+                  const SizedBox(height: 16),
+                  config.bodyExtension!,
+                ],
                 const SizedBox(height: 24),
                 _buttons(context),
               ],
@@ -73,6 +77,8 @@ class ConfirmRenderer extends StatelessWidget {
                   label: MaterialLocalizations.of(context).closeButtonTooltip,
                   button: true,
                   child: IconButton(
+                    tooltip:
+                        MaterialLocalizations.of(context).closeButtonTooltip,
                     onPressed: () => runtime.controller.dismissEntry(
                       entryId,
                       reason: PopupDismissReason.manual,
@@ -126,37 +132,38 @@ class ConfirmRenderer extends StatelessWidget {
     final style = config.style;
     final foreground =
         confirm ? style.confirmStyle?.color : style.cancelStyle?.color;
+    final background = confirm
+        ? style.confirmBackgroundColor ?? Theme.of(context).colorScheme.primary
+        : style.cancelBackgroundColor ??
+            Theme.of(context).colorScheme.surfaceContainerHighest;
+    final border = confirm ? style.confirmBorder : style.cancelBorder;
     return Material(
-      color: confirm
-          ? style.confirmBackgroundColor ??
-              Theme.of(context).colorScheme.primary
-          : style.cancelBackgroundColor ??
-              Theme.of(context).colorScheme.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(
-        borderRadius: style.buttonBorderRadius,
-        side: _sideFrom(confirm ? style.confirmBorder : style.cancelBorder),
-      ),
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: style.buttonBorderRadius),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _choose(confirm),
-        child: DefaultTextStyle.merge(
-          style: TextStyle(
-            color: foreground ??
-                (confirm
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurface),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Center(child: child),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: background,
+          border: border,
+          borderRadius: style.buttonBorderRadius,
+        ),
+        child: InkWell(
+          onTap: () => _choose(confirm),
+          child: DefaultTextStyle.merge(
+            style: TextStyle(
+              color: foreground ??
+                  (confirm
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.onSurface),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Center(child: child),
+            ),
           ),
         ),
       ),
     );
-  }
-
-  BorderSide _sideFrom(BoxBorder? border) {
-    return border is Border ? border.top : BorderSide.none;
   }
 
   void _choose(bool confirm) {

@@ -8,7 +8,7 @@ sealed class PopupLifetime {
 
   const factory PopupLifetime.until(Future<void> event) = PopupUntilLifetime;
 
-  const factory PopupLifetime.anyOf(List<PopupLifetime> conditions) =
+  factory PopupLifetime.anyOf(List<PopupLifetime> conditions) =
       PopupAnyOfLifetime;
 }
 
@@ -29,7 +29,9 @@ final class PopupUntilLifetime extends PopupLifetime {
 }
 
 final class PopupAnyOfLifetime extends PopupLifetime {
-  const PopupAnyOfLifetime(this.conditions) : assert(conditions.length > 1);
+  PopupAnyOfLifetime(List<PopupLifetime> conditions)
+      : assert(conditions.length > 1),
+        conditions = List<PopupLifetime>.unmodifiable(conditions);
 
   final List<PopupLifetime> conditions;
 }

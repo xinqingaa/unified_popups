@@ -55,6 +55,7 @@ final class ConfirmConfig implements PopupVisualConfig {
     this.titleWidget,
     this.content,
     this.contentWidget,
+    this.bodyExtension,
     this.confirmText = 'confirm',
     this.confirmButton,
     this.cancelText,
@@ -88,6 +89,7 @@ final class ConfirmConfig implements PopupVisualConfig {
   final Widget? titleWidget;
   final String? content;
   final Widget? contentWidget;
+  final Widget? bodyExtension;
   final String confirmText;
   final Widget? confirmButton;
   final String? cancelText;

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_popups/src/configs/popup_back_policy.dart';
 import 'package:unified_popups/src/configs/popup_channel.dart';
@@ -202,6 +203,32 @@ void main() {
     await Future.wait(<Future<void>>[parent.dismissed, child.dismissed]);
   });
 
+  test('parent cascade emits one controller notification', () {
+    controller.attachHost();
+    final parent = open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.sheet,
+        config: 'parent',
+      ),
+    );
+    open<void, String>(
+      PopupEntryRequest<void, String>(
+        channel: PopupChannel.confirm,
+        config: 'child',
+        ownership: PopupOwnership(
+          parentEntryId: parent.id,
+          policy: PopupOwnerPolicy.dismissWithParent,
+        ),
+      ),
+    );
+    var notifications = 0;
+    controller.addListener(() => notifications++);
+
+    parent.dismiss();
+
+    expect(notifications, 1);
+  });
+
   test('queued entries do not start lifetime until presented', () async {
     final event = Completer<void>();
     controller.attachHost();
@@ -265,5 +292,57 @@ void main() {
     );
     expect(late.state, PopupEntryState.disposed);
     expect((await late.outcome).reason, PopupDismissReason.hostUnavailable);
+  });
+
+  test('pendingHost capacity closes the oldest transient entry', () async {
+    controller.dispose();
+    controller = PopupController(
+      runtimeEpoch: 'bounded',
+      maxPendingHostEntries: 2,
+    );
+    final first = open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.toast,
+        config: 'first',
+      ),
+    );
+    final second = open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.confirm,
+        config: 'second',
+      ),
+    );
+    final third = open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.confirm,
+        config: 'third',
+      ),
+    );
+
+    expect(first.state, PopupEntryState.disposed);
+    expect((await first.outcome).reason, PopupDismissReason.queueOverflow);
+    expect(second.state, PopupEntryState.pendingHost);
+    expect(third.state, PopupEntryState.pendingHost);
+    expect(controller.entries, hasLength(2));
+  });
+
+  test('back delegate errors are reported and consume the back action',
+      () async {
+    controller.attachHost();
+    final previous = FlutterError.onError;
+    Object? reported;
+    FlutterError.onError = (details) => reported = details.exception;
+    addTearDown(() => FlutterError.onError = previous);
+    open<void, String>(
+      PopupEntryRequest<void, String>(
+        channel: PopupChannel.custom,
+        config: 'delegate',
+        backPolicy: PopupBackPolicy.delegate,
+        onBack: () async => throw StateError('back failed'),
+      ),
+    );
+
+    expect(await controller.handleBack(), isTrue);
+    expect(reported, isA<StateError>());
   });
 }

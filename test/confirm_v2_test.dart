@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_popups/src/api/popup_type_api.dart';
 import 'package:unified_popups/src/configs/confirm_config.dart';
 import 'package:unified_popups/src/configs/popup_animation_config.dart';
+import 'package:unified_popups/src/configs/popup_behavior_config.dart';
 import 'package:unified_popups/src/configs/popup_channel.dart';
+import 'package:unified_popups/src/configs/popup_route_policy.dart';
 import 'package:unified_popups/src/controller/popup_dismiss_reason.dart';
 import 'package:unified_popups/src/controller/popup_entry_request.dart';
 import 'package:unified_popups/src/controller/popup_entry_state.dart';
@@ -23,6 +25,7 @@ void main() {
     final handle = api.confirm(
       ConfirmConfig(
         content: 'continue?',
+        bodyExtension: const Text('extra'),
         confirmText: 'yes',
         cancelText: 'no',
         animationConfig: const PopupAnimationConfig(duration: Duration.zero),
@@ -35,6 +38,7 @@ void main() {
     );
     await tester.pumpWidget(_ConfirmApp(runtime: runtime));
     await tester.pump();
+    expect(find.text('extra'), findsOneWidget);
 
     await tester.tap(find.text('no'));
     expect(await handle.result, isFalse);
@@ -141,6 +145,63 @@ void main() {
     await handle.dismissed;
     await tester.pump();
     expect(fieldFocus.hasFocus, isTrue);
+  });
+
+  test('non-button exits preserve their own reason and a null result',
+      () async {
+    Future<void> verify(
+      PopupDismissReason expected,
+      Future<void> Function(PopupRuntime runtime, String id) close, {
+      PopupBehaviorConfig behavior = const PopupBehaviorConfig(
+        channel: PopupChannel.confirm,
+      ),
+    }) async {
+      final runtime = PopupRuntime();
+      runtime.attachHost(Object());
+      final handle = PopupTypeApi(runtime).confirm(
+        ConfirmConfig(content: 'reason', behavior: behavior),
+      );
+      runtime.controller.markPresented(handle.id);
+
+      await close(runtime, handle.id);
+
+      expect(await handle.result, isNull);
+      expect((await handle.outcome).reason, expected);
+      runtime.controller.markDisposed(handle.id);
+      await runtime.shutdown();
+    }
+
+    await verify(
+      PopupDismissReason.barrier,
+      (runtime, id) async {
+        runtime.controller.dismissEntry(
+          id,
+          reason: PopupDismissReason.barrier,
+        );
+      },
+    );
+    await verify(
+      PopupDismissReason.back,
+      (runtime, id) async {
+        expect(await runtime.controller.handleBack(), isTrue);
+      },
+    );
+    await verify(
+      PopupDismissReason.manual,
+      (runtime, id) async {
+        runtime.controller.dismissEntry(id);
+      },
+    );
+    await verify(
+      PopupDismissReason.routeChanged,
+      (runtime, id) async {
+        runtime.controller.handleRouteChanged(Object());
+      },
+      behavior: const PopupBehaviorConfig(
+        channel: PopupChannel.confirm,
+        routePolicy: PopupRoutePolicy.dismissOnAnyRouteChange,
+      ),
+    );
   });
 }
 

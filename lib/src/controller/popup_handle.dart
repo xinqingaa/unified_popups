@@ -32,5 +32,7 @@ abstract interface class PopupHandle<T> {
 
 /// A handle whose existing logical entry can accept a type-safe new config.
 abstract interface class UpdatablePopupHandle<T, C> implements PopupHandle<T> {
-  void update(C config);
+  /// Returns false when the entry is inactive or the new config changes an
+  /// immutable part of the renderer contract.
+  bool update(C config);
 }

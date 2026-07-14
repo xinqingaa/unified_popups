@@ -45,7 +45,7 @@ final class PopupEntryRequest<T, C> {
 
   /// Extracts lifecycle behavior when [UpdatablePopupHandle.update] receives a
   /// new type-specific config. Key and channel remain immutable.
-  final PopupEntryUpdate<T> Function(C config)? resolveUpdate;
+  final PopupEntryUpdate<T>? Function(C previous, C next)? resolveUpdate;
 }
 
 final class PopupEntryUpdate<T> {

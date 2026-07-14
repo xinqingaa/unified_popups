@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import '../controller/popup_controller.dart';
 import '../navigation/popup_route_observer_v2.dart';
 import '../navigation/popup_route_token.dart';
@@ -15,11 +17,16 @@ enum PopupRuntimeState {
 /// through `Pop`, while tests may construct isolated runtimes.
 final class PopupRuntime {
   PopupRuntime({PopupController? controller})
-      : controller = controller ?? PopupController() {
+      : controller = controller ??
+            PopupController(runtimeEpoch: 'runtime-${++_nextRuntimeEpoch}'),
+        _ownsController = controller == null {
     routeObserver = PopupRouteObserverV2(this.controller);
   }
 
+  static int _nextRuntimeEpoch = 0;
+
   final PopupController controller;
+  final bool _ownsController;
   late final PopupRouteObserverV2 routeObserver;
   final Completer<void> _ready = Completer<void>();
 
@@ -36,6 +43,16 @@ final class PopupRuntime {
   bool attachHost(Object binding) {
     if (_state == PopupRuntimeState.shutdown) return false;
     if (_hostBinding != null && !identical(_hostBinding, binding)) {
+      if (kReleaseMode) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: StateError(
+              'Only one PopupHost may be attached to a PopupRuntime.',
+            ),
+            library: 'unified_popups',
+          ),
+        );
+      }
       assert(false, 'Only one PopupHost may be attached to a PopupRuntime.');
       return false;
     }
@@ -60,5 +77,9 @@ final class PopupRuntime {
     _hostBinding = null;
     routeObserver.dispose();
     await controller.shutdown();
+    // `ready` is a gate, not an error channel. Completing it on shutdown
+    // prevents startup tasks from hanging; callers can inspect `isReady`.
+    if (!_ready.isCompleted) _ready.complete();
+    if (_ownsController) controller.dispose();
   }
 }

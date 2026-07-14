@@ -20,10 +20,14 @@ import 'popup_ownership.dart';
 
 /// Owns popup lifecycle state without depending on an Overlay or BuildContext.
 class PopupController extends ChangeNotifier {
-  PopupController({String runtimeEpoch = 'runtime'})
-      : _runtimeEpoch = runtimeEpoch;
+  PopupController({
+    String runtimeEpoch = 'runtime',
+    this.maxPendingHostEntries = 100,
+  })  : assert(maxPendingHostEntries > 0),
+        _runtimeEpoch = runtimeEpoch;
 
   final String _runtimeEpoch;
+  final int maxPendingHostEntries;
   final List<_PopupRecord<dynamic, dynamic>> _entries =
       <_PopupRecord<dynamic, dynamic>>[];
   final Map<String, _PopupRecord<dynamic, dynamic>> _keyed =
@@ -34,6 +38,8 @@ class PopupController extends ChangeNotifier {
   bool _everAttached = false;
   bool _shutdown = false;
   bool _changeNotifierDisposed = false;
+  int _mutationDepth = 0;
+  bool _notificationPending = false;
 
   bool get isHostAttached => _hostAttached;
 
@@ -70,7 +76,9 @@ class PopupController extends ChangeNotifier {
             return PopupOpenResult<T>.rejected();
           }
           final typed = existing as _PopupRecord<T, C>;
-          _updateRecord(typed, request);
+          if (!_updateRecord(typed, request)) {
+            return PopupOpenResult<T>.rejected();
+          }
           return PopupOpenResult<T>.updated(typed.handle);
         case PopupConflictPolicy.replaceExisting:
           final replacement = _createRecord(request, forceQueued: true);
@@ -105,6 +113,7 @@ class PopupController extends ChangeNotifier {
       _requestClose(record, PopupDismissReason.hostUnavailable);
     } else if (!_hostAttached) {
       _transition(record, PopupEntryState.pendingHost);
+      _enforcePendingHostCapacity(record);
     } else if (forceQueued || request.initiallyQueued) {
       _transition(record, PopupEntryState.queued);
     } else {
@@ -114,41 +123,80 @@ class PopupController extends ChangeNotifier {
     return record;
   }
 
-  void _updateRecord<T, C>(
+  bool _updateRecord<T, C>(
     _PopupRecord<T, C> record,
     PopupEntryRequest<T, C> request,
   ) {
-    if (!record.isActive) return;
+    if (!record.isActive) return false;
+    final update = record.resolveUpdate?.call(record.config, request.config);
+    if (record.resolveUpdate != null && update == null) return false;
     record
       ..config = request.config
-      ..tags = Set<String>.unmodifiable(request.tags)
-      ..backPolicy = request.backPolicy
-      ..routePolicy = request.routePolicy
-      ..ownership = request.ownership
-      ..lifetime = request.lifetime
-      ..lifecycle = request.lifecycle ?? PopupLifecycleCallbacks<T>()
       ..resolveUpdate = request.resolveUpdate;
+    _applyUpdate(
+      record,
+      update ??
+          PopupEntryUpdate<T>(
+            tags: request.tags,
+            routePolicy: request.routePolicy,
+            backPolicy: request.backPolicy,
+            ownership: request.ownership,
+            lifetime: request.lifetime,
+            lifecycle: request.lifecycle ?? PopupLifecycleCallbacks<T>(),
+          ),
+    );
     record.generation++;
     _restartLifetime(record);
     _notifySafely();
+    return true;
   }
 
-  void _updateConfig<T, C>(_PopupRecord<T, C> record, C config) {
-    if (!record.isActive || !record.updatable) return;
+  bool _updateConfig<T, C>(_PopupRecord<T, C> record, C config) {
+    if (!record.isActive || !record.updatable) return false;
+    final update = record.resolveUpdate?.call(record.config, config);
+    if (record.resolveUpdate != null && update == null) return false;
     record.config = config;
-    final update = record.resolveUpdate?.call(config);
-    if (update != null) {
-      record
-        ..tags = Set<String>.unmodifiable(update.tags)
-        ..routePolicy = update.routePolicy
-        ..backPolicy = update.backPolicy
-        ..ownership = update.ownership
-        ..lifetime = update.lifetime
-        ..lifecycle = update.lifecycle;
-    }
+    if (update != null) _applyUpdate(record, update);
     record.generation++;
     _restartLifetime(record);
     _notifySafely();
+    return true;
+  }
+
+  void _applyUpdate<T, C>(
+    _PopupRecord<T, C> record,
+    PopupEntryUpdate<T> update,
+  ) {
+    record
+      ..tags = Set<String>.unmodifiable(update.tags)
+      ..routePolicy = update.routePolicy
+      ..backPolicy = update.backPolicy
+      ..ownership = update.ownership
+      ..lifetime = update.lifetime
+      ..lifecycle = update.lifecycle;
+  }
+
+  void _enforcePendingHostCapacity(
+    _PopupRecord<dynamic, dynamic> newest,
+  ) {
+    final pending = _entries
+        .where((entry) => entry.state == PopupEntryState.pendingHost)
+        .toList(growable: false);
+    if (pending.length <= maxPendingHostEntries) return;
+    final overflow = pending.firstWhere(
+      (entry) =>
+          entry.channel == PopupChannel.toast ||
+          entry.channel == PopupChannel.loading,
+      orElse: () => pending.first,
+    );
+    // Prefer dropping an old transient entry, but never reject the new entry
+    // solely because all older entries are modal.
+    _requestClose(
+      identical(overflow, newest) && pending.length > 1
+          ? pending.first
+          : overflow,
+      PopupDismissReason.queueOverflow,
+    );
   }
 
   /// Attaches the declaration host and releases entries created before frame 1.
@@ -171,15 +219,17 @@ class PopupController extends ChangeNotifier {
   /// Detaches the host and synchronously removes every remaining entry.
   void detachHost() {
     if (!_hostAttached) return;
-    _hostAttached = false;
-    for (final entry
-        in List<_PopupRecord<dynamic, dynamic>>.of(_entries).reversed) {
-      if (entry.isActive) {
-        _requestClose(entry, PopupDismissReason.hostDetached);
+    _mutate(() {
+      _hostAttached = false;
+      for (final entry
+          in List<_PopupRecord<dynamic, dynamic>>.of(_entries).reversed) {
+        if (entry.isActive) {
+          _requestClose(entry, PopupDismissReason.hostDetached);
+        }
+        if (!entry.state.isTerminal) _disposeRecord(entry);
       }
-      if (!entry.state.isTerminal) _disposeRecord(entry);
-    }
-    _notifySafely();
+      _notifySafely();
+    });
   }
 
   /// Moves an entering entry to visible and starts its lifetime.
@@ -231,6 +281,13 @@ class PopupController extends ChangeNotifier {
     _PopupRecord<dynamic, dynamic> entry,
     PopupDismissReason reason, [
     Object? value,
+  ]) =>
+      _mutate(() => _requestCloseNow(entry, reason, value));
+
+  void _requestCloseNow(
+    _PopupRecord<dynamic, dynamic> entry,
+    PopupDismissReason reason, [
+    Object? value,
   ]) {
     if (!entry.isActive) return;
 
@@ -240,7 +297,7 @@ class PopupController extends ChangeNotifier {
           candidate.ownership.parentEntryId == entry.id;
     }).toList(growable: false);
     for (final child in children) {
-      _requestClose(child, PopupDismissReason.parentDismissed);
+      _requestCloseNow(child, PopupDismissReason.parentDismissed);
     }
 
     entry.cancelLifetime();
@@ -353,9 +410,11 @@ class PopupController extends ChangeNotifier {
     final matches = _entries.reversed
         .where((entry) => entry.channel == channel && entry.isActive)
         .toList(growable: false);
-    for (final entry in matches) {
-      _requestClose(entry, PopupDismissReason.manual);
-    }
+    _mutate(() {
+      for (final entry in matches) {
+        _requestClose(entry, PopupDismissReason.manual);
+      }
+    });
     await Future.wait(matches.map((entry) => entry.dismissed));
     return matches.length;
   }
@@ -364,18 +423,22 @@ class PopupController extends ChangeNotifier {
     final matches = _entries.reversed
         .where((entry) => entry.isActive && entry.tags.any(tags.contains))
         .toList(growable: false);
-    for (final entry in matches) {
-      _requestClose(entry, PopupDismissReason.manual);
-    }
+    _mutate(() {
+      for (final entry in matches) {
+        _requestClose(entry, PopupDismissReason.manual);
+      }
+    });
     await Future.wait(matches.map((entry) => entry.dismissed));
     return matches.length;
   }
 
   Future<void> dismissAll() async {
     final matches = _entries.reversed.toList(growable: false);
-    for (final entry in matches) {
-      if (entry.isActive) _requestClose(entry, PopupDismissReason.manual);
-    }
+    _mutate(() {
+      for (final entry in matches) {
+        if (entry.isActive) _requestClose(entry, PopupDismissReason.manual);
+      }
+    });
     await Future.wait(matches.map((entry) => entry.dismissed));
   }
 
@@ -411,7 +474,20 @@ class PopupController extends ChangeNotifier {
           return true;
         case PopupBackPolicy.delegate:
           final delegate = entry.onBack;
-          if (delegate != null && await delegate()) return true;
+          if (delegate == null) continue;
+          try {
+            if (await delegate()) return true;
+          } catch (error, stackTrace) {
+            FlutterError.reportError(
+              FlutterErrorDetails(
+                exception: error,
+                stack: stackTrace,
+                library: 'unified_popups',
+                context: ErrorDescription('while delegating popup back'),
+              ),
+            );
+            return true;
+          }
       }
     }
     return false;
@@ -428,19 +504,21 @@ class PopupController extends ChangeNotifier {
 
   /// Applies route ownership policies after the root route changes.
   void handleRouteChanged(Object? currentRouteToken) {
-    for (final entry in _entries.reversed.toList(growable: false)) {
-      if (!entry.isActive) continue;
-      final shouldDismiss = switch (entry.routePolicy) {
-        PopupRoutePolicy.persist => false,
-        PopupRoutePolicy.dismissOnAnyRouteChange => true,
-        PopupRoutePolicy.dismissWhenOwnerRouteChanges =>
-          entry.ownership.routeToken != null &&
-              entry.ownership.routeToken != currentRouteToken,
-      };
-      if (shouldDismiss) {
-        _requestClose(entry, PopupDismissReason.routeChanged);
+    _mutate(() {
+      for (final entry in _entries.reversed.toList(growable: false)) {
+        if (!entry.isActive) continue;
+        final shouldDismiss = switch (entry.routePolicy) {
+          PopupRoutePolicy.persist => false,
+          PopupRoutePolicy.dismissOnAnyRouteChange => true,
+          PopupRoutePolicy.dismissWhenOwnerRouteChanges =>
+            entry.ownership.routeToken != null &&
+                entry.ownership.routeToken != currentRouteToken,
+        };
+        if (shouldDismiss) {
+          _requestClose(entry, PopupDismissReason.routeChanged);
+        }
       }
-    }
+    });
   }
 
   bool isVisibleKey(String key) {
@@ -464,13 +542,15 @@ class PopupController extends ChangeNotifier {
     if (_shutdown) return;
     _shutdown = true;
     final records = _entries.reversed.toList(growable: false);
-    for (final entry in records) {
-      if (entry.isActive) {
-        _requestClose(entry, PopupDismissReason.runtimeDisposed);
+    _mutate(() {
+      for (final entry in records) {
+        if (entry.isActive) {
+          _requestClose(entry, PopupDismissReason.runtimeDisposed);
+        }
+        if (!entry.state.isTerminal) _disposeRecord(entry);
       }
-      if (!entry.state.isTerminal) _disposeRecord(entry);
-    }
-    _notifySafely();
+      _notifySafely();
+    });
     await Future.wait(records.map((entry) => entry.dismissed));
   }
 
@@ -485,6 +565,10 @@ class PopupController extends ChangeNotifier {
     _PopupRecord<dynamic, dynamic> entry,
     PopupEntryState next,
   ) {
+    assert(
+      _isLegalTransition(entry.state, next),
+      'Illegal popup transition: ${entry.state} -> $next (${entry.id}).',
+    );
     entry.wasMounted = entry.wasMounted || entry.state.isMounted;
     entry.state = next;
     if (next == PopupEntryState.entering ||
@@ -492,6 +576,27 @@ class PopupController extends ChangeNotifier {
         next == PopupEntryState.exiting) {
       entry.wasMounted = true;
     }
+  }
+
+  bool _isLegalTransition(PopupEntryState current, PopupEntryState next) {
+    return switch (current) {
+      PopupEntryState.created => next == PopupEntryState.pendingHost ||
+          next == PopupEntryState.queued ||
+          next == PopupEntryState.entering ||
+          next == PopupEntryState.dismissRequested,
+      PopupEntryState.pendingHost => next == PopupEntryState.queued ||
+          next == PopupEntryState.entering ||
+          next == PopupEntryState.dismissRequested,
+      PopupEntryState.queued => next == PopupEntryState.entering ||
+          next == PopupEntryState.dismissRequested,
+      PopupEntryState.entering => next == PopupEntryState.visible ||
+          next == PopupEntryState.dismissRequested,
+      PopupEntryState.visible => next == PopupEntryState.dismissRequested,
+      PopupEntryState.dismissRequested =>
+        next == PopupEntryState.exiting || next == PopupEntryState.disposed,
+      PopupEntryState.exiting => next == PopupEntryState.disposed,
+      PopupEntryState.disposed => false,
+    };
   }
 
   void _invoke(void Function()? callback, String context) {
@@ -511,7 +616,25 @@ class PopupController extends ChangeNotifier {
   }
 
   void _notifySafely() {
-    if (!_changeNotifierDisposed) notifyListeners();
+    if (_changeNotifierDisposed) return;
+    if (_mutationDepth > 0) {
+      _notificationPending = true;
+      return;
+    }
+    notifyListeners();
+  }
+
+  R _mutate<R>(R Function() mutation) {
+    _mutationDepth++;
+    try {
+      return mutation();
+    } finally {
+      _mutationDepth--;
+      if (_mutationDepth == 0 && _notificationPending) {
+        _notificationPending = false;
+        if (!_changeNotifierDisposed) notifyListeners();
+      }
+    }
   }
 
   @override
@@ -567,7 +690,7 @@ final class _PopupRecord<T, C> {
   PopupOwnership ownership;
   PopupLifetime lifetime;
   PopupLifecycleCallbacks<T> lifecycle;
-  PopupEntryUpdate<T> Function(C config)? resolveUpdate;
+  PopupEntryUpdate<T>? Function(C previous, C next)? resolveUpdate;
   PopupEntryState state = PopupEntryState.created;
   PopupOutcome<T>? finalOutcome;
   int generation = 0;
@@ -666,5 +789,5 @@ final class _ControllerPopupHandle<T, C> implements UpdatablePopupHandle<T, C> {
   Future<void> dismiss() => _controller._dismiss(_record);
 
   @override
-  void update(C config) => _controller._updateConfig(_record, config);
+  bool update(C config) => _controller._updateConfig(_record, config);
 }

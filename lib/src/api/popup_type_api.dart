@@ -1,5 +1,7 @@
 import '../configs/confirm_config.dart';
+import '../configs/date_config.dart';
 import '../configs/loading_config.dart';
+import '../configs/popup_barrier_config.dart';
 import '../configs/popup_channel.dart';
 import '../configs/popup_position.dart';
 import '../configs/popup_owner_policy.dart';
@@ -54,7 +56,7 @@ final class PopupTypeApi {
         lifecycle: lifecycle,
         updatable: behavior.key != null,
         initiallyQueued: initiallyQueued,
-        resolveUpdate: (next) => _toastUpdate(next),
+        resolveUpdate: (previous, next) => _toastUpdate(previous, next),
       ),
     );
   }
@@ -78,7 +80,7 @@ final class PopupTypeApi {
         lifetime: config.lifetime,
         lifecycle: config.lifecycle,
         updatable: true,
-        resolveUpdate: (next) => _loadingUpdate(next),
+        resolveUpdate: (previous, next) => _loadingUpdate(next),
       ),
     );
     final handle = switch (result) {
@@ -115,6 +117,36 @@ final class PopupTypeApi {
       PopupUpdated<bool>(:final handle) => handle,
       PopupToggledClosed<bool>() || PopupRejected<bool>() => throw StateError(
           'ConfirmConfig was not opened by its conflict policy.',
+        ),
+    };
+  }
+
+  PopupHandle<DateTime> date(DateConfig config) {
+    final behavior = config.behavior;
+    assert(
+      behavior.channel == PopupChannel.date,
+      'DateConfig must use PopupChannel.date.',
+    );
+    final result = runtime.controller.open<DateTime, DateConfig>(
+      PopupEntryRequest<DateTime, DateConfig>(
+        channel: PopupChannel.date,
+        config: config,
+        key: behavior.key,
+        tags: behavior.tags,
+        conflictPolicy: behavior.conflictPolicy,
+        routePolicy: behavior.routePolicy,
+        backPolicy: behavior.backPolicy,
+        ownership: _modalOwnership(config.ownership),
+        lifecycle: config.lifecycle,
+      ),
+    );
+    return switch (result) {
+      PopupOpened<DateTime>(:final handle) => handle,
+      PopupUpdated<DateTime>(:final handle) => handle,
+      PopupToggledClosed<DateTime>() ||
+      PopupRejected<DateTime>() =>
+        throw StateError(
+          'DateConfig was not opened by its conflict policy.',
         ),
     };
   }
@@ -178,7 +210,14 @@ final class PopupTypeApi {
     );
   }
 
-  PopupEntryUpdate<void> _toastUpdate(ToastConfig config) {
+  PopupEntryUpdate<void>? _toastUpdate(
+    ToastConfig previous,
+    ToastConfig config,
+  ) {
+    if (previous.position != config.position ||
+        !_sameBarrierTopology(previous.barrier, config.barrier)) {
+      return null;
+    }
     final behavior = config.behavior;
     return PopupEntryUpdate<void>(
       tags: behavior.tags,
@@ -198,6 +237,14 @@ final class PopupTypeApi {
         },
       ),
     );
+  }
+
+  bool _sameBarrierTopology(
+    PopupBarrierConfig previous,
+    PopupBarrierConfig next,
+  ) {
+    return previous.visible == next.visible &&
+        previous.dismissible == next.dismissible;
   }
 
   PopupEntryUpdate<void> _loadingUpdate(LoadingConfig config) {

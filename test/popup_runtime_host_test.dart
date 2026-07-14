@@ -8,6 +8,32 @@ import 'package:unified_popups/src/host/popup_host.dart';
 import 'package:unified_popups/src/runtime/popup_runtime.dart';
 
 void main() {
+  test('runtime epochs isolate ids and shutdown releases ready', () async {
+    final first = PopupRuntime();
+    final second = PopupRuntime();
+    final firstHandle = (first.controller.open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.toast,
+        config: 'first',
+      ),
+    ) as PopupOpened<void>)
+        .handle;
+    final secondHandle = (second.controller.open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.toast,
+        config: 'second',
+      ),
+    ) as PopupOpened<void>)
+        .handle;
+
+    expect(firstHandle.id, isNot(secondHandle.id));
+    final ready = first.ready;
+    await first.shutdown();
+    await ready;
+    expect(first.isReady, isFalse);
+    await second.shutdown();
+  });
+
   testWidgets('host releases pending entries without rebuilding app child',
       (tester) async {
     final runtime = PopupRuntime();

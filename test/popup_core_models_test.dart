@@ -3,6 +3,7 @@ import 'package:unified_popups/src/configs/popup_channel.dart';
 import 'package:unified_popups/src/controller/popup_dismiss_reason.dart';
 import 'package:unified_popups/src/controller/popup_entry_state.dart';
 import 'package:unified_popups/src/controller/popup_outcome.dart';
+import 'package:unified_popups/src/controller/popup_lifetime.dart';
 
 void main() {
   test('entry state separates business activity from host mounting', () {
@@ -31,5 +32,21 @@ void main() {
   test('custom channels use value equality', () {
     expect(const PopupChannel('orders'), const PopupChannel('orders'));
     expect(const PopupChannel('orders'), isNot(const PopupChannel('profile')));
+  });
+
+  test('anyOf lifetime owns an immutable condition list', () {
+    final source = <PopupLifetime>[
+      const PopupLifetime.manual(),
+      const PopupLifetime.after(Duration(seconds: 1)),
+    ];
+    final lifetime = PopupLifetime.anyOf(source) as PopupAnyOfLifetime;
+
+    source.add(const PopupLifetime.manual());
+
+    expect(lifetime.conditions, hasLength(2));
+    expect(
+      () => lifetime.conditions.add(const PopupLifetime.manual()),
+      throwsUnsupportedError,
+    );
   });
 }
