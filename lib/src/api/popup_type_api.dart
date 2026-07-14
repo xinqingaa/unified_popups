@@ -1,11 +1,14 @@
 import '../configs/confirm_config.dart';
 import '../configs/date_config.dart';
+import '../configs/flow_sheet_config.dart';
 import '../configs/loading_config.dart';
 import '../configs/popup_barrier_config.dart';
 import '../configs/popup_channel.dart';
 import '../configs/popup_position.dart';
+import '../configs/sheet_config.dart';
 import '../configs/popup_owner_policy.dart';
 import '../configs/toast_config.dart';
+import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_entry_request.dart';
 import '../controller/popup_entry_state.dart';
 import '../controller/popup_handle.dart';
@@ -149,6 +152,76 @@ final class PopupTypeApi {
           'DateConfig was not opened by its conflict policy.',
         ),
     };
+  }
+
+  PopupHandle<T> sheet<T>(SheetConfig<T> config) {
+    final behavior = config.behavior;
+    assert(
+      behavior.channel == PopupChannel.sheet,
+      'SheetConfig must use PopupChannel.sheet.',
+    );
+    final result = runtime.controller.open<T, SheetConfig<T>>(
+      PopupEntryRequest<T, SheetConfig<T>>(
+        channel: PopupChannel.sheet,
+        config: config,
+        key: behavior.key,
+        tags: behavior.tags,
+        conflictPolicy: behavior.conflictPolicy,
+        routePolicy: behavior.routePolicy,
+        backPolicy: behavior.backPolicy,
+        ownership: _captureOwnership(config.ownership),
+        lifecycle: config.lifecycle,
+        onBack: config.onBack,
+      ),
+    );
+    return switch (result) {
+      PopupOpened<T>(:final handle) => handle,
+      PopupUpdated<T>(:final handle) => handle,
+      PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
+          'SheetConfig was not opened by its conflict policy.',
+        ),
+    };
+  }
+
+  PopupHandle<R> flowSheet<R>(FlowSheetConfig<R> config) {
+    config.controller.claimPopupSession();
+    final behavior = config.behavior;
+    assert(
+      behavior.channel == PopupChannel.flowSheet,
+      'FlowSheetConfig must use PopupChannel.flowSheet.',
+    );
+    late PopupHandle<R> handle;
+    final result = runtime.controller.open<R, FlowSheetConfig<R>>(
+      PopupEntryRequest<R, FlowSheetConfig<R>>(
+        channel: PopupChannel.flowSheet,
+        config: config,
+        key: behavior.key,
+        tags: behavior.tags,
+        conflictPolicy: behavior.conflictPolicy,
+        routePolicy: behavior.routePolicy,
+        backPolicy: behavior.backPolicy,
+        ownership: _captureOwnership(config.ownership),
+        lifecycle: config.lifecycle,
+        onBack: () async {
+          if (config.controller.canPop) {
+            return config.controller.handleBack();
+          }
+          runtime.controller.dismissEntry(
+            handle.id,
+            reason: PopupDismissReason.back,
+          );
+          return true;
+        },
+      ),
+    );
+    handle = switch (result) {
+      PopupOpened<R>(:final handle) => handle,
+      PopupUpdated<R>(:final handle) => handle,
+      PopupToggledClosed<R>() || PopupRejected<R>() => throw StateError(
+          'FlowSheetConfig was not opened by its conflict policy.',
+        ),
+    };
+    return handle;
   }
 
   Future<void> hideLoading({String key = PopupKeys.globalLoading}) {

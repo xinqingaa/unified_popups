@@ -2,8 +2,8 @@ import '../configs/popup_channel.dart';
 import 'popup_entry_state.dart';
 import 'popup_outcome.dart';
 
-/// A stable reference to one logical popup entry.
-abstract interface class PopupHandle<T> {
+/// Type-independent lifecycle operations shared by renderer infrastructure.
+abstract interface class PopupHandleBase {
   String get id;
 
   String? get key;
@@ -16,18 +16,20 @@ abstract interface class PopupHandle<T> {
 
   PopupEntryState get state;
 
+  Future<void> get dismissed;
+
+  Future<void> dismiss();
+}
+
+/// A stable reference to one logical popup entry.
+abstract interface class PopupHandle<T> implements PopupHandleBase {
   Future<PopupOutcome<T>> get outcome;
 
   Future<T?> get result;
 
-  Future<void> get dismissed;
-
   /// Completes the business result immediately and the returned future after
   /// visual removal.
   Future<void> complete([T? result]);
-
-  /// Dismisses without a business result and completes after visual removal.
-  Future<void> dismiss();
 }
 
 /// A handle whose existing logical entry can accept a type-safe new config.

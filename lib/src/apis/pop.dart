@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/popup_manager.dart';
+import '../configs/sheet_types.dart';
 import '../utils/sheet_dimension.dart';
 import '../flow_sheets/flow_sheet.dart';
 import '../widgets/confirm_widget.dart';

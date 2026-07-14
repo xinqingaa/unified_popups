@@ -1,16 +1,23 @@
-part of '../flow_sheet.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
-/// 把 [_FlowEntry] 映射为 Cupertino 风格转场的声明式 [Page]。
+import '../contracts/flow_sheet_entry.dart';
+import '../contracts/flow_sheet_host_delegate.dart';
+import '../contracts/flow_sheet_route_builder.dart';
+import '../lifecycle/flow_sheet_lifecycle_controller.dart';
+import '../pages/flow_sheet_page.dart';
+
+/// 把 [FlowSheetEntry] 映射为 Cupertino 风格转场的声明式 [Page]。
 class _FlowPage extends Page<dynamic> {
   _FlowPage(
     this.entry,
     this.controller, {
     required this.pageBackgroundColor,
     required this.routeBuilder,
-  }) : super(key: ValueKey<_FlowEntry>(entry));
+  }) : super(key: ValueKey<FlowSheetEntry>(entry));
 
-  final _FlowEntry entry;
-  final FlowSheetController controller;
+  final FlowSheetEntry entry;
+  final FlowSheetHostDelegate controller;
   final Color? pageBackgroundColor;
   final FlowSheetRouteBuilder? routeBuilder;
 
@@ -18,8 +25,8 @@ class _FlowPage extends Page<dynamic> {
   Route<dynamic> createRoute(BuildContext context) {
     final child = ColoredBox(
       color: _resolvePageBackgroundColor(context),
-      child: _FlowSheetPageScope(
-        navigator: controller,
+      child: FlowSheetPageScope(
+        navigator: controller.navigator,
         lifecycleController: entry.lifecycleController,
         child: entry.page,
       ),
@@ -59,7 +66,7 @@ class FlowSheetHost extends StatefulWidget {
     this.routeBuilder,
   });
 
-  final FlowSheetController controller;
+  final FlowSheetHostDelegate controller;
   final FlowSheetPage initialPage;
   final Color? pageBackgroundColor;
   final FlowSheetRouteBuilder? routeBuilder;
@@ -77,10 +84,10 @@ class _FlowSheetHostState extends State<FlowSheetHost> {
   @override
   void initState() {
     super.initState();
-    _controllerUsable = !widget.controller._disposed;
+    _controllerUsable = !widget.controller.isDisposed;
     if (!_controllerUsable) return;
-    widget.controller._attachHost(this);
-    widget.controller._ensureInitial(widget.initialPage);
+    widget.controller.attachHost(this);
+    widget.controller.ensureInitial(widget.initialPage);
     widget.controller.addListener(_onControllerChanged);
   }
 
@@ -92,40 +99,42 @@ class _FlowSheetHostState extends State<FlowSheetHost> {
   void dispose() {
     if (_controllerUsable) {
       widget.controller.removeListener(_onControllerChanged);
-      widget.controller._detachHost(this);
+      widget.controller.detachHost(this);
     }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_controllerUsable || widget.controller._disposed) {
+    if (!_controllerUsable || widget.controller.isDisposed) {
       return _wrapPopScope(const SizedBox.shrink());
     }
-    final entries = widget.controller._stack;
+    final entries = widget.controller.entries;
     if (entries.isEmpty) {
       return _wrapPopScope(const SizedBox.shrink());
     }
 
     return _wrapPopScope(
       ClipRect(
-        child: Navigator(
-          key: widget.controller._navigatorKey,
-          pages: [
-            for (final entry in entries)
-              _FlowPage(
-                entry,
-                widget.controller,
-                pageBackgroundColor: widget.pageBackgroundColor,
-                routeBuilder: widget.routeBuilder,
-              ),
-          ],
-          onDidRemovePage: (page) {
-            if (page is _FlowPage) {
-              widget.controller._handleRemoved(page.entry);
-            }
-            if (mounted) setState(() {});
-          },
+        child: HeroControllerScope.none(
+          child: Navigator(
+            key: widget.controller.navigatorKey,
+            pages: [
+              for (final entry in entries)
+                _FlowPage(
+                  entry,
+                  widget.controller,
+                  pageBackgroundColor: widget.pageBackgroundColor,
+                  routeBuilder: widget.routeBuilder,
+                ),
+            ],
+            onDidRemovePage: (page) {
+              if (page is _FlowPage) {
+                widget.controller.handlePageRemoved(page.entry);
+              }
+              if (mounted) setState(() {});
+            },
+          ),
         ),
       ),
     );

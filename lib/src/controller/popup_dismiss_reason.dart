@@ -5,6 +5,7 @@ enum PopupDismissReason {
   timeout,
   externalEvent,
   barrier,
+  drag,
   back,
   routeChanged,
   replaced,

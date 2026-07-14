@@ -207,7 +207,13 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     }
     switch (widget.entry.state) {
       case PopupEntryState.entering:
-        _controller.forward(from: initial ? 0 : null).whenCompleteOrCancel(() {
+        _controller
+            .animateTo(
+          1,
+          duration: _visual.animationConfig.duration,
+          curve: _visual.animationConfig.curve,
+        )
+            .whenCompleteOrCancel(() {
           if (mounted) {
             widget.runtime.controller.markPresented(widget.entry.id);
           }
@@ -216,7 +222,14 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
         _controller.value = 1;
       case PopupEntryState.dismissRequested:
       case PopupEntryState.exiting:
-        _controller.reverse().whenCompleteOrCancel(() {
+        _controller
+            .animateBack(
+          0,
+          duration: _visual.animationConfig.reverseDuration ??
+              _visual.animationConfig.duration,
+          curve: _visual.animationConfig.reverseCurve,
+        )
+            .whenCompleteOrCancel(() {
           if (mounted) {
             widget.runtime.controller.markDisposed(widget.entry.id);
           }
@@ -245,15 +258,19 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
   @override
   Widget build(BuildContext context) {
     final animationConfig = _visual.animationConfig;
-    final animation = CurvedAnimation(
-      parent: _controller,
-      curve: animationConfig.curve,
-      reverseCurve: animationConfig.reverseCurve,
-    );
+    final animation = _controller;
     Widget content = widget.renderer.build(
       context,
       widget.runtime,
       widget.entry,
+      _EntryMotionController(
+        controller: _controller,
+        animationConfig: animationConfig,
+        onDismiss: (reason) => widget.runtime.controller.dismissEntry(
+          widget.entry.id,
+          reason: reason,
+        ),
+      ),
     );
     final entryFocus = _entryFocus;
     if (entryFocus != null) {
@@ -267,18 +284,24 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
       fit: StackFit.expand,
       children: <Widget>[
         if (barrier.visible)
-          FadeTransition(
-            opacity: animation,
-            child: ModalBarrier(
-              color: barrier.color,
-              dismissible: barrier.dismissible,
-              semanticsLabel: barrier.semanticsLabel,
-              onDismiss: barrier.dismissible
-                  ? () => widget.runtime.controller.dismissEntry(
-                        widget.entry.id,
-                        reason: PopupDismissReason.barrier,
-                      )
-                  : null,
+          Positioned.fill(
+            left: barrier.insets.left,
+            top: barrier.insets.top,
+            right: barrier.insets.right,
+            bottom: barrier.insets.bottom,
+            child: FadeTransition(
+              opacity: animation,
+              child: ModalBarrier(
+                color: barrier.color,
+                dismissible: barrier.dismissible,
+                semanticsLabel: barrier.semanticsLabel,
+                onDismiss: barrier.dismissible
+                    ? () => widget.runtime.controller.dismissEntry(
+                          widget.entry.id,
+                          reason: PopupDismissReason.barrier,
+                        )
+                    : null,
+              ),
             ),
           ),
         Align(alignment: _alignment(_visual.position), child: content),
@@ -303,33 +326,67 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
         ),
       PopupAnimationType.slideDown => SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0, -0.15),
+            begin: Offset(0, -_visual.animationConfig.slideOffset),
             end: Offset.zero,
           ).animate(animation),
           child: child,
         ),
       PopupAnimationType.slideUp => SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0, 0.15),
+            begin: Offset(0, _visual.animationConfig.slideOffset),
             end: Offset.zero,
           ).animate(animation),
           child: child,
         ),
       PopupAnimationType.slideLeft => SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(-0.15, 0),
+            begin: Offset(-_visual.animationConfig.slideOffset, 0),
             end: Offset.zero,
           ).animate(animation),
           child: child,
         ),
       PopupAnimationType.slideRight => SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0.15, 0),
+            begin: Offset(_visual.animationConfig.slideOffset, 0),
             end: Offset.zero,
           ).animate(animation),
           child: child,
         ),
     };
+  }
+}
+
+final class _EntryMotionController implements PopupMotionController {
+  const _EntryMotionController({
+    required AnimationController controller,
+    required PopupAnimationConfig animationConfig,
+    required void Function(PopupDismissReason reason) onDismiss,
+  })  : _controller = controller,
+        _animationConfig = animationConfig,
+        _onDismiss = onDismiss;
+
+  final AnimationController _controller;
+  final PopupAnimationConfig _animationConfig;
+  final void Function(PopupDismissReason reason) _onDismiss;
+
+  @override
+  double get value => _controller.value;
+
+  @override
+  set value(double value) => _controller.value = value.clamp(0.0, 1.0);
+
+  @override
+  Future<void> animateToVisible() async {
+    await _controller.animateTo(
+      1,
+      duration: _animationConfig.duration,
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void dismiss({PopupDismissReason reason = PopupDismissReason.manual}) {
+    _onDismiss(reason);
   }
 }
 

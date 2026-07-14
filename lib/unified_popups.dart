@@ -11,10 +11,10 @@ export 'src/core/popup_manager.dart'
         PopupPosition,
         PopupAnimation,
         PopupType,
-        SheetDirection,
-        SheetDragDismissMode,
         ToastType,
         ConfirmButtonLayout;
+
+export 'src/configs/sheet_types.dart';
 
 // 工具函数
 export 'src/utils/sheet_dimension.dart';

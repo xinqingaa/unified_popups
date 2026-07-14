@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../core/popup_manager.dart';
+import '../configs/sheet_types.dart';
 
 class SheetWidget extends StatefulWidget {
   final String? title;

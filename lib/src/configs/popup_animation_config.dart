@@ -17,6 +17,7 @@ final class PopupAnimationConfig {
     this.reverseDuration,
     this.curve = Curves.easeOutCubic,
     this.reverseCurve = Curves.easeInCubic,
+    this.slideOffset = 0.15,
   });
 
   final PopupAnimationType type;
@@ -24,4 +25,5 @@ final class PopupAnimationConfig {
   final Duration? reverseDuration;
   final Curve curve;
   final Curve reverseCurve;
+  final double slideOffset;
 }

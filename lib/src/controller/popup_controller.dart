@@ -406,6 +406,15 @@ class PopupController extends ChangeNotifier {
     return typed.dismissed;
   }
 
+  /// Returns the stable typed handle used by a renderer-owned builder.
+  PopupHandle<T>? handleFor<T>(String id) {
+    final entry = _find(id);
+    if (entry == null || entry.resultType != T) return null;
+    return (entry as _PopupRecord<T, dynamic>).handle;
+  }
+
+  PopupHandleBase? handleForEntry(String id) => _find(id)?.handle;
+
   Future<int> dismissChannel(PopupChannel channel) async {
     final matches = _entries.reversed
         .where((entry) => entry.channel == channel && entry.isActive)

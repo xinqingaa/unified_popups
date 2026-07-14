@@ -1,4 +1,8 @@
-part of '../flow_sheet.dart';
+import 'package:flutter/widgets.dart';
+
+import '../../configs/sheet_types.dart';
+import '../contracts/flow_sheet_navigator.dart';
+import '../lifecycle/flow_sheet_lifecycle_controller.dart';
 
 /// FlowSheet 中的一个页面。
 ///
@@ -37,8 +41,8 @@ abstract class FlowSheetPage<T> extends StatefulWidget {
 /// - 页面从栈移除：onHide（若当前可见）-> onRemove
 /// - 整个 sheet 关闭：onHide（若当前可见）-> onClose
 abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
-    extends State<W> implements _FlowSheetLifecycleObserver {
-  _FlowSheetPageLifecycleController? _lifecycleController;
+    extends State<W> implements FlowSheetLifecycleObserver {
+  FlowSheetPageLifecycleController? _lifecycleController;
   FlowSheetNavigator? _navigator;
   bool _loaded = false;
   bool _visible = false;
@@ -76,7 +80,7 @@ abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final scope = _FlowSheetPageScope.maybeOf(context);
+    final scope = FlowSheetPageScope.maybeOf(context);
     _navigator = scope?.navigator;
     final nextController = scope?.lifecycleController;
     if (identical(_lifecycleController, nextController)) return;

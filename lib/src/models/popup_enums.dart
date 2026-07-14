@@ -39,21 +39,6 @@ enum PopupAnimation {
   slideRight,
 }
 
-/// sheet 弹出方向
-enum SheetDirection { top, bottom, left, right }
-
-/// Sheet 下拉/侧滑关闭策略。
-enum SheetDragDismissMode {
-  /// 非滚动主体：整块内容均可拖动关闭。
-  fullBody,
-
-  /// 滚动内容滚到顶后继续下拉可关闭（适用于 SingleChildScrollView 等）。
-  contentWhenAtTop,
-
-  /// 仅 drag handle / 标题栏可拖动关闭（适用于 SmartRefresher 等下拉刷新页）。
-  handleOnly,
-}
-
 /// toast 等级
 enum ToastType { success, warn, error, none }
 

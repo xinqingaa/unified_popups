@@ -1,21 +1,12 @@
-part of '../flow_sheet.dart';
+import 'package:flutter/widgets.dart';
 
-class _FlowEntry {
-  _FlowEntry(this.page);
-
-  final FlowSheetPage page;
-  final _FlowSheetPageLifecycleController lifecycleController =
-      _FlowSheetPageLifecycleController();
-  final Completer<dynamic> completer = Completer<dynamic>();
-
-  /// 由 [FlowSheetController.pop] 暂存，待路由真正移除时回传给 [completer]。
-  dynamic pendingResult;
-  bool _disposed = false;
-
-  void completeIfPending([dynamic result]) {
-    if (!completer.isCompleted) completer.complete(result);
-  }
-}
+import '../../configs/sheet_types.dart';
+import '../../controller/popup_handle.dart';
+import '../contracts/flow_sheet_entry.dart';
+import '../contracts/flow_sheet_host_delegate.dart';
+import '../contracts/flow_sheet_navigator.dart';
+import '../lifecycle/flow_sheet_lifecycle_controller.dart';
+import '../pages/flow_sheet_page.dart';
 
 /// FlowSheet 控制器：维护内部页面栈、结果回传与生命周期。
 ///
@@ -33,13 +24,15 @@ class _FlowEntry {
 ///
 /// [R] 为整个 sheet（[closeAll]）的最终结果类型。
 class FlowSheetController<R> extends ChangeNotifier
-    implements FlowSheetNavigator {
-  final List<_FlowEntry> _stack = <_FlowEntry>[];
+    implements FlowSheetNavigator, FlowSheetHostDelegate {
+  final List<FlowSheetEntry> _stack = <FlowSheetEntry>[];
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   final ValueNotifier<SheetDragDismissMode> dragDismissModeNotifier =
       ValueNotifier<SheetDragDismissMode>(SheetDragDismissMode.fullBody);
 
   void Function([R? result])? _dismiss;
+  PopupHandle<R>? _popupHandle;
+  bool _sessionClaimed = false;
   SheetDragDismissMode _defaultDragDismissMode = SheetDragDismissMode.fullBody;
 
   /// 业务是否已关闭（pending Future 已完成、onClose 已触发）。
@@ -48,6 +41,18 @@ class FlowSheetController<R> extends ChangeNotifier
 
   /// 对象是否已销毁。只管 notifier 释放，不参与任何业务判断。
   bool _disposed = false;
+
+  @override
+  bool get isDisposed => _disposed;
+
+  @override
+  List<FlowSheetEntry> get entries => List<FlowSheetEntry>.unmodifiable(_stack);
+
+  @override
+  GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
+
+  @override
+  FlowSheetNavigator get navigator => this;
 
   /// 底层 Pop.sheet 的 Future 是否已完成（dismiss 已发生，退场动画可能还在播）。
   bool _sheetDismissed = false;
@@ -59,11 +64,37 @@ class FlowSheetController<R> extends ChangeNotifier
 
   /// 由 [FlowSheetHost] 注入底层 sheet 的 dismiss 回调。
   void attachDismiss(void Function([R? result]) dismiss) {
+    if (!_sessionClaimed) _sessionClaimed = true;
     _dismiss = dismiss;
   }
 
+  void claimPopupSession() {
+    if (_sessionClaimed || _disposed || _closed) {
+      throw StateError('FlowSheetController is a one-shot session.');
+    }
+    _sessionClaimed = true;
+  }
+
+  /// Transfers this one-shot session to the unified outer popup handle.
+  void attachPopupHandle(PopupHandle<R> handle) {
+    if (_disposed || _closed) {
+      throw StateError('A closed FlowSheetController cannot be attached.');
+    }
+    if (_popupHandle != null && !identical(_popupHandle, handle)) {
+      throw StateError('FlowSheetController is a one-shot session.');
+    }
+    _sessionClaimed = true;
+    _popupHandle = handle;
+    handle.outcome.then((_) => _closeBusiness());
+    handle.dismissed.then((_) {
+      _sheetDismissed = true;
+      _maybeDispose();
+    });
+  }
+
   /// 由 [FlowSheetHost] 的 initState 调用。
-  void _attachHost(Object host) {
+  @override
+  void attachHost(Object host) {
     _host = host;
     _hostAttached = true;
     _hostDetached = false;
@@ -73,7 +104,8 @@ class FlowSheetController<R> extends ChangeNotifier
   ///
   /// 用身份判断过滤「宿主重挂载」场景下旧 State 的迟到 detach，
   /// 避免新宿主还活着时就销毁 controller。
-  void _detachHost(Object host) {
+  @override
+  void detachHost(Object host) {
     if (!identical(_host, host)) return;
     _host = null;
     _hostDetached = true;
@@ -98,7 +130,7 @@ class FlowSheetController<R> extends ChangeNotifier
     _isHandlingBack = false;
     for (final entry in _stack.reversed) {
       entry.completeIfPending();
-      _disposeEntry(entry, _FlowSheetLifecycleEndReason.close);
+      _disposeEntry(entry, FlowSheetLifecycleEndReason.close);
     }
     _syncDragDismissMode();
   }
@@ -117,10 +149,11 @@ class FlowSheetController<R> extends ChangeNotifier
   }
 
   /// 由 [FlowSheetHost] 在首帧注入初始页面。
-  void _ensureInitial(FlowSheetPage page) {
+  @override
+  void ensureInitial(FlowSheetPage page) {
     if (_closed || _disposed) return;
     if (_stack.isNotEmpty) return;
-    final entry = _FlowEntry(page);
+    final entry = FlowSheetEntry(page);
     _stack.add(entry);
     _syncDragDismissMode();
     _scheduleShow(entry);
@@ -133,7 +166,7 @@ class FlowSheetController<R> extends ChangeNotifier
   Future<T?> push<T>(FlowSheetPage<T> page) {
     if (_closed) return Future<T?>.value();
     final previousTop = _stack.isNotEmpty ? _stack.last : null;
-    final entry = _FlowEntry(page);
+    final entry = FlowSheetEntry(page);
     previousTop?.lifecycleController.hide();
     _stack.add(entry);
     _syncDragDismissMode();
@@ -147,12 +180,12 @@ class FlowSheetController<R> extends ChangeNotifier
     if (_closed) return Future<T?>.value();
     if (_stack.isEmpty) return push<T>(page);
     final removed = _stack.removeLast();
-    final entry = _FlowEntry(page);
+    final entry = FlowSheetEntry(page);
     _stack.add(entry);
     _syncDragDismissMode();
     notifyListeners();
     removed.completeIfPending();
-    _disposeEntry(removed, _FlowSheetLifecycleEndReason.remove);
+    _disposeEntry(removed, FlowSheetLifecycleEndReason.remove);
     _scheduleShow(entry);
     return entry.completer.future.then((value) => value as T?);
   }
@@ -166,7 +199,6 @@ class FlowSheetController<R> extends ChangeNotifier
     entry.pendingResult = result;
     // 结果回传不依赖 Navigator 动画回调：程序化 pop 立即完成业务 Future，
     // onDidRemovePage 只负责栈簿记与生命周期（completeIfPending 幂等）。
-    debugPrint('[FlowSheet] pop page=${entry.page.id} result=$result');
     entry.completeIfPending(result);
     final nav = _navigatorKey.currentState;
     if (nav != null && nav.canPop()) {
@@ -174,7 +206,7 @@ class FlowSheetController<R> extends ChangeNotifier
       nav.pop();
     } else {
       // Navigator 尚不可用时直接收口。
-      _handleRemoved(entry);
+      handlePageRemoved(entry);
       notifyListeners();
     }
   }
@@ -184,9 +216,6 @@ class FlowSheetController<R> extends ChangeNotifier
     if (_closed) return;
     if (_stack.isEmpty) return;
     final entry = _stack.last;
-    debugPrint(
-      '[FlowSheet] completeCurrent page=${entry.page.id} result=$result',
-    );
     entry.pendingResult = result;
     entry.completeIfPending(result);
   }
@@ -195,6 +224,7 @@ class FlowSheetController<R> extends ChangeNotifier
   ///
   /// FlowSheet 承载在 overlay sheet 中，外层页面也可能通过 PopupManager
   /// 拦截返回；这里提供一个幂等入口，确保多页时优先退内部页面。
+  @override
   bool handleBack([Object? result]) {
     if (_closed) return true;
     if (_isHandlingBack) return true;
@@ -210,17 +240,22 @@ class FlowSheetController<R> extends ChangeNotifier
   @override
   void closeAll([Object? result]) {
     if (_closed) return;
-    debugPrint('[FlowSheet] closeAll result=$result');
     _closeBusiness();
-    _dismiss?.call(result as R?);
+    final popupHandle = _popupHandle;
+    if (popupHandle != null) {
+      popupHandle.complete(result as R?);
+    } else {
+      _dismiss?.call(result as R?);
+    }
   }
 
   /// 路由真正从栈移除时调用（程序化 pop / 系统返回 / iOS 侧滑均收口于此）。
-  void _handleRemoved(_FlowEntry entry) {
+  @override
+  void handlePageRemoved(FlowSheetEntry entry) {
     if (_closed) return;
     if (!_stack.remove(entry)) return;
     entry.completeIfPending(entry.pendingResult);
-    _disposeEntry(entry, _FlowSheetLifecycleEndReason.remove);
+    _disposeEntry(entry, FlowSheetLifecycleEndReason.remove);
     if (_stack.isNotEmpty) _scheduleShow(_stack.last);
     _syncDragDismissMode();
     _isHandlingBack = false;
@@ -236,10 +271,10 @@ class FlowSheetController<R> extends ChangeNotifier
     }
   }
 
-  void _scheduleShow(_FlowEntry entry) {
+  void _scheduleShow(FlowSheetEntry entry) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_closed ||
-          entry._disposed ||
+          entry.disposed ||
           _stack.isEmpty ||
           !identical(_stack.last, entry)) {
         return;
@@ -249,11 +284,11 @@ class FlowSheetController<R> extends ChangeNotifier
   }
 
   void _disposeEntry(
-    _FlowEntry entry,
-    _FlowSheetLifecycleEndReason reason,
+    FlowSheetEntry entry,
+    FlowSheetLifecycleEndReason reason,
   ) {
-    if (entry._disposed) return;
-    entry._disposed = true;
+    if (entry.disposed) return;
+    entry.disposed = true;
     entry.lifecycleController.disposeLifecycle(reason);
   }
 

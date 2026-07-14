@@ -4,13 +4,27 @@ import '../configs/confirm_config.dart';
 import '../configs/date_config.dart';
 import '../configs/loading_config.dart';
 import '../configs/popup_visual_config.dart';
+import '../configs/sheet_config.dart';
 import '../configs/toast_config.dart';
 import '../controller/popup_entry_snapshot.dart';
+import '../controller/popup_dismiss_reason.dart';
 import '../runtime/popup_runtime.dart';
 import 'confirm_renderer.dart';
 import 'date_renderer.dart';
 import 'loading_renderer.dart';
+import 'sheet_renderer.dart';
 import 'toast_renderer.dart';
+
+/// Interactive access to the same normalized progress used for entry/exit.
+abstract interface class PopupMotionController {
+  double get value;
+
+  set value(double value);
+
+  Future<void> animateToVisible();
+
+  void dismiss({PopupDismissReason reason});
+}
 
 /// Renders one config family without coupling [PopupScene] to every type.
 abstract interface class PopupRendererDelegate {
@@ -22,6 +36,7 @@ abstract interface class PopupRendererDelegate {
     BuildContext context,
     PopupRuntime runtime,
     PopupEntrySnapshot entry,
+    PopupMotionController motion,
   );
 }
 
@@ -36,6 +51,7 @@ final class PopupRendererRegistry {
           LoadingPopupRendererDelegate(),
           ConfirmPopupRendererDelegate(),
           DatePopupRendererDelegate(),
+          SheetPopupRendererDelegate(),
         ],
       );
 
@@ -70,6 +86,7 @@ final class ToastPopupRendererDelegate implements PopupRendererDelegate {
     BuildContext context,
     PopupRuntime runtime,
     PopupEntrySnapshot entry,
+    PopupMotionController motion,
   ) {
     return ToastRenderer(config: entry.config! as ToastConfig);
   }
@@ -89,6 +106,7 @@ final class LoadingPopupRendererDelegate implements PopupRendererDelegate {
     BuildContext context,
     PopupRuntime runtime,
     PopupEntrySnapshot entry,
+    PopupMotionController motion,
   ) {
     return LoadingRenderer(config: entry.config! as LoadingConfig);
   }
@@ -108,6 +126,7 @@ final class ConfirmPopupRendererDelegate implements PopupRendererDelegate {
     BuildContext context,
     PopupRuntime runtime,
     PopupEntrySnapshot entry,
+    PopupMotionController motion,
   ) {
     return ConfirmRenderer(
       runtime: runtime,
@@ -131,11 +150,38 @@ final class DatePopupRendererDelegate implements PopupRendererDelegate {
     BuildContext context,
     PopupRuntime runtime,
     PopupEntrySnapshot entry,
+    PopupMotionController motion,
   ) {
     return DateRenderer(
       runtime: runtime,
       entryId: entry.id,
       config: entry.config! as DateConfig,
+    );
+  }
+}
+
+final class SheetPopupRendererDelegate implements PopupRendererDelegate {
+  const SheetPopupRendererDelegate();
+
+  @override
+  bool supports(Object config) => config is SheetConfigBase;
+
+  @override
+  PopupVisualConfig visualConfig(Object config) => config as SheetConfigBase;
+
+  @override
+  Widget build(
+    BuildContext context,
+    PopupRuntime runtime,
+    PopupEntrySnapshot entry,
+    PopupMotionController motion,
+  ) {
+    final handle = runtime.controller.handleForEntry(entry.id);
+    if (handle == null) return const SizedBox.shrink();
+    return SheetRenderer(
+      config: entry.config! as SheetConfigBase,
+      handle: handle,
+      motion: motion,
     );
   }
 }

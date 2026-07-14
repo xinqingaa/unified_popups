@@ -1,4 +1,4 @@
-part of '../flow_sheet.dart';
+import '../pages/flow_sheet_page.dart';
 
 /// FlowSheet 内部页面栈的导航接口。
 ///
