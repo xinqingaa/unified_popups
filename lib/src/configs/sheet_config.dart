@@ -57,7 +57,7 @@ final class SheetStyle {
     this.backgroundColor,
     this.borderRadius,
     this.boxShadow,
-    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    this.padding = const EdgeInsets.fromLTRB(16, 0, 16, 10),
     this.imagePath,
     this.imageSize = 60,
     this.imageOffset = const Offset(16, -40),

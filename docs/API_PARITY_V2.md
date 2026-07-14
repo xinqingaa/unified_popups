@@ -1,4 +1,4 @@
-# unified_popups v1 → v2 API parity
+# unified_popups v1 → v2 API 能力对照
 
 本文档冻结 v1 公开能力在 v2 中的去向。状态含义：
 
@@ -30,16 +30,16 @@ MaterialApp(
 | v1 | v2 | 状态 | 说明 |
 | --- | --- | --- | --- |
 | `PopupConfig.type` 驱动行为 | `PopupChannel` + 显式 Policy | 替换 | Channel 只用于查询，不驱动返回/路由。 |
-| `animation` / `animationDuration` / `animationCurve` | `PopupAnimationConfig` | 迁移 | 便捷 API 继续透传常用参数。 |
+| `animation` / `animationDuration` / `animationCurve` | `PopupAnimationConfig` | 迁移 | 通过各类型高级 Config 配置。 |
 | `showBarrier` / `barrierDismissible` / `barrierColor` | `PopupBarrierConfig` | 迁移 | 支持局部 Barrier insets。 |
-| `useSafeArea` | 类型 Config | 迁移 | Sheet/Confirm/Menu 分别定义。 |
+| `useSafeArea` | `SheetConfig` / `FlowSheetConfig` | 迁移 | 便捷 Sheet 继续提供。 |
 | `duration` | `PopupLifetime` | 替换 | 支持 manual/after/until/anyOf。 |
 | `onShow` | `onPresented` | 替换 | 进入动画完成触发。 |
 | `onDismiss` | `onOutcome` + `onDismissed` | 替换 | 区分业务关闭与视觉移除。 |
 | `onBackPressed` | `PopupBackPolicy.delegate` | 替换 | 由 Host 统一分发。 |
 | `dismissOnRouteChange` | `PopupRoutePolicy` | 替换 | 支持 owner route token。 |
-| `dockToEdge` / `edgeGap` | Sheet/Custom Config + Barrier insets | 迁移 | 保留点击透传能力。 |
-| `clipDuringAnimation` | 类型 Animation/Render Config | 迁移 | Menu/Custom 显式配置。 |
+| `dockToEdge` / `edgeGap` | `SheetDockConfig` + Barrier insets | 迁移 | 保留边缘区域交互能力。 |
+| `clipDuringAnimation` | Renderer 内部负责 | 移除公开参数 | 不再让调用方控制内部裁剪实现。 |
 
 ## Toast
 
@@ -77,7 +77,7 @@ MaterialApp(
 | v1 参数/行为 | v2 | 状态 |
 | --- | --- | --- |
 | title/content String 或 Widget | `ConfirmConfig` | 保留 |
-| confirm/cancel String 或 Widget | `ConfirmButtonConfig` | 迁移 |
+| confirm/cancel String 或 Widget | `ConfirmConfig` 对应字段 | 迁移 |
 | `onConfirm` / `onCancel` | 保留并冻结按钮专属语义 | 保留 |
 | `showCloseButton` | `ConfirmConfig.showCloseButton` | 保留 |
 | image、文字、按钮布局和样式 | `ConfirmStyle` | 迁移 |
@@ -119,7 +119,7 @@ MaterialApp(
 | v1 参数/行为 | v2 | 状态 |
 | --- | --- | --- |
 | `GlobalKey anchorKey` | `PopupAnchorController` + `PopupAnchor` | 替换 |
-| `anchorOffset` | `MenuAnchorConfig.offset` | 保留 |
+| `anchorOffset` | `MenuConfig.offset` | 保留 |
 | builder/dismiss/result | 保留 | 保留 |
 | barrier、padding、constraints、decoration | `MenuConfig` / `PopupMenuStyle` | 迁移 |
 | animation 参数 | `PopupAnimationConfig` | 迁移 |
@@ -166,7 +166,7 @@ MaterialApp(
 
 v2 最低版本冻结为 Flutter `3.24.0`、Dart `3.5.0`。原因是正式返回桥使用 `PopEntry.onPopInvokedWithResult` 的稳定 API 形态；Flutter `3.16` 中的 `PopEntry` 接口仍不兼容当前实现。
 
-完成旧 performance 基线迁移后，CI 矩阵将覆盖：
+性能基线迁移后，持续集成矩阵应覆盖：
 
 - Flutter `3.24.0`。
 - 当前 Flutter stable。

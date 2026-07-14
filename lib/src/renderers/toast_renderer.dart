@@ -72,13 +72,16 @@ class _ToastRendererState extends State<ToastRenderer> {
           borderRadius: BorderRadius.circular(12),
         );
 
-    return GestureDetector(
-      onTap: config.onTap != null || config.toggle != null ? _tap : null,
-      child: Container(
-        margin: style.margin,
-        padding: style.padding,
-        decoration: decoration,
-        child: body,
+    return Material(
+      type: MaterialType.transparency,
+      child: GestureDetector(
+        onTap: config.onTap != null || config.toggle != null ? _tap : null,
+        child: Container(
+          margin: style.margin,
+          padding: style.padding,
+          decoration: decoration,
+          child: body,
+        ),
       ),
     );
   }

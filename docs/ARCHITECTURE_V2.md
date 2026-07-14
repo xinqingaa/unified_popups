@@ -1,70 +1,79 @@
-# v2 Architecture
+# v2 架构说明
 
 ```text
-business / service / flow
+业务页面 / 服务层 / 流程层
           │
           ▼
-     global Pop facade
+      全局 Pop 门面
           │
           ▼
- PopupRuntime ── route observer / host ownership
+ PopupRuntime ── 路由观察 / Host 所有权
           │
           ▼
- PopupController ── entries / policies / handles / outcomes
-          │ snapshots
+ PopupController ── Entry / 策略 / Handle / Outcome
+          │ 状态快照
           ▼
- one PopupHost + PopupScene
+ 单一 PopupHost + PopupScene
           │
-          ├─ Toast / Loading renderer
-          ├─ Confirm / Date renderer
-          ├─ Sheet / FlowSheet renderer
-          ├─ Menu renderer
-          └─ Custom renderer
+          ├─ Toast / Loading 渲染器
+          ├─ Confirm / Date 渲染器
+          ├─ Sheet / FlowSheet 渲染器
+          ├─ Menu 渲染器
+          └─ Custom 渲染器
 ```
 
-## Responsibilities
+## 各层职责
 
-- `Pop` is the only recommended business entry. It owns the default replaceable
-  Runtime and exposes convenience, typed Config, and global management APIs.
-- `PopupRuntime` owns one Controller, one stable route observer, and one Host
-  binding. It has no Navigator key or BuildContext dependency.
-- `PopupController` is the UI-independent state machine. It resolves conflicts,
-  route/back/ownership policies, lifetime races, queueing, outcome, and cleanup.
-- `PopupHost` declaratively renders Controller snapshots above a stable app
-  child. Popup changes do not rebuild the Navigator/application subtree.
-- Renderers own type-specific UI and interaction. Channel is only a query
-  category and never selects behavior implicitly.
+- `Pop` 是业务唯一推荐入口。它持有默认 Runtime，并提供便捷 API、类型化
+  Config API 和全局管理 API。
+- `PopupRuntime` 持有一个 Controller、一个稳定路由观察者和一个 Host 绑定；
+  不依赖 Navigator key 或业务 `BuildContext`。
+- `PopupController` 是与 UI 无关的状态机，处理冲突策略、路由、返回键、父子
+  归属、自动关闭竞争、Toast 排队、Outcome 和资源收口。
+- `PopupHost` 根据 Controller 快照声明式渲染弹窗，应用 child 保持稳定。
+- 各 Renderer 只处理对应类型的布局和交互。Channel 只用于查询，不隐式决定行为。
 
-## Lifecycle
+## 生命周期
 
 ```text
-open → pendingHost/queued → entering → visible
-                                  │
-complete/dismiss/policy/event ─────┘
-          ↓
-outcome fixed → exiting → renderer removed → dismissed
+open → pendingHost / queued → entering → visible
+                                      │
+complete / dismiss / 策略 / 外部事件 ─┘
+                  ↓
+确定 outcome → exiting → 移除 Renderer → dismissed
 ```
 
-Business completion and visual removal are separate. Every close path is
-idempotent and records one `PopupDismissReason`. Lifetime generations prevent an
-old timer/Future from closing a newly updated Loading or Toast.
+业务完成与视觉移除是两个阶段。所有关闭路径都是幂等的，并且只会记录一个
+`PopupDismissReason`。更新 Loading 或 Toast 时递增 lifetime generation，旧的
+Timer 或 Future 即使稍后完成，也不能关闭新配置。
 
-## Stack and navigation
+## 堆叠和导航
 
-All popup types share one ordered entry list, so Confirm/Menu/Toast may appear
-above Sheet or FlowSheet without closing the lower layer. The stable route
-observer registers a `PopEntry` on the active root route. System back is routed
-to the top eligible entry; FlowSheet delegates first to its internal Navigator.
+所有类型共享一个有序 Entry 列表，因此 Confirm、Menu、Toast 可以显示在 Sheet
+或 FlowSheet 上方，而不需要关闭下层弹窗。
 
-Route ownership is captured when a Config requests owner-route behavior.
-`persist`, owner-route dismissal, and any-route dismissal are explicit policies.
+稳定的路由观察者会在当前根 Route 注册 `PopEntry`。系统返回先交给最上层符合
+条件的弹窗；FlowSheet 则先委托给内部 Navigator。路由归属在打开 Config 时
+捕获，跨路由保留、所属路由变化关闭、任意路由变化关闭均为显式策略。
 
-## Performance model
+## 性能模型
 
-- One Host and one private Overlay replace one fullscreen OverlayEntry per popup.
-- The app child remains stable while only the popup scene listens to snapshots.
-- Toasts without a Barrier share positional lanes.
-- Loading update preserves one logical entry and handle.
-- Sheet drag mutates the shared animation progress; heavy content is cached by
-  the renderer rather than rebuilt for each pointer update.
-- Animation controllers follow Widget lifecycle; there is no unsafe object pool.
+- 一个 Host 和一个私有 Overlay，替代每个弹窗一个全屏 OverlayEntry。
+- 应用 child 保持稳定，只有 PopupScene 监听状态快照。
+- 无 Barrier 的 Toast 共享位置 lane。
+- Loading 更新保留同一个逻辑 Entry 和 Handle。
+- Sheet 拖拽直接修改统一动画进度，Renderer 缓存重业务 child，不随每次指针移动
+  重建。
+- AnimationController 跟随 Widget 正常创建和销毁，不使用跨 State 对象池。
+
+## 为什么保留全局 Pop
+
+业务层不需要 `BuildContext` 是本项目的核心约束。Service、状态机、Flow、Timer
+回调等场景无法可靠获得页面 context，如果强制使用 context，会产生跨异步间隙、
+错误 Navigator、失效 Element 等问题。
+
+因此 v2 保留全局 `Pop` 门面，但移除了旧版全局单例承担的 UI、Overlay、动画和
+业务策略。全局层现在只负责定位默认 Runtime；真正状态由可独立构造和测试的
+Controller 管理，渲染由 Host 管理。
+
+这与旧架构的关键差别是：保留全局调用体验，不保留全局巨型对象的职责耦合。

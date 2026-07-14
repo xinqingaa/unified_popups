@@ -1112,7 +1112,7 @@ MaterialApp(
 );
 ```
 
-`Pop.routeObserver` 在单个 Runtime 生命周期内保持稳定实例，MaterialApp rebuild 不会创建或重复绑定 Observer。第一版只将 Root Navigator 作为默认 route scope；嵌套 Navigator 不得把事件混入同一个 current route token，未来如需支持必须通过显式 `scopeId` 扩展。
+`Pop.routeObserver` 在单个 Runtime 生命周期内保持稳定实例，MaterialApp 重建不会创建或重复绑定 Observer。第一版只将根 Navigator 作为默认路由作用域；嵌套 Navigator 不得把事件混入同一个当前 route token，未来如需支持必须通过显式 `scopeId` 扩展。
 
 Entry 创建时记录 owner route。路由 push/pop/replace/remove 后，根据 policy 处理。
 
@@ -1346,7 +1346,7 @@ builder: (context, child) {
 
 第一版保持 Timer 的墙上时间语义：App 进入后台期间 lifetime 继续经过，回到前台时已超时的 Toast 不重新展示；Loading 默认 manual，不受影响。该行为写入 API 文档，不在 v2 首版增加暂停/恢复计时复杂度。
 
-## 24.4 SDK 与 API parity 门槛
+## 24.4 SDK 与 API 对照门槛
 
 阶段 0 必须建立 `docs/API_PARITY_V2.md`，逐项记录每个 v1 参数在 v2 中的保留、替代、删除、默认值变化和回归测试，重点覆盖 toast toggle、自定义 Widget/图片、Loading customIndicator、Sheet dockToEdge/edgeGap/useSafeArea、Confirm 自定义按钮、Menu constraints/decoration、Date 范围与样式、FlowSheet routeBuilder/maintainState。
 
@@ -1584,7 +1584,7 @@ Loading：
 2.0.0
 ```
 
-## 阶段 10：Example 全量迁移
+## 阶段 10：示例全量迁移
 
 Example 初始化：
 
@@ -1740,4 +1740,4 @@ navigatorKey             → 不再用于 Popup
 3. **Menu 的 GlobalKey API 直接替换为 PopupAnchorController，不长期保留旧兼容层。**
 4. **v2 删除 PopupManager，不在包内保留完整 v1 实现；只通过迁移文档协助升级。**
 
-同时采用本计划审查补充的 PopupOutcome、稳定更新 Handle、父子 ownership、阶段 0 返回技术 Spike、queued/exiting 契约和 API parity/SDK 门槛。完成阶段 0 技术验证后再进入正式代码替换。
+同时采用本计划审查补充的 PopupOutcome、稳定更新 Handle、父子 ownership、阶段 0 返回技术验证、queued/exiting 契约和 API 对照/SDK 门槛。当前正式代码替换已经完成，本文保留为架构决策记录。

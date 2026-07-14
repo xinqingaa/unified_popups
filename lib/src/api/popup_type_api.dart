@@ -4,6 +4,7 @@ import '../configs/custom_popup_config.dart';
 import '../configs/flow_sheet_config.dart';
 import '../configs/loading_config.dart';
 import '../configs/menu_config.dart';
+import '../configs/popup_back_policy.dart';
 import '../configs/popup_barrier_config.dart';
 import '../configs/popup_channel.dart';
 import '../configs/popup_position.dart';
@@ -162,6 +163,7 @@ final class PopupTypeApi {
       behavior.channel == PopupChannel.sheet,
       'SheetConfig must use PopupChannel.sheet.',
     );
+    late PopupHandle<T> handle;
     final result = runtime.controller.open<T, SheetConfig<T>>(
       PopupEntryRequest<T, SheetConfig<T>>(
         channel: PopupChannel.sheet,
@@ -170,19 +172,31 @@ final class PopupTypeApi {
         tags: behavior.tags,
         conflictPolicy: behavior.conflictPolicy,
         routePolicy: behavior.routePolicy,
-        backPolicy: behavior.backPolicy,
+        backPolicy: config.onBack == null
+            ? behavior.backPolicy
+            : PopupBackPolicy.delegate,
         ownership: _captureOwnership(config.ownership),
         lifecycle: config.lifecycle,
-        onBack: config.onBack,
+        onBack: config.onBack == null
+            ? null
+            : () async {
+                if (await config.onBack!()) return true;
+                runtime.controller.dismissEntry(
+                  handle.id,
+                  reason: PopupDismissReason.back,
+                );
+                return true;
+              },
       ),
     );
-    return switch (result) {
+    handle = switch (result) {
       PopupOpened<T>(:final handle) => handle,
       PopupUpdated<T>(:final handle) => handle,
       PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
           'SheetConfig was not opened by its conflict policy.',
         ),
     };
+    return handle;
   }
 
   PopupHandle<R> flowSheet<R>(FlowSheetConfig<R> config) {

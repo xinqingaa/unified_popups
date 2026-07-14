@@ -156,6 +156,65 @@ void main() {
     expect(sheet.isActive, isTrue);
     expect(find.text('sheet remains'), findsOneWidget);
   });
+
+  testWidgets('sheet back callback may consume back or allow sheet dismissal',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    var consumeBack = true;
+    final handle = PopupTypeApi(runtime).sheet<void>(
+      SheetConfig<void>(
+        animation: const PopupAnimationConfig(duration: Duration.zero),
+        onBack: () async => consumeBack,
+        builder: (context, handle) => const Text('back-aware sheet'),
+      ),
+    );
+    await tester.pumpWidget(_SheetApp(runtime: runtime));
+    await tester.pump();
+
+    expect(await runtime.controller.handleBack(), isTrue);
+    expect(handle.isActive, isTrue);
+
+    consumeBack = false;
+    expect(await runtime.controller.handleBack(), isTrue);
+    expect((await handle.outcome).reason, PopupDismissReason.back);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets(
+      'bottom sheet SafeArea ignores top inset so drag handle stays near panel top',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    PopupTypeApi(runtime).sheet<void>(
+      SheetConfig<void>(
+        header: const SheetHeaderConfig(title: 'title'),
+        animation: const PopupAnimationConfig(
+          type: PopupAnimationType.slideUp,
+          duration: Duration.zero,
+          slideOffset: 1,
+        ),
+        builder: (context, handle) => const Text('content'),
+      ),
+    );
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(
+          padding: EdgeInsets.only(top: 59, bottom: 34),
+          size: Size(400, 800),
+        ),
+        child: _SheetApp(runtime: runtime),
+      ),
+    );
+    await tester.pump();
+
+    final panelTop =
+        tester.getTopLeft(find.byKey(SheetRendererKeys.panel)).dy;
+    final handleTop =
+        tester.getTopLeft(find.byKey(SheetRendererKeys.dragHandle)).dy;
+    // Handle vertical padding is 6; must not also absorb status-bar top (59).
+    expect(handleTop - panelTop, lessThan(20));
+  });
 }
 
 class _SheetApp extends StatelessWidget {

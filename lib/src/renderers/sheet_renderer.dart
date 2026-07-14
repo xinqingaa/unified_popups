@@ -230,7 +230,17 @@ class _SheetRendererState extends State<SheetRenderer> {
           ),
           child: Material(
             color: Colors.transparent,
-            child: config.resolvedUseSafeArea ? SafeArea(child: body) : body,
+            child: config.resolvedUseSafeArea
+                ? SafeArea(
+                    // Only pad the docked edge. Full SafeArea would apply the
+                    // opposite inset (e.g. status-bar top on a bottom sheet).
+                    top: config.direction == SheetDirection.top,
+                    bottom: config.direction == SheetDirection.bottom,
+                    left: config.direction == SheetDirection.left,
+                    right: config.direction == SheetDirection.right,
+                    child: body,
+                  )
+                : body,
           ),
         ),
       ),
@@ -299,7 +309,7 @@ class _SheetRendererState extends State<SheetRenderer> {
         Theme.of(context).bottomSheetTheme.dragHandleColor ??
         Theme.of(context).colorScheme.onSurfaceVariant;
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Center(
         child: SizedBox(
           key: SheetRendererKeys.dragHandle,

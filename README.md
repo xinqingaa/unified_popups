@@ -229,5 +229,5 @@ final count = Pop.countChannel(PopupChannel.toast);
 
 不要创建多个全局 Host。测试需要隔离状态时可直接构造独立的 `PopupRuntime`。
 
-更多内容见 [API_REFERENCE](docs/API_REFERENCE.md)、
-[BEST_PRACTICES](docs/BEST_PRACTICES.md) 和可运行的 [example](example/lib/main.dart)。
+更多内容见 [API 参数参考](docs/API_REFERENCE.md)、
+[最佳实践](docs/BEST_PRACTICES.md) 和可运行的 [示例](example/lib/main.dart)。

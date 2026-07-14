@@ -87,14 +87,19 @@ class _LoadingRendererState extends State<LoadingRenderer>
       child: content,
     );
 
-    if (message == null) return box;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth.isFinite
-            ? (constraints.maxWidth * 0.32).clamp(80.0, 160.0)
-            : 160.0;
-        return SizedBox.square(dimension: width, child: box);
-      },
+    final child = message == null
+        ? box
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth.isFinite
+                  ? (constraints.maxWidth * 0.32).clamp(80.0, 160.0)
+                  : 160.0;
+              return SizedBox.square(dimension: width, child: box);
+            },
+          );
+    return Material(
+      type: MaterialType.transparency,
+      child: child,
     );
   }
 }
