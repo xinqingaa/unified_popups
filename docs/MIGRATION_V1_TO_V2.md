@@ -59,7 +59,8 @@ await handle.dismissed;
 
 将 `GlobalKey anchorKey` 替换为稳定的 `PopupAnchorController`，用
 `PopupAnchor` 包裹触发 Widget，并把 `anchor:` 传给 `Pop.menu`。删除坐标轮询、
-RenderBox 重试和手动滚动位置更新。
+RenderBox 重试和手动滚动位置更新。v2 Menu **默认无遮罩**，打开后可继续滚动以验证
+跟随；需要点外部关闭时传 `showBarrier: true`。
 
 ## 5. Loading 和 Toast 迁移
 
@@ -82,12 +83,12 @@ RenderBox 重试和手动滚动位置更新。
 
 ## 7. 建议验收顺序
 
-1. 启动 Example，检查四个业务 Tab 和 Lab。
-2. 分别验证一个弹窗，以及 Sheet → Confirm 堆叠时的系统返回顺序。
-3. 在所属路由弹窗可见时执行 push、replace、remove。
-4. 打开 Menu 后滚动 Anchor，并在 Menu 打开时移除 Anchor。
-5. 验证 Loading 重复更新、重新计时和外部 Future 关闭。
-6. 验证 Toast/Loading 文本样式、Sheet 指示器间距和键盘避让。
+1. 启动 Example：首页选 FitPulse 或 API 展柜。
+2. API 展柜从「通用 Config」看两层 API，再按目录逐页点一遍。
+3. 重点手测：Toast 连点排队、Loading 长文/双位置、Confirm 按钮 vs 遮罩结果、
+   Sheet 拖拽模式、Menu 无遮罩滚动跟随、叠层系统返回、FlowSheet 全屏/半屏。
+4. 在策略页验证 persist Toast 与 owner Confirm 的路由行为。
+5. 打开 Menu 后滚动 Anchor，并用「卸 Anchor」场景验证自动关闭。
 
 逐参数映射见 [v1 → v2 API 能力对照](API_PARITY_V2.md)，完整参数见
 [API 参数参考](API_REFERENCE.md)。

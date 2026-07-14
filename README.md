@@ -141,7 +141,8 @@ final birthday = await Pop.date(
 );
 ```
 
-Menu 使用合成图层跟随 Anchor，滚动时无需重新计算坐标：
+Menu 使用合成图层跟随 Anchor，滚动时无需重新计算坐标。**默认无全屏遮罩**，
+便于底层继续滚动；需要点外部关闭时传 `showBarrier: true`：
 
 ```dart
 final menuAnchor = PopupAnchorController();
@@ -153,6 +154,7 @@ PopupAnchor(
     onPressed: () async {
       final action = await Pop.menu<String>(
         anchor: menuAnchor,
+        // showBarrier: true, // 需要点外部关闭时打开
         builder: (dismiss) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [

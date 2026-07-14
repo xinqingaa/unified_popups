@@ -81,6 +81,16 @@ final value = await Pop.sheet<String>(childBuilder: ...);
 | Menu | `Pop.openMenu<T>(MenuConfig<T>)` | `PopupHandle<T>` |
 | Custom | `Pop.custom<T>(CustomPopupConfig<T>)` | `PopupHandle<T>` |
 
+便捷 API 的扁平参数会在内部组装到类型 Config，二者不会同时生效或互相覆盖。
+常见映射：
+
+| 便捷参数 | Config 字段 |
+| --- | --- |
+| `showBarrier` / `barrierDismissible` / `barrierColor` | `PopupBarrierConfig`（`false` → `PopupBarrierConfig.hidden()`） |
+| `duration` / `until` | `PopupLifetime` |
+| `onBackPressed` | `PopupBackPolicy.delegate` + `onBack` |
+| Sheet `showDragHandle` | `SheetDragConfig.showHandle`（仅底部方向实际渲染） |
+
 ## Toast
 
 ### `Pop.toast`
@@ -224,11 +234,15 @@ await handle.dismiss();
 | `style` | `LoadingStyle()` | 背景色、圆角、内边距、文字样式、指示器颜色和线宽。 |
 | `indicator` | `LoadingIndicatorConfig()` | 自定义 child 与旋转周期，默认周期 1 秒。 |
 | `behavior` | loading channel、全局 key、updateExisting、persist、block back | 保证默认 Loading 原地更新且阻止系统返回。 |
-| `ownership` | independent | 默认不随下层 Sheet 一起关闭。 |
+| `ownership` | independent | 父子归属。 |
 | `barrier` | 可见、不可点击关闭 | 默认阻断下层交互。 |
-| `animation` | fade、150ms | 入退场动画。 |
-| `lifetime` | manual | 手动关闭。 |
-| `lifecycle` | 空回调 | 通用生命周期。 |
+| `animation` | 150ms fade | 进出场。 |
+| `lifetime` | manual | 自动关闭条件。 |
+| `lifecycle` | 空回调 | onPresented / onOutcome / onDismissed。 |
+| `position` | `center` | 全局对齐；多 Loading 并存时可分别用 top/bottom 错开。 |
+
+有文案时 Loading 面板按内容自适应宽高（最大宽约 280），不再强制正方形，避免长文截断。
+仅指示器时保持紧凑方盒。
 
 `LoadingStyle` 参数：
 
@@ -357,8 +371,8 @@ Future<T?> Pop.sheet<T>({
 | `padding` | 左右 16、顶部 0、底部 10 | 内容内边距。指示器自身距离边缘 6，不再叠加顶部内容间距。 |
 | `dockToEdge` | `false` | 是否在对应边缘保留可交互间隙。 |
 | `edgeGap` | `16` | 保留间隙，例如底部 NavigationBar 高度。 |
-| `showDragHandle` | `true` | 是否显示拖拽指示器。 |
-| `dragHandleColor` | BottomSheetTheme 或 onSurfaceVariant | 指示器颜色。 |
+| `showDragHandle` | `true` | 是否请求显示拖拽指示器。**实际仅 `SheetDirection.bottom` 会渲染**；上/左/右方向忽略该视觉（`handleOnly` 仍可通过标题栏等 chrome 拖关）。 |
+| `dragHandleColor` | BottomSheetTheme 或 onSurfaceVariant | 指示器颜色（仅底部 Sheet）。 |
 | `adjustForKeyboard` | `true` | 底部 Sheet 是否随键盘 viewInsets 上移。 |
 | `dragDismissMode` | `fullBody` | 拖拽参与范围。 |
 | `dragDismissModeListenable` | `null` | 运行时动态切换拖拽模式。 |
@@ -377,7 +391,7 @@ const SheetDimension.fraction(.8); // 屏幕对应维度的 80%
 | --- | --- |
 | `fullBody` | 整个 Sheet 都可拖拽。 |
 | `contentWhenAtTop` | 滚动内容到达关闭方向边缘后，继续拖动才带动 Sheet。 |
-| `handleOnly` | 只有指示器区域可拖拽，适合正文包含复杂手势。 |
+| `handleOnly` | 只有指示器/标题等 chrome 区域可拖拽，适合正文包含复杂手势。底部 Sheet 有指示器；其他方向依赖标题栏等。 |
 
 ### `SheetConfig<T>`
 
@@ -410,7 +424,7 @@ final handle = Pop.openSheet<String>(
 | `SheetSizeConfig` | width、height、maxWidth、maxHeight |
 | `SheetStyle` | backgroundColor、borderRadius、boxShadow、padding、imagePath、imageSize（60）、imageOffset（16, -40） |
 | `SheetDockConfig` | enabled、edgeGap（16） |
-| `SheetDragConfig` | mode、modeListenable、showHandle、handleColor、dismissProgressThreshold（0.28）、dismissVelocity（700） |
+| `SheetDragConfig` | mode、modeListenable、showHandle、handleColor、dismissProgressThreshold（0.28）、dismissVelocity（700）。`showHandle` 仅在 `direction == bottom` 时渲染指示器。 |
 | `SheetKeyboardConfig` | adjustForKeyboard、animationDuration（主题动画时长） |
 
 `SheetConfig<T>` 另外提供 `behavior`、`ownership`、`barrier`、`animation`、
@@ -452,8 +466,8 @@ Future<R?> Pop.flowSheet<R>({
 | `barrierDismissible` | `false` | 默认不允许点击遮罩退出多步流程。 |
 | `showBarrier` | `true` | 是否显示遮罩。 |
 | `barrierColor` | `Colors.black54` | 遮罩颜色。 |
-| `showDragHandle` | `true` | 是否显示指示器。 |
-| `dragHandleColor` | 主题值 | 指示器颜色。 |
+| `showDragHandle` | `true` | 是否请求显示指示器；仅底部方向实际渲染。 |
+| `dragHandleColor` | 主题值 | 指示器颜色（仅底部）。 |
 | `adjustForKeyboard` | `true` | 键盘避让。 |
 | `dragDismissMode` | `fullBody` | 默认拖拽模式；每个页面可覆盖。 |
 | `pageBackgroundColor` | `null` | 内部页面背景色。 |
@@ -588,7 +602,9 @@ Future<T?> Pop.menu<T>({
   EdgeInsetsGeometry? padding,
   BoxConstraints? constraints,
   Decoration? decoration,
+  bool showBarrier = false,
   bool barrierDismissible = true,
+  Color? barrierColor,
 })
 ```
 
@@ -601,13 +617,16 @@ Future<T?> Pop.menu<T>({
 | `padding` | `EdgeInsets.zero` | 菜单容器内边距。 |
 | `constraints` | 最小宽 120、最大宽 280 | 菜单尺寸约束。 |
 | `decoration` | 主题 surface、圆角 8、阴影 | 菜单装饰。 |
-| `barrierDismissible` | `true` | 点击菜单外部是否关闭。 |
+| `showBarrier` | `false` | 是否显示全屏遮罩。默认关闭，便于底层滚动与菜单跟随；需要点外部关闭时设为 `true`。 |
+| `barrierDismissible` | `true` | 遮罩可点关；仅在 `showBarrier=true` 时生效。 |
+| `barrierColor` | `Color(0x8A000000)` | 遮罩颜色；仅在 `showBarrier=true` 时生效。 |
 
 Menu 通过 `CompositedTransformTarget/Follower` 跟随 Anchor；滚动、布局变化和
 Transform 不需要重新计算坐标。Anchor 卸载时以
 `PopupDismissReason.anchorDetached` 自动关闭。
 
-高级 `MenuConfig<T>` 增加 `PopupMenuStyle`、behavior、ownership、barrier、
+高级 `MenuConfig<T>` 的 `barrier` 默认亦为 `PopupBarrierConfig.hidden()`；需要遮罩时传入
+可见的 `PopupBarrierConfig`。另支持 `PopupMenuStyle`、behavior、ownership、
 animationConfig 和 lifecycle。
 
 ## Custom Popup

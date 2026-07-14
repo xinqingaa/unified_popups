@@ -71,10 +71,14 @@ class _LoadingRendererState extends State<LoadingRenderer>
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        indicator,
+        SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(child: indicator),
+        ),
         if (message != null) ...<Widget>[
           const SizedBox(height: 16),
-          Flexible(child: message),
+          message,
         ],
       ],
     );
@@ -87,15 +91,16 @@ class _LoadingRendererState extends State<LoadingRenderer>
       child: content,
     );
 
+    // Indicator-only: compact square. With text: grow width/height so copy
+    // is not clipped by a fixed square.
     final child = message == null
         ? box
-        : LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth.isFinite
-                  ? (constraints.maxWidth * 0.32).clamp(80.0, 160.0)
-                  : 160.0;
-              return SizedBox.square(dimension: width, child: box);
-            },
+        : ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: 120,
+              maxWidth: 280,
+            ),
+            child: box,
           );
     return Material(
       type: MaterialType.transparency,

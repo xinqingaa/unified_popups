@@ -66,6 +66,7 @@ final class LoadingConfig implements PopupVisualConfig {
     ),
     this.lifetime = const PopupLifetime.manual(),
     this.lifecycle = const PopupLifecycleCallbacks<void>(),
+    this.position = PopupPosition.center,
   });
 
   final String? message;
@@ -79,10 +80,9 @@ final class LoadingConfig implements PopupVisualConfig {
   final PopupAnimationConfig animation;
   final PopupLifetime lifetime;
   final PopupLifecycleCallbacks<void> lifecycle;
+  @override
+  final PopupPosition position;
 
   @override
   PopupAnimationConfig get animationConfig => animation;
-
-  @override
-  PopupPosition get position => PopupPosition.center;
 }

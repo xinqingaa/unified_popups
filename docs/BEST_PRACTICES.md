@@ -19,6 +19,11 @@ Service、Flow 和页面统一调用 `Pop.*`。
   `Pop.openXxx(Config)` 并保存 `PopupHandle`。
 - 完全自定义内容：使用 `Pop.custom(CustomPopupConfig)`。
 
+便捷 API 内部会组装对应类型的 Config，**不会与高级字段叠加或打架**。例如
+`showBarrier: false` 等价于 `barrier: PopupBarrierConfig.hidden()`。
+需要 `PopupBarrierConfig.insets`、`PopupBehaviorConfig.tags`、
+`PopupOwnership.routeToken` 等能力时，直接走高级 Config。
+
 不要依赖字符串 id。Handle 是类型安全且包含完整生命周期的稳定引用。
 
 ## 3. 正确理解完成与关闭
@@ -77,6 +82,17 @@ PopupAnchor(
 不要再用 `GlobalKey + RenderBox` 手算位置。Anchor/Follower 能随滚动、布局和
 Transform 更新；Anchor 卸载会自动关闭 Menu。
 
+Menu **默认无全屏遮罩**，因此打开后仍可滚动底层列表并观察跟随。需要点外部关闭时：
+
+```dart
+Pop.menu(
+  anchor: anchor,
+  showBarrier: true,
+  barrierDismissible: true,
+  builder: ...,
+);
+```
+
 ## 7. 路由与返回键
 
 - 日常模态弹窗使用 `dismissWhenOwnerRouteChanges`。
@@ -103,13 +119,15 @@ Channel 不决定动画、Barrier、返回键或路由策略；这些行为必�
 - 多步且需要页面结果、保活、内部返回栈时使用 FlowSheet。
 - `contentWhenAtTop` 适合含滚动内容的底部 Sheet。
 - `handleOnly` 适合正文包含横向手势或复杂拖拽的内容。
+- 拖拽指示器**仅在底部 Sheet** 显示；上/左/右即使 `showDragHandle: true` 也不渲染指示器，`handleOnly` 请配合标题栏等 chrome。
 - 一个 `FlowSheetController` 只用于一次显示，下一次流程创建新 Controller。
 
 ## 10. 测试与诊断
 
-Widget 测试优先构造隔离的 `PopupRuntime`；测试默认全局 facade 时在 teardown
-调用 `Pop.resetForTest()`。断言异步生命周期时分别检查 outcome 与 dismissed，
-不要用任意长延迟代替 `pumpAndSettle`。
+Example 的 **技术实验室** 是整库能力矩阵（按类型分页），适合手测与回归；
+业务 Tab 只保留真实用法。Widget 测试优先构造隔离的 `PopupRuntime`；测试默认
+全局 facade 时在 teardown 调用 `Pop.resetForTest()`。断言异步生命周期时分别
+检查 outcome 与 dismissed，不要用任意长延迟代替 `pumpAndSettle`。
 
 常见问题：
 

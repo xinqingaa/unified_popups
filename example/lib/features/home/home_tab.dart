@@ -8,9 +8,16 @@ class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
 
   Future<void> _syncHealth() async {
-    Pop.loading(message: '同步健康数据…');
-    await Future<void>.delayed(const Duration(milliseconds: 1200));
-    Pop.hideLoading();
+    final sync = Future<void>.delayed(const Duration(milliseconds: 1800));
+    Pop.loading(message: '连接健康服务…');
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    Pop.loading(message: '拉取步数与消耗…');
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    Pop.loading(
+      message: '写入本地…',
+      until: sync,
+    );
+    await sync;
     Pop.toast('同步完成', toastType: ToastType.success);
   }
 
@@ -52,7 +59,7 @@ class HomeTab extends StatelessWidget {
       children: [
         const SectionHeader(
           title: '今日概览',
-          subtitle: '用真实动机触发 toast / loading / confirm',
+          subtitle: 'Loading 分阶段更新 · Confirm · Toast',
         ),
         const Row(
           children: [

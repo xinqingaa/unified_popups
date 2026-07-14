@@ -296,7 +296,9 @@ class _SheetRendererState extends State<SheetRenderer> {
         mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          if (config.drag.showHandle) _dragTarget(_buildHandle(context)),
+          if (config.drag.showHandle &&
+              config.direction == SheetDirection.bottom)
+            _dragTarget(_buildHandle(context)),
           if (hasHeader) _dragTarget(_buildHeader(context)),
           if (expand) Expanded(child: child) else Flexible(child: child),
         ],

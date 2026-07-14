@@ -371,7 +371,9 @@ abstract final class Pop {
     EdgeInsetsGeometry? padding,
     BoxConstraints? constraints,
     Decoration? decoration,
+    bool showBarrier = false,
     bool barrierDismissible = true,
+    Color? barrierColor,
   }) {
     return _api
         .menu<T>(
@@ -379,7 +381,12 @@ abstract final class Pop {
             anchor: anchor,
             placement: placement,
             offset: offset,
-            barrier: PopupBarrierConfig(dismissible: barrierDismissible),
+            barrier: showBarrier
+                ? PopupBarrierConfig(
+                    dismissible: barrierDismissible,
+                    color: barrierColor ?? const Color(0x8A000000),
+                  )
+                : const PopupBarrierConfig.hidden(),
             style: PopupMenuStyle(
               padding: padding ?? EdgeInsets.zero,
               constraints: constraints ??

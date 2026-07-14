@@ -31,17 +31,20 @@
 - Confirm 新增按钮专属 `onConfirm` 与 `onCancel`，同时保留
   `Future<bool?>` 业务结果。
 - Sheet 与 FlowSheet 统一四方向 Renderer、拖拽进度和退出动画；重业务 child
-  不随拖拽指针反复重建。
+  不随拖拽指针反复重建。拖拽指示器仅底部方向渲染。
 - FlowSheet 接入统一外层 Handle，同时保留内部页面栈、页面结果和生命周期。
 - Menu 改为 `PopupAnchorController + PopupAnchor`，随滚动和布局变化自动跟随，
-  Anchor 卸载时自动关闭。
+  Anchor 卸载时自动关闭；**默认无全屏遮罩**（`showBarrier: false`），需要点外部
+  关闭时再显式打开。
 - 新增 `CustomPopupConfig`，自定义内容也接入统一生命周期和全局管理。
 
 ### 示例和文档
 
 - FitPulse Example 全量迁移到 v2。
-- 实验室增加 Handle 外部关闭、弹窗堆叠、返回键、路由归属、Loading 更新和外部
-  Future 关闭示例。
+- Example 启动页双入口：FitPulse 真实 App / API 展柜；展柜 AppBar 常驻 Entry
+  计数，并新增「通用 Config」页说明两层 API。
+- Loading 有文案时自适应宽高；`LoadingConfig.position` 可错开多实例。
+- 技术实验室按类型分页覆盖整库能力；业务 Tab 保留真实用法示例。
 - 重写 README、API 参数参考、最佳实践、架构说明和 v1 → v2 迁移指南。
 - 项目使用文档统一为中文。
 

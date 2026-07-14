@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../features/home/home_tab.dart';
-import '../features/lab/lab_page.dart';
+import '../features/lab/lab_shell.dart';
 import '../features/profile/profile_tab.dart';
 import '../features/progress/progress_tab.dart';
 import '../features/workouts/workouts_tab.dart';
 import 'fit_pulse_metrics.dart';
 
-/// FitPulse 主壳：4 个业务 Tab，Lab 从 AppBar 进入。
+/// FitPulse 主壳：4 个业务 Tab。API 展柜从启动页或 AppBar 进入。
 class FitPulseShell extends StatefulWidget {
   const FitPulseShell({super.key});
 
@@ -32,7 +32,7 @@ class _FitPulseShellState extends State<FitPulseShell> {
               if (value == 'lab') {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const LabPage(),
+                    builder: (_) => const LabShell(),
                   ),
                 );
               }
@@ -43,8 +43,8 @@ class _FitPulseShellState extends State<FitPulseShell> {
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.science_outlined),
-                  title: Text('技术实验室'),
-                  subtitle: Text('Async / Popup Runtime 回归'),
+                  title: Text('打开 API 展柜'),
+                  subtitle: Text('逐项验收弹窗能力'),
                 ),
               ),
             ],

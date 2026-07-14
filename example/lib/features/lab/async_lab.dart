@@ -1,6 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
+
+import 'lab_shell.dart';
 
 class AsyncLabPage extends StatefulWidget {
   const AsyncLabPage({super.key});
@@ -21,7 +24,7 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lab · 异步边界')),
+      appBar: labAppBar(context, 'Lab · 异步边界'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -52,6 +55,19 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
                 ),
               ),
             ],
+            Card(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              child: const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  '边界回归：在 Future / Stream / Timer / postFrameCallback / '
+                  'initState / build 等时机调用 Pop，验证 Host 就绪与调度安全。'
+                  '完整类型能力请回实验室目录各子页。',
+                  style: TextStyle(height: 1.4),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             _buildTestButton(
               title: '场景1: Future.then() 回调',
               subtitle: '模拟网络请求完成后的回调中调用 loading',

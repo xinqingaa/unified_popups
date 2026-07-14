@@ -55,9 +55,9 @@ class _ProgressTabState extends State<ProgressTab> {
   }
 
   Future<void> _exportReport() async {
-    Pop.loading(message: '导出周报…');
-    await Future<void>.delayed(const Duration(milliseconds: 1000));
-    Pop.hideLoading();
+    final export = Future<void>.delayed(const Duration(milliseconds: 1200));
+    Pop.loading(message: '导出周报…', until: export);
+    await export;
     Pop.toast('周报已生成', toastType: ToastType.success);
   }
 
@@ -72,7 +72,7 @@ class _ProgressTabState extends State<ProgressTab> {
       children: [
         const SectionHeader(
           title: '身体数据',
-          subtitle: '日期选择与导出报告',
+          subtitle: 'Date · Loading until · Toast',
         ),
         Row(
           children: [

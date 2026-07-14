@@ -48,7 +48,7 @@ final class MenuConfig<T> extends MenuConfigBase {
       backPolicy: PopupBackPolicy.dismiss,
     ),
     this.ownership = const PopupOwnership(),
-    this.barrier = const PopupBarrierConfig(),
+    this.barrier = const PopupBarrierConfig.hidden(),
     this.animationConfig = const PopupAnimationConfig(
       type: PopupAnimationType.fade,
     ),

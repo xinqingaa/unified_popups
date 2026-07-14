@@ -95,13 +95,15 @@ void main() {
     expect(childBuilds, 1);
   });
 
-  testWidgets('horizontal handleOnly ignores body drag but accepts handle drag',
+  testWidgets(
+      'horizontal handleOnly ignores body drag; title chrome dismisses',
       (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final handle = PopupTypeApi(runtime).sheet<void>(
       SheetConfig<void>(
         direction: SheetDirection.left,
+        header: const SheetHeaderConfig(title: 'panel'),
         drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
         animation: const PopupAnimationConfig(
           type: PopupAnimationType.slideLeft,
@@ -114,14 +116,14 @@ void main() {
     await tester.pumpWidget(_SheetApp(runtime: runtime));
     await tester.pump();
 
+    // Drag handle is bottom-only; left sheets expose chrome via title.
+    expect(find.byKey(SheetRendererKeys.dragHandle), findsNothing);
+
     await tester.drag(find.text('body'), const Offset(-300, 0));
     await tester.pump();
     expect(handle.isActive, isTrue);
 
-    await tester.drag(
-      find.byKey(SheetRendererKeys.dragHandle),
-      const Offset(-300, 0),
-    );
+    await tester.drag(find.text('panel'), const Offset(-300, 0));
     await tester.pumpAndSettle();
     expect((await handle.outcome).reason, PopupDismissReason.drag);
     await handle.dismissed;

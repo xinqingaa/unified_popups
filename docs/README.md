@@ -12,13 +12,13 @@
 
 可运行示例位于 [`example/lib`](../example/lib)：
 
-| 页面 | 覆盖能力 |
+| 入口 | 覆盖能力 |
 | --- | --- |
-| 今日 | Loading、Toast、Confirm |
-| 训练 | Sheet、Menu Anchor、FlowSheet |
-| 数据 | Date、Loading |
-| 我的 | Confirm、Date、业务 Flow |
-| 实验室 | 异步无 context 调用、Handle 外部关闭、堆叠、返回键与全局批量关闭 |
+| 启动首页 | 双入口：FitPulse 真实 App / API 展柜 |
+| FitPulse | Loading 分阶段、Toast、Confirm、Sheet、Menu、FlowSheet |
+| API 展柜 | 按类型分页的整库能力矩阵（含通用 Config）；AppBar 常驻 Entry 计数 |
+
+详见 [`example/README.md`](../example/README.md)。
 
 最小接入：
 

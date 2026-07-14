@@ -95,7 +95,7 @@ MaterialApp(
 | width/height/maxWidth/maxHeight | `SheetSizeConfig` | 迁移 |
 | showCloseButton、图片、背景、圆角、阴影、padding | `SheetStyle` | 迁移 |
 | dockToEdge/edgeGap | `SheetDockConfig` | 迁移 |
-| showDragHandle/dragHandleColor | `SheetDragConfig` | 迁移 |
+| showDragHandle/dragHandleColor | `SheetDragConfig`；指示器**仅底部方向**渲染 | 迁移/行为收紧 |
 | adjustForKeyboard | `SheetKeyboardConfig` | 迁移 |
 | fullBody/contentWhenAtTop/handleOnly | 保留并补齐四方向 | 保留 |
 | 固定 75px、无速度/回弹 | 比例 + velocity + 回弹 | 替换 |
@@ -121,10 +121,10 @@ MaterialApp(
 | `GlobalKey anchorKey` | `PopupAnchorController` + `PopupAnchor` | 替换 |
 | `anchorOffset` | `MenuConfig.offset` | 保留 |
 | builder/dismiss/result | 保留 | 保留 |
-| barrier、padding、constraints、decoration | `MenuConfig` / `PopupMenuStyle` | 迁移 |
+| barrier、padding、constraints、decoration | `MenuConfig` / `PopupMenuStyle`；便捷 API 提供 `showBarrier`（**默认 false**） | 迁移/默认变更 |
 | animation 参数 | `PopupAnimationConfig` | 迁移 |
 | post-frame RenderBox 重试 | Target/Follower + placement delegate | 替换 |
-| Anchor 滚动后位置不变 | 自动跟随 | 修复 |
+| Anchor 滚动后位置不变 | 自动跟随（默认无遮罩，底层可滚动） | 修复 |
 | Anchor 卸载 | 自动以 anchorDetached 关闭 | 新增 |
 
 ## Date

@@ -97,6 +97,8 @@ final class SheetDragConfig {
 
   final SheetDragDismissMode mode;
   final ValueListenable<SheetDragDismissMode>? modeListenable;
+
+  /// Requests a drag handle. Only rendered when direction is bottom.
   final bool showHandle;
   final Color? handleColor;
   final double dismissProgressThreshold;
