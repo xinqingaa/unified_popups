@@ -11,34 +11,38 @@ import 'popup_owner_policy.dart';
 import 'popup_route_policy.dart';
 import 'popup_visual_config.dart';
 
+/// 确认弹窗底部确认/取消按钮的排列方式。
 enum ConfirmButtonLayout {
   row,
   column,
 }
 
-/// Confirm 底部按钮视觉风格。
+/// 确认弹窗操作按钮的视觉样式。
 ///
-/// - [divider]：贴底分割线按钮（默认，对齐常见「线条」确认框）
-/// - [filled]：圆角填充 / 胶囊按钮
+/// - [divider]：通栏分隔线按钮（常见的“分割线”确认样式）
+/// - [filled]：圆角填充/描边药丸按钮
 enum ConfirmButtonStyle {
   divider,
   filled,
 }
 
-/// One confirm-dialog action payload.
+/// 一个确认弹窗操作按钮的内容载荷。
 ///
-/// Text and custom Widget variants are structurally exclusive, so callers do
-/// not need to remember which field takes precedence.
+/// 文本与自定义 Widget 两种形式在结构上互斥，调用方无需关心优先级。
 final class ConfirmAction {
+  /// 使用纯文本 [text] 标注的操作。
   const ConfirmAction.text(String this.text) : child = null;
 
+  /// 使用自定义 [child] 组件渲染的操作。
   const ConfirmAction.content(Widget this.child) : text = null;
 
   final String? text;
   final Widget? child;
 }
 
+/// 确认弹窗的视觉与布局样式。
 final class ConfirmStyle {
+  /// 创建确认弹窗外观默认值。
   const ConfirmStyle({
     this.buttonStyle = ConfirmButtonStyle.divider,
     this.titleStyle,
@@ -59,40 +63,31 @@ final class ConfirmStyle {
     this.buttonSpacing = 12,
   });
 
-  /// 按钮风格；默认 [ConfirmButtonStyle.divider]。
   final ConfirmButtonStyle buttonStyle;
   final TextStyle? titleStyle;
   final TextStyle? contentStyle;
   final TextStyle? confirmStyle;
   final TextStyle? cancelStyle;
-
-  /// 内容区内边距（标题 / 正文 / 扩展区）。
-  ///
-  /// [ConfirmButtonStyle.divider] 下不作用于按钮区（按钮贴底铺满）。
-  /// [ConfirmButtonStyle.filled] 下同时包住按钮区。
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
   final Decoration? decoration;
   final TextAlign textAlign;
-
-  /// 填充按钮圆角；线条风格下按钮本身无圆角（由卡片裁剪）。
   final BorderRadiusGeometry buttonBorderRadius;
   final Color? confirmBackgroundColor;
   final Color? cancelBackgroundColor;
   final BoxBorder? confirmBorder;
   final BoxBorder? cancelBorder;
-
-  /// 线条风格分割线颜色；默认使用主题 `dividerColor`。
   final Color? dividerColor;
-
-  /// 线条风格分割线宽度。
   final double dividerWidth;
-
-  /// 填充风格下按钮间距（横排为水平间距，竖排为垂直间距）。
   final double buttonSpacing;
 }
 
+/// [Pop.confirm] 的配置：带确认/取消操作的模态对话框。
 final class ConfirmConfig implements PopupVisualConfig {
+  /// 创建一个确认弹窗。
+  ///
+  /// [content] 与 [contentWidget] 至少需要提供一个；[title] 与 [titleWidget]
+  /// 互斥，[content] 与 [contentWidget] 同样互斥。
   const ConfirmConfig({
     this.title,
     this.titleWidget,
@@ -144,10 +139,13 @@ final class ConfirmConfig implements PopupVisualConfig {
   final VoidCallback? onCancel;
   final PopupBehaviorConfig behavior;
   final PopupOwnership ownership;
+
   @override
   final PopupBarrierConfig barrier;
+
   @override
   final PopupPosition position;
+
   @override
   final PopupAnimationConfig animationConfig;
   final PopupLifecycleCallbacks<bool> lifecycle;

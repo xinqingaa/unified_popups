@@ -6,8 +6,12 @@ import 'package:flutter/material.dart';
 import 'liquid_glass_edge_painter.dart';
 import 'liquid_glass_style.dart';
 
-/// A reusable, theme-aware liquid-glass surface.
+/// 一个可复用、感知主题的磨砂玻璃表面，支持可选的背景模糊效果。
+///
+/// 使用 [LiquidGlassStyle] 提供的颜色，将 [child] 包裹在一个可裁剪、可选模糊的容器中。
+/// 如需在表面内加入按压反馈，请使用 [LiquidGlassButton] 或 [LiquidGlassActionButton]。
 class LiquidGlass extends StatefulWidget {
+  /// 围绕 [child] 创建一个液态玻璃容器。
   const LiquidGlass({
     required this.child,
     this.width,
@@ -24,20 +28,25 @@ class LiquidGlass extends StatefulWidget {
   });
 
   final Widget child;
+
   final double? width;
+
   final double? height;
+
   final EdgeInsetsGeometry? padding;
+
   final EdgeInsetsGeometry? margin;
+
   final BorderRadius? borderRadius;
+
   final LiquidGlassStyle style;
+
   final double? blurSigma;
+
   final Duration blurDelay;
 
-  /// Blend mode used when compositing the filtered backdrop.
-  ///
-  /// [BlendMode.src] avoids double blending when an ancestor uses an opacity
-  /// save layer. The default keeps Flutter's broadly supported behavior.
   final BlendMode backdropBlendMode;
+
   final bool enableShadow;
 
   @override

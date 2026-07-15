@@ -12,7 +12,9 @@ import 'popup_position.dart';
 import 'popup_keys.dart';
 import 'popup_visual_config.dart';
 
+/// Loading 容器与转圈指示器的视觉样式。
 final class LoadingStyle {
+  /// 创建 loading 外观默认值。
   const LoadingStyle({
     this.backgroundColor = const Color(0xCC000000),
     this.borderRadius = 12,
@@ -30,7 +32,9 @@ final class LoadingStyle {
   final double indicatorStrokeWidth;
 }
 
+/// [LoadingConfig] 的转圈指示器组件与旋转周期设置。
 final class LoadingIndicatorConfig {
+  /// 创建指示器设置。
   const LoadingIndicatorConfig({
     this.child,
     this.rotationDuration = const Duration(seconds: 1),
@@ -40,7 +44,9 @@ final class LoadingIndicatorConfig {
   final Duration rotationDuration;
 }
 
+/// [Pop.loading] 的配置：单例、阻塞交互的加载浮层。
 final class LoadingConfig implements PopupVisualConfig {
+  /// 仅显示转圈指示器（无文案）的 loading。
   const LoadingConfig.indicator({
     this.style = const LoadingStyle(),
     this.indicator = const LoadingIndicatorConfig(),
@@ -63,6 +69,7 @@ final class LoadingConfig implements PopupVisualConfig {
   })  : message = null,
         content = null;
 
+  /// 在指示器下方显示文案 [message] 的 loading。
   const LoadingConfig.text(
     String this.message, {
     this.style = const LoadingStyle(),
@@ -85,6 +92,7 @@ final class LoadingConfig implements PopupVisualConfig {
     this.position = PopupPosition.center,
   }) : content = null;
 
+  /// 使用完全自定义 [content] 替代默认布局的 loading。
   const LoadingConfig.content(
     Widget this.content, {
     this.style = const LoadingStyle(),
@@ -113,11 +121,13 @@ final class LoadingConfig implements PopupVisualConfig {
   final LoadingIndicatorConfig indicator;
   final PopupBehaviorConfig behavior;
   final PopupOwnership ownership;
+
   @override
   final PopupBarrierConfig barrier;
   final PopupAnimationConfig animation;
   final PopupLifetime lifetime;
   final PopupLifecycleCallbacks<void> lifecycle;
+
   @override
   final PopupPosition position;
 

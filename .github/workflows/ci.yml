@@ -17,14 +17,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flutter: ['3.24.0', stable]
+        include:
+          - flutter: '3.24.0'
+          # Latest stable: omit flutter-version (must not pass the literal "stable")
+          - flutter: stable
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter ${{ matrix.flutter }}
+        if: matrix.flutter != 'stable'
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ matrix.flutter }}
+          channel: stable
+          cache: true
+
+      - name: Set up Flutter stable
+        if: matrix.flutter == 'stable'
+        uses: subosito/flutter-action@v2
+        with:
           channel: stable
           cache: true
 

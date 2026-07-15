@@ -1,7 +1,12 @@
-/// Edge from which a sheet enters and toward which it is dismissed.
-enum SheetDirection { top, bottom, left, right }
+/// Sheet 弹出的边缘方向，也是关闭时退出的方向。
+enum SheetDirection {
+  top,
+  bottom,
+  left,
+  right,
+}
 
-/// Determines which part of a sheet participates in drag-to-dismiss.
+/// 决定 sheet 中哪个区域参与拖拽关闭手势。
 enum SheetDragDismissMode {
   fullBody,
   contentWhenAtTop,

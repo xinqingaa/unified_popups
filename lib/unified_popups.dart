@@ -1,3 +1,17 @@
+/// Flutter 统一全局弹窗 SDK。
+///
+/// 通过 [Pop] 提供 Toast、Loading、Confirm、Date、Sheet、FlowSheet、Menu、
+/// DropMenu、Custom 等能力；共用同一套 Runtime、冲突策略与生命周期。
+///
+/// 接入方式：
+/// ```dart
+/// MaterialApp(
+///   navigatorObservers: [Pop.routeObserver],
+///   builder: Pop.hostBuilder,
+/// );
+/// ```
+///
+/// 打开弹窗统一为 `Pop.xxx(Config)`，返回 [PopupOpenResult]。
 library unified_popups;
 
 export 'src/api/pop.dart' show Pop;

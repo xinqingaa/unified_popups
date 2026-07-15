@@ -1,6 +1,6 @@
 import '../configs/popup_owner_policy.dart';
 
-/// Associates an entry with a route and, optionally, another popup entry.
+/// 将弹窗与路由、可选父 Entry 关联，用于归属与级联关闭。
 final class PopupOwnership {
   const PopupOwnership({
     this.routeToken,

@@ -4,11 +4,16 @@ import '../../configs/sheet_types.dart';
 import '../contracts/flow_sheet_navigator.dart';
 import '../lifecycle/flow_sheet_lifecycle_controller.dart';
 
-/// FlowSheet 中的一个页面。
+/// FlowSheet 内部的单个页面。
 ///
-/// 负责声明 page id、保活策略和 pop 结果类型。业务页面统一继承它，
-/// State 统一继承 [FlowSheetPageState]。
+/// 为多页面 sheet 流程的每一步创建该组件的子类，并配合 [FlowSheetPageState] 子类实现
+/// 导航与可选的生命周期钩子。
 abstract class FlowSheetPage<T> extends StatefulWidget {
+  /// 创建一个 FlowSheet 页面。
+  ///
+  /// [id] 用于调试，在同一个流程内应保持唯一。[maintainState] 决定该页面被其他页面覆盖时
+  /// 是否保留状态。[dragDismissMode] 在该页面位于栈顶时覆盖整体的拖拽关闭模式；为 null 时
+  /// 使用打开 sheet 时配置的模式。
   const FlowSheetPage({
     super.key,
     required this.id,
@@ -16,30 +21,24 @@ abstract class FlowSheetPage<T> extends StatefulWidget {
     this.dragDismissMode,
   });
 
-  /// 页面标识，便于调试。
   final String id;
 
-  /// 是否在被上层页面覆盖时保活。
   final bool maintainState;
 
-  /// 当前页面作为 FlowSheet 顶层页时使用的拖动关闭策略。
-  ///
-  /// 为 null 时使用 FlowSheet 打开时传入的默认策略。
   final SheetDragDismissMode? dragDismissMode;
 }
 
-/// FlowSheet 页面 State 基类。
+/// [FlowSheetPage] 子类对应的基础 [State]。
 ///
-/// 基础能力是 [nav] 和 [isFlowSheetVisible]。生命周期 hook 是可选能力：
-/// 需要时 override [onLoad]、[onShow]、[onHide]、[onRemove]、[onClose]，
-/// 不需要时只实现普通 [build] 即可。
+/// 提供 [nav] 用于栈内导航，[isFlowSheetVisible] 用于查询可见性。生命周期钩子
+/// （[onLoad]、[onShow]、[onHide]、[onRemove]、[onClose]）均为可选，按需重写即可。
 ///
-/// 生命周期顺序：
-/// - 首次成为当前页：onLoad -> onShow
-/// - 被新页面覆盖：onHide
-/// - 上层页面 pop 后重新露出：onShow
-/// - 页面从栈移除：onHide（若当前可见）-> onRemove
-/// - 整个 sheet 关闭：onHide（若当前可见）-> onClose
+/// 生命周期触发顺序：
+/// - 页面首次成为当前页：[onLoad] → [onShow]
+/// - 被新入栈的页面覆盖：[onHide]
+/// - 上方页面弹出后再次显示：[onShow]
+/// - 从栈中移除（pop 或 replace）：[onHide]（若可见）→ [onRemove]
+/// - 整个 sheet 关闭：[onHide]（若可见）→ [onClose]
 abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
     extends State<W> implements FlowSheetLifecycleObserver {
   FlowSheetPageLifecycleController? _lifecycleController;
@@ -48,7 +47,9 @@ abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
   bool _visible = false;
   bool _endedByFlowSheet = false;
 
-  /// FlowSheet 内部导航器。
+  /// FlowSheet 的内部导航器。
+  ///
+  /// 在 [didChangeDependencies] 执行之后才可用；提前访问会抛出 [StateError]。
   FlowSheetNavigator get nav {
     final navigator = _navigator;
     if (navigator == null) {
@@ -59,22 +60,26 @@ abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
     return navigator;
   }
 
-  /// 当前 FlowSheet 页面是否处于有效可见状态。
+  /// 该页面是否是 FlowSheet 栈中当前可见的页面。
   bool get isFlowSheetVisible => _lifecycleController?.isVisible ?? false;
 
-  /// 页面实例第一次进入 FlowSheet 生命周期，只触发一次。
+  /// 该页面首次进入 FlowSheet 生命周期时调用一次。
   void onLoad() {}
 
-  /// 页面成为当前有效可见页，首次显示和返回露出都会触发。
+  /// 当该页面成为可见的栈顶页面时调用。
+  ///
+  /// 首次显示以及上方页面被弹出后都会触发。
   void onShow() {}
 
-  /// 页面不再是当前有效可见页，例如被覆盖、替换、pop 或 sheet 关闭。
+  /// 当该页面不再是可见的栈顶页面时调用。
+  ///
+  /// 在被覆盖、替换、弹出，或整个 sheet 关闭时触发。
   void onHide() {}
 
-  /// 页面被 pop 或 replace，从 FlowSheet 栈移除。
+  /// 当该页面通过 [pop] 或 [replace] 从栈中移除时调用。
   void onRemove() {}
 
-  /// 整个 FlowSheet 关闭，导致页面结束。
+  /// 当整个 FlowSheet 关闭而该页面仍在栈中时调用。
   void onClose() {}
 
   @override

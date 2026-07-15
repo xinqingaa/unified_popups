@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
-/// Theme-aware visual overrides for liquid-glass surfaces.
+/// 用于 [LiquidGlass] 表面与按压反馈的、感知主题的视觉参数集合。
 ///
-/// Colors left null are resolved from the ambient [ColorScheme].
+/// 可为 null 的颜色会在调用 [LiquidGlassStyle.resolve] 时基于当前 [ColorScheme] 解析。
+/// 使用 [LiquidGlassStyle.standard] 或 [copyWith] 来定制个别数值。
 @immutable
 final class LiquidGlassStyle {
+  /// 创建一个带有指定覆盖值的液态玻璃样式。
+  ///
+  /// [blurSigma]、[outlineWidth]、[topStrokeWidth] 与 [shadowBlurRadius] 必须非负；
+  /// [pressScale] 必须在 `(0, 1]` 范围内。
   const LiquidGlassStyle({
     this.backgroundColor,
     this.borderColor,
@@ -26,25 +31,38 @@ final class LiquidGlassStyle {
         assert(shadowBlurRadius >= 0),
         assert(pressScale > 0 && pressScale <= 1);
 
+  /// 使用主题解析颜色、模糊适中的默认样式。
   static const LiquidGlassStyle standard = LiquidGlassStyle();
 
   final Color? backgroundColor;
+
   final Color? borderColor;
 
-  /// Gradient color painted along the top edge, independent from [borderColor].
   final Color? topHighlightColor;
+
   final Color? pressHighlightColor;
+
   final Color? shadowColor;
+
   final double blurSigma;
+
   final double outlineWidth;
+
   final double topStrokeWidth;
+
   final double shadowBlurRadius;
+
   final Offset shadowOffset;
+
   final Duration pressColorDuration;
+
   final Duration pressScaleDuration;
+
   final double pressScale;
+
   final Curve pressCurve;
 
+  /// 返回一个替换了指定字段的该样式副本。
   LiquidGlassStyle copyWith({
     Color? backgroundColor,
     Color? borderColor,
@@ -80,8 +98,13 @@ final class LiquidGlassStyle {
   }
 }
 
+/// 在当前主题下完全解析后的 [LiquidGlassStyle] 颜色集合。
+///
+/// 由 [LiquidGlassStyle.resolve] 生成；传递给内部绘制器，并被 [LiquidGlassButton]
+/// 用于按压反馈。
 @immutable
 final class ResolvedLiquidGlassStyle {
+  /// 创建一个具备具体颜色并关联到 [source] 的已解析样式。
   const ResolvedLiquidGlassStyle({
     required this.backgroundColor,
     required this.borderColor,
@@ -92,10 +115,15 @@ final class ResolvedLiquidGlassStyle {
   });
 
   final Color backgroundColor;
+
   final Color borderColor;
+
   final Color topHighlightColor;
+
   final Color pressHighlightColor;
+
   final Color shadowColor;
+
   final LiquidGlassStyle source;
 
   @override
@@ -121,8 +149,9 @@ final class ResolvedLiquidGlassStyle {
       );
 }
 
+/// 基于 [ThemeData] 解析 [LiquidGlassStyle] 中可为 null 的颜色。
 extension LiquidGlassStyleResolution on LiquidGlassStyle {
-  /// Resolves nullable color overrides against the current Material theme.
+  /// 基于当前 Material 主题解析可为 null 的颜色覆盖值。
   ResolvedLiquidGlassStyle resolve(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;

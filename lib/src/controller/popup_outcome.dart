@@ -1,6 +1,6 @@
 import 'popup_dismiss_reason.dart';
 
-/// The business outcome of a popup, independent from its exit animation.
+/// 弹窗业务结果；与退出动画 / 视觉移除相互独立。
 final class PopupOutcome<T> {
   const PopupOutcome({
     required this.reason,
@@ -10,6 +10,7 @@ final class PopupOutcome<T> {
   final T? value;
   final PopupDismissReason reason;
 
+  /// 是否因业务正常完成而关闭。
   bool get isCompleted => reason == PopupDismissReason.completed;
 
   @override

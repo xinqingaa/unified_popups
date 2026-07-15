@@ -1,4 +1,4 @@
-/// Why a popup produced its final outcome.
+/// 弹窗产生最终业务结果的原因（与退出动画无关）。
 enum PopupDismissReason {
   completed,
   manual,

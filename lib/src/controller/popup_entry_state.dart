@@ -1,4 +1,4 @@
-/// Lifecycle states shared by every popup entry.
+/// 单个弹窗 Entry 的生命周期状态。
 enum PopupEntryState {
   created,
   pendingHost,
@@ -10,8 +10,9 @@ enum PopupEntryState {
   disposed,
 }
 
+/// [PopupEntryState] 的便捷查询。
 extension PopupEntryStateX on PopupEntryState {
-  /// Whether business code can still complete, dismiss, or update the entry.
+  /// 业务是否仍可 complete / dismiss / update。
   bool get isActive => switch (this) {
         PopupEntryState.created ||
         PopupEntryState.pendingHost ||
@@ -25,7 +26,7 @@ extension PopupEntryStateX on PopupEntryState {
           false,
       };
 
-  /// Whether the host may still be rendering the entry.
+  /// Host 是否仍可能在渲染该 Entry。
   bool get isMounted => switch (this) {
         PopupEntryState.entering ||
         PopupEntryState.visible ||
@@ -39,5 +40,6 @@ extension PopupEntryStateX on PopupEntryState {
           false,
       };
 
+  /// 是否已进入终态（已销毁）。
   bool get isTerminal => this == PopupEntryState.disposed;
 }

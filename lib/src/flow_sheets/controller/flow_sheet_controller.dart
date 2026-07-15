@@ -8,24 +8,28 @@ import '../contracts/flow_sheet_navigator.dart';
 import '../lifecycle/flow_sheet_lifecycle_controller.dart';
 import '../pages/flow_sheet_page.dart';
 
-/// FlowSheet 控制器：维护内部页面栈、结果回传与生命周期。
+/// FlowSheet 内部页面栈、结果与生命周期的控制器。
 ///
-/// 展示层由 [FlowSheetHost] 用内嵌 [Navigator]（Pages API + [CupertinoPage]）承载，
-/// 转场默认由框架提供。结果回传走每个 entry 自己的 [Completer]，与路由 future 解耦，
-/// 因此 [closeAll] 即使在有 pending 页面时也不会泄漏。
+/// 展示层由内嵌在 sheet 中的 [Navigator]（Pages API + Cupertino 风格转场）承载。
+/// 每个入栈页面都持有独立的 [Completer] 来管理结果，与路由 future 解耦，因此即使页面仍在
+/// 播放动画，[closeAll] 也不会造成未完成 future 的泄漏。
 ///
-/// 生命周期分两个独立阶段：
-/// 1. 业务关闭（[_closeBusiness]）：完成所有 pending Future、触发页面 onHide/onClose。
-///    在 [closeAll] 或统一 Popup outcome 完成时同步发生。
-/// 2. 对象销毁（[dispose]）：释放 notifier。退场动画期间 [FlowSheetHost] 仍持有
-///    本对象，因此销毁延迟到「Popup 已移除」且「Host 已卸载」两个条件都满足，
-///    避免 "used after being disposed"。
+/// 生命周期分为两个独立阶段：
+/// 1. **业务关闭**：完成所有待处理 future，并触发页面的
+///    [FlowSheetPageState.onHide]/[FlowSheetPageState.onClose] 钩子。当 [closeAll]
+///    完成或外层弹窗结果落定时会同步执行。
+/// 2. **对象销毁**（[dispose]）：释放各类 notifier。FlowSheet 宿主组件在退出动画期间可能仍持有
+///    该控制器，因此销毁会推迟到弹窗被移除且宿主已卸载之后，以避免出现“已销毁后仍被使用”的错误。
 ///
-/// [R] 为整个 sheet（[closeAll]）的最终结果类型。
+/// [R] 是通过 [closeAll] 返回给打开该 sheet 调用方的最终结果类型。
+///
+/// 控制器是**一次性会话**：每次通过公开 API 打开 flow sheet 时都应创建新实例。
+/// 复用已关闭或已被绑定的控制器会抛出 [StateError]。
 class FlowSheetController<R> extends ChangeNotifier
     implements FlowSheetNavigator, FlowSheetHostDelegate {
   final List<FlowSheetEntry> _stack = <FlowSheetEntry>[];
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   final ValueNotifier<SheetDragDismissMode> dragDismissModeNotifier =
       ValueNotifier<SheetDragDismissMode>(SheetDragDismissMode.fullBody);
 
@@ -33,26 +37,26 @@ class FlowSheetController<R> extends ChangeNotifier
   bool _sessionClaimed = false;
   SheetDragDismissMode _defaultDragDismissMode = SheetDragDismissMode.fullBody;
 
-  /// 业务是否已关闭（pending Future 已完成、onClose 已触发）。
-  /// 只由 [_closeBusiness] 置位；内部页面 pop 永远不会碰它。
   bool _closed = false;
 
-  /// 对象是否已销毁。只管 notifier 释放，不参与任何业务判断。
   bool _disposed = false;
 
+  /// 该控制器是否已被销毁；销毁后不可再使用。
   @override
   bool get isDisposed => _disposed;
 
+  /// 内部页面栈条目的一个不可修改视图。
   @override
   List<FlowSheetEntry> get entries => List<FlowSheetEntry>.unmodifiable(_stack);
 
+  /// 用于渲染页面栈的内嵌 [Navigator] 对应的 key。
   @override
   GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
 
+  /// 以 [FlowSheetNavigator] 形式暴露的当前控制器。
   @override
   FlowSheetNavigator get navigator => this;
 
-  /// 统一 Popup 是否已完成退场并从 Host 移除。
   bool _popupDismissed = false;
 
   bool _hostAttached = false;
@@ -60,6 +64,9 @@ class FlowSheetController<R> extends ChangeNotifier
   bool _isHandlingBack = false;
   Object? _host;
 
+  /// 为单个弹窗会话保留此控制器。
+  ///
+  /// 在外层 sheet 展示之前调用。若会话已被占用，或控制器已关闭/已销毁，则抛出 [StateError]。
   void claimPopupSession() {
     if (_sessionClaimed || _disposed || _closed) {
       throw StateError('FlowSheetController is a one-shot session.');
@@ -67,15 +74,19 @@ class FlowSheetController<R> extends ChangeNotifier
     _sessionClaimed = true;
   }
 
-  /// Releases a reservation when the outer popup request was rejected or
-  /// toggled before a handle was attached.
+  /// 当外层弹窗请求在绑定 handle 之前被拒绝或取消时，释放会话占用。
   void releasePopupSessionClaim() {
     if (_popupHandle == null && !_closed && !_disposed) {
       _sessionClaimed = false;
     }
   }
 
-  /// Transfers this one-shot session to the unified outer popup handle.
+  /// 将该一次性会话绑定到统一的外层弹窗 [handle]。
+  ///
+  /// 当 handle 的 outcome 完成时会自动执行业务关闭；当 handle 被 dismiss（退出动画结束）后，
+  /// 一旦宿主卸载即可进行销毁。
+  ///
+  /// 若控制器已关闭、已销毁，或已绑定到另一个 handle，则抛出 [StateError]。
   void attachPopupHandle(PopupHandle<R> handle) {
     if (_disposed || _closed) {
       throw StateError('A closed FlowSheetController cannot be attached.');
@@ -92,7 +103,7 @@ class FlowSheetController<R> extends ChangeNotifier
     });
   }
 
-  /// 由 [FlowSheetHost] 的 initState 调用。
+  /// 在 FlowSheet 宿主组件挂载时调用。
   @override
   void attachHost(Object host) {
     _host = host;
@@ -100,10 +111,9 @@ class FlowSheetController<R> extends ChangeNotifier
     _hostDetached = false;
   }
 
-  /// 由 [FlowSheetHost] 的 dispose 调用：宿主已卸载，满足条件即可真正销毁。
+  /// 在 FlowSheet 宿主组件卸载时调用。
   ///
-  /// 用身份判断过滤「宿主重挂载」场景下旧 State 的迟到 detach，
-  /// 避免新宿主还活着时就销毁 controller。
+  /// 通过身份比较来避免旧宿主实例的延迟 detach 在新宿主仍处于活跃状态时错误地销毁控制器。
   @override
   void detachHost(Object host) {
     if (!identical(_host, host)) return;
@@ -112,7 +122,7 @@ class FlowSheetController<R> extends ChangeNotifier
     _maybeDispose();
   }
 
-  /// 业务关闭：完成所有 pending Future、触发 onHide/onClose。幂等。
+  /// 完成所有待处理 future 并触发生命周期关闭钩子；具备幂等性。
   void _closeBusiness() {
     if (_closed) return;
     _closed = true;
@@ -124,7 +134,7 @@ class FlowSheetController<R> extends ChangeNotifier
     _syncDragDismissMode();
   }
 
-  /// 仅当「Popup 已移除」且「Host 已卸载（或从未挂载）」时销毁对象。
+  /// 仅在弹窗已被移除且宿主已卸载（或从未挂载）之后才销毁控制器。
   void _maybeDispose() {
     if (_disposed) return;
     if (!_popupDismissed) return;
@@ -132,12 +142,18 @@ class FlowSheetController<R> extends ChangeNotifier
     dispose();
   }
 
+  /// 设置默认的 [SheetDragDismissMode]，在栈顶页面未指定
+  /// [FlowSheetPage.dragDismissMode] 时使用。
+  ///
+  /// 会立即更新 [dragDismissModeNotifier]。
   void configureDragDismissMode(SheetDragDismissMode mode) {
     _defaultDragDismissMode = mode;
     _syncDragDismissMode();
   }
 
-  /// 由 [FlowSheetHost] 在首帧注入初始页面。
+  /// 当栈仍为空时，将 [page] 注入为根条目。
+  ///
+  /// 由 FlowSheet 宿主组件在首帧调用。若控制器已关闭、已销毁，或栈中已有页面，则不做任何操作。
   @override
   void ensureInitial(FlowSheetPage page) {
     if (_closed || _disposed) return;
@@ -148,9 +164,15 @@ class FlowSheetController<R> extends ChangeNotifier
     _scheduleShow(entry);
   }
 
+  /// 是否可以进行内部回退导航。
+  ///
+  /// 参见 [FlowSheetNavigator.canPop]。
   @override
   bool get canPop => _stack.length > 1;
 
+  /// 将 [page] 推入内部栈。
+  ///
+  /// 语义参见 [FlowSheetNavigator.push]。若控制器已关闭，则返回一个立即完成的 future。
   @override
   Future<T?> push<T>(FlowSheetPage<T> page) {
     if (_closed) return Future<T?>.value();
@@ -164,6 +186,9 @@ class FlowSheetController<R> extends ChangeNotifier
     return entry.completer.future.then((value) => value as T?);
   }
 
+  /// 用 [page] 替换栈顶页面。
+  ///
+  /// 语义参见 [FlowSheetNavigator.replace]。
   @override
   Future<T?> replace<T>(FlowSheetPage<T> page) {
     if (_closed) return Future<T?>.value();
@@ -179,27 +204,33 @@ class FlowSheetController<R> extends ChangeNotifier
     return entry.completer.future.then((value) => value as T?);
   }
 
+  /// 弹出栈顶的内部页面。
+  ///
+  /// 语义参见 [FlowSheetNavigator.pop]。根页面不能被弹出，请改用 [closeAll]。
   @override
   void pop<T>([T? result]) {
     if (_closed) return;
-    // 栈底页面不通过 pop 关闭，使用 closeAll 关闭整个 sheet。
+    // The root page cannot be popped; use closeAll to dismiss the sheet.
     if (_stack.length <= 1) return;
     final entry = _stack.last;
     entry.pendingResult = result;
-    // 结果回传不依赖 Navigator 动画回调：程序化 pop 立即完成业务 Future，
-    // onDidRemovePage 只负责栈簿记与生命周期（completeIfPending 幂等）。
+    // Complete the business future immediately; route removal handles stack
+    // bookkeeping and lifecycle (completeIfPending is idempotent).
     entry.completeIfPending(result);
     final nav = _navigatorKey.currentState;
     if (nav != null && nav.canPop()) {
-      // 交给 Navigator 播放出场动画，移除由 onDidRemovePage 收口。
+      // Let Navigator play the exit animation; onDidRemovePage finalizes.
       nav.pop();
     } else {
-      // Navigator 尚不可用时直接收口。
+      // Navigator not ready yet; finalize directly.
       handlePageRemoved(entry);
       notifyListeners();
     }
   }
 
+  /// 完成当前页面的结果，但不执行弹出操作。
+  ///
+  /// 语义参见 [FlowSheetNavigator.completeCurrent]。
   @override
   void completeCurrent<T>([T? result]) {
     if (_closed) return;
@@ -209,9 +240,10 @@ class FlowSheetController<R> extends ChangeNotifier
     entry.completeIfPending(result);
   }
 
-  /// 处理系统返回/侧滑返回。
+  /// 处理 FlowSheet 的系统返回与边缘滑动返回手势。
   ///
-  /// 外层 Popup 返回桥会委托到这里，确保多页时优先退内部页面。
+  /// 外层弹窗的返回桥接会委托到此处，使多页面流程在关闭 sheet 之前先弹出内部页面。
+  /// 返回 `true` 表示返回事件已被消费。
   @override
   bool handleBack([Object? result]) {
     if (_closed) return true;
@@ -225,6 +257,9 @@ class FlowSheetController<R> extends ChangeNotifier
     return true;
   }
 
+  /// 关闭整个 FlowSheet 并完成外层弹窗。
+  ///
+  /// 语义参见 [FlowSheetNavigator.closeAll]。
   @override
   void closeAll([Object? result]) {
     if (_closed) return;
@@ -232,7 +267,9 @@ class FlowSheetController<R> extends ChangeNotifier
     _popupHandle?.complete(result as R?);
   }
 
-  /// 路由真正从栈移除时调用（程序化 pop / 系统返回 / iOS 侧滑均收口于此）。
+  /// 当路由真正从内嵌 navigator 中被移除时调用。
+  ///
+  /// 在同一处统一处理程序化 pop、系统返回以及 iOS 交互式返回手势。
   @override
   void handlePageRemoved(FlowSheetEntry entry) {
     if (_closed) return;
@@ -275,11 +312,14 @@ class FlowSheetController<R> extends ChangeNotifier
     entry.lifecycleController.disposeLifecycle(reason);
   }
 
+  /// 释放资源并关闭任何尚未结束的业务状态。
+  ///
+  /// 具备幂等性；若被直接调用，也会先执行业务关闭，避免遗漏待处理 future 与 [onClose] 钩子。
   @override
   void dispose() {
-    // 幂等：延迟销毁握手与业务侧兜底调用可能并存。
+    // Idempotent: delayed-disposal handshakes and direct calls may coexist.
     if (_disposed) return;
-    // 直接 dispose 时也先完成业务收口，保证 pending Future / onClose 不丢。
+    // Run business close first so pending futures / onClose are not dropped.
     _closeBusiness();
     _disposed = true;
     _stack.clear();

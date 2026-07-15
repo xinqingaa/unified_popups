@@ -1,7 +1,8 @@
-/// A query-only category for grouping popup entries.
+/// 仅用于查询和分组弹窗条目的分类标签。
 ///
-/// A channel never drives back, route, or animation behavior.
+/// Channel 本身从不驱动返回键、路由或动画行为。
 final class PopupChannel {
+  /// 使用给定的非空 [name] 创建一个 channel。
   const PopupChannel(this.name) : assert(name != '');
 
   final String name;
@@ -15,6 +16,7 @@ final class PopupChannel {
   static const date = PopupChannel('date');
   static const custom = PopupChannel('custom');
 
+  /// 当两个 channel 的 [name] 相同时视为相等。
   @override
   bool operator ==(Object other) => other is PopupChannel && other.name == name;
 

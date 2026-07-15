@@ -16,18 +16,30 @@ import 'popup_keys.dart';
 import 'popup_position.dart';
 import 'popup_route_policy.dart';
 
-enum DropMenuMode { single, nested }
+/// 下拉菜单的布局模式：单层列表或两级嵌套区块。
+enum DropMenuMode {
+  single,
+  nested,
+}
 
-enum DropMenuSectionType { nested, direct }
+/// [DropMenuSection] 是展开为子项，还是作为直接可点击项。
+enum DropMenuSectionType {
+  nested,
+  direct,
+}
 
+/// 构建嵌套下拉菜单区块的展开/收起箭头图标。
 typedef DropMenuExpandIconBuilder = Widget Function(
   BuildContext context,
   bool expanded,
 );
 
-/// One selectable drop-menu value.
+/// 一个可选中的下拉菜单值。
 @immutable
 final class DropMenuItem<T> {
+  /// 创建一个菜单项。
+  ///
+  /// [label] 与 [labelWidget] 必须提供且只能提供一个。
   const DropMenuItem({
     required this.value,
     this.label,
@@ -52,16 +64,16 @@ final class DropMenuItem<T> {
   final bool selected;
   final bool disabled;
   final bool showUnselectedIndicator;
-
-  /// For flat/direct items, closes the whole menu. For nested options, closes
-  /// only the currently expanded section.
   final bool closeOnSelect;
   final VoidCallback? onTap;
 }
 
-/// A primary row in a two-level drop menu.
+/// 两级下拉菜单中的一个一级行。
 @immutable
 final class DropMenuSection<T> {
+  /// 创建一个带嵌套 [items] 的可展开区块。
+  ///
+  /// [label] 与 [labelWidget] 必须提供且只能提供一个。
   const DropMenuSection({
     required this.id,
     required this.items,
@@ -78,6 +90,7 @@ final class DropMenuSection<T> {
           'Provide exactly one of label or labelWidget.',
         );
 
+  /// 创建一个直接选中 [item] 而不展开的区块。
   const DropMenuSection.direct({
     required this.id,
     required DropMenuItem<T> item,
@@ -103,9 +116,10 @@ final class DropMenuSection<T> {
   final double? primaryVerticalPadding;
 }
 
-/// Immutable data for either a flat or a two-level drop menu.
+/// 单层或两级下拉菜单的不可变数据。
 @immutable
 final class DropMenu<T> {
+  /// 从 [items] 创建单层扁平菜单。
   const DropMenu.single({
     required this.items,
     this.selectedValue,
@@ -114,6 +128,7 @@ final class DropMenu<T> {
         sections = const [],
         initialOpenSectionId = null;
 
+  /// 从 [sections] 创建两级嵌套菜单。
   const DropMenu.nested({
     required this.sections,
     this.initialOpenSectionId,
@@ -130,9 +145,10 @@ final class DropMenu<T> {
   final String emptyText;
 }
 
-/// Visual customization for the standard drop-menu content.
+/// 标准下拉菜单内容的视觉定制。
 @immutable
 final class DropMenuStyle {
+  /// 创建下拉菜单外观默认值（默认液态玻璃面板）。
   const DropMenuStyle({
     this.constraints = const BoxConstraints(
       minWidth: 140,
@@ -199,8 +215,12 @@ final class DropMenuStyle {
   final DropMenuExpandIconBuilder? expandIconBuilder;
 }
 
-/// Complete configuration for the single `Pop.dropMenu` entrypoint.
+/// [Pop.dropMenu] 入口的完整配置。
 final class DropMenuConfig<T> extends MenuConfigBase {
+  /// 创建一个下拉菜单配置。
+  ///
+  /// 默认使用 [PopupKeys.globalDropMenu] 与
+  /// [PopupConflictPolicy.replaceExisting]，确保同一时刻只有一个下拉菜单打开。
   DropMenuConfig({
     required this.anchor,
     required this.menu,
@@ -217,8 +237,6 @@ final class DropMenuConfig<T> extends MenuConfigBase {
     ),
     this.ownership = const PopupOwnership(),
     this.barrier = const PopupBarrierConfig(color: Colors.transparent),
-    // Entry progress still drives content fade; PopupScene skips wrapping the
-    // glass/BackdropFilter in FadeTransition so blur stays correct.
     this.animationConfig = const PopupAnimationConfig(
       type: PopupAnimationType.fade,
       duration: Duration(milliseconds: 140),
@@ -231,19 +249,20 @@ final class DropMenuConfig<T> extends MenuConfigBase {
   final PopupAnchorController anchor;
   final DropMenu<T> menu;
   final DropMenuStyle menuStyle;
+
   @override
   final MenuPlacement placement;
+
   @override
   final Offset offset;
-
-  /// Receives every selection. This is the primary result channel for nested
-  /// options because selecting them keeps the outer menu open.
   final ValueChanged<T>? onSelected;
   final ValueChanged<String?>? onOpenSectionChanged;
   final PopupBehaviorConfig behavior;
   final PopupOwnership ownership;
+
   @override
   final PopupBarrierConfig barrier;
+
   @override
   final PopupAnimationConfig animationConfig;
   final PopupLifecycleCallbacks<T> lifecycle;

@@ -4,8 +4,12 @@ import 'liquid_glass.dart';
 import 'liquid_glass_button.dart';
 import 'liquid_glass_style.dart';
 
-/// A complete standalone liquid-glass action button.
+/// 一个自带液态玻璃外观的独立可点击控件。
+///
+/// 将 [LiquidGlass] 与 [LiquidGlassButton] 组合成单一组件。当只需要一个磨砂质感的
+/// 操作控件时，优先使用该组件而非手动组合两者。
 class LiquidGlassActionButton extends StatelessWidget {
+  /// 创建一个在按下时调用 [onTap] 的液态玻璃按钮。
   const LiquidGlassActionButton({
     required this.child,
     required this.onTap,
@@ -24,17 +28,29 @@ class LiquidGlassActionButton extends StatelessWidget {
   });
 
   final Widget child;
+
   final VoidCallback? onTap;
+
   final double? size;
+
   final double? width;
+
   final double? height;
+
   final EdgeInsetsGeometry? padding;
+
   final EdgeInsetsGeometry? margin;
+
   final BorderRadius? borderRadius;
+
   final AlignmentGeometry alignment;
+
   final LiquidGlassStyle style;
+
   final double? blurSigma;
+
   final Duration blurDelay;
+
   final bool enableShadow;
 
   @override

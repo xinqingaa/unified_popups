@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'liquid_glass_style.dart';
 
-/// Interactive region intended for placement inside a liquid-glass surface.
+/// 用于放置在 [LiquidGlass] 表面内部的可交互区域。
+///
+/// 提供由 [LiquidGlassStyle] 驱动的按压高亮与缩放动画。自身不绘制模糊或边缘效果；
+/// 需要完整控件时请配合 [LiquidGlass] 包裹，或直接使用 [LiquidGlassActionButton]。
 class LiquidGlassButton extends StatefulWidget {
+  /// 创建一个带液态玻璃按压反馈的可点击区域。
   const LiquidGlassButton({
     required this.child,
     required this.onTap,
@@ -17,12 +21,19 @@ class LiquidGlassButton extends StatefulWidget {
   });
 
   final Widget child;
+
   final VoidCallback? onTap;
+
   final double? width;
+
   final double? height;
+
   final EdgeInsetsGeometry? padding;
+
   final BorderRadius? borderRadius;
+
   final AlignmentGeometry alignment;
+
   final LiquidGlassStyle style;
 
   @override

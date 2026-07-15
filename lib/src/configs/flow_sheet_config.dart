@@ -14,7 +14,13 @@ import 'popup_route_policy.dart';
 import 'sheet_config.dart';
 import 'sheet_types.dart';
 
+/// [Pop.flowSheet] 的配置：承载由 [FlowSheetController] 管理的内部页面栈的
+/// sheet。
 final class FlowSheetConfig<R> extends SheetConfigBase {
+  /// 创建一个 flow-sheet 配置。
+  ///
+  /// [drag.modeListenable] 会被绑定到 [controller.dragDismissModeNotifier]，
+  /// 使 controller 能够随页面切换动态改变拖拽模式。
   FlowSheetConfig({
     required this.controller,
     required this.initialPage,
@@ -52,18 +58,25 @@ final class FlowSheetConfig<R> extends SheetConfigBase {
 
   final FlowSheetController<R> controller;
   final FlowSheetPage initialPage;
+
   @override
   final SheetDirection direction;
+
   @override
   final SheetHeaderConfig header;
+
   @override
   final SheetSizeConfig size;
+
   @override
   final SheetStyle style;
+
   @override
   final SheetDockConfig dock;
+
   @override
   final SheetDragConfig drag;
+
   @override
   final SheetKeyboardConfig keyboard;
   final bool? useSafeArea;
