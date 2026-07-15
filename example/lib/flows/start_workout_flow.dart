@@ -150,6 +150,8 @@ class _WorkoutDetailPage extends FlowSheetPage<_WorkoutResult?> {
     required this.controller,
   }) : super(
           id: 'workout_detail',
+          // 保活：否则被确认码页覆盖后 State 被 dispose，await 后 closeAll 不会执行。
+          maintainState: true,
           dragDismissMode: SheetDragDismissMode.contentWhenAtTop,
         );
 
@@ -220,7 +222,7 @@ class _WorkoutDetailPageState
                   '2. 如有心血管疾病请先咨询医生。\n'
                   '3. 本页 contentWhenAtTop：滚到顶再下拉可关整个 Sheet。\n'
                   '4. 系统返回优先 pop 本页，而不是直接关掉 Sheet。\n'
-                  '5. 确认后进入确认码页，成功时 completeCurrent + closeAll。\n\n'
+                  '5. 确认码页验证成功后 completeCurrent，本页再 closeAll（本页 maintainState）。\n\n'
                   '${List.generate(6, (i) => '补充说明 ${i + 1}：用于演示可滚动详情。').join('\n\n')}',
                   style: const TextStyle(height: 1.45),
                 ),
@@ -284,6 +286,7 @@ class _ConfirmCodePageState extends FlowSheetPageState<_ConfirmCodePage, bool> {
       setState(() => _error = '请输入至少 4 位确认码（演示任意数字即可）');
       return;
     }
+    // 只回传结果、不播内页返回动画；由详情页 await 后 closeAll 关整 Sheet。
     nav.completeCurrent(true);
   }
 
