@@ -191,12 +191,14 @@ class _MenuLabPageState extends State<MenuLabPage> {
   Future<void> _openMenu(
     PopupAnchorController anchor, {
     MenuPlacement placement = MenuPlacement.auto,
-    bool showBarrier = false,
+    bool showBarrier = true,
+    Color barrierColor = Colors.transparent,
   }) async {
     final action = await Pop.menu<String>(
       anchor: anchor,
       placement: placement,
       showBarrier: showBarrier,
+      barrierColor: barrierColor,
       builder: (dismiss) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -230,17 +232,16 @@ class _MenuLabPageState extends State<MenuLabPage> {
         padding: const EdgeInsets.all(16),
         children: [
           const LabBanner(
-            text: '标准选择使用 Pop.dropMenu；任意内容使用 Pop.menu。'
-                '两者都通过 PopupAnchor + PopupAnchorController 定位。'
-                '默认无遮罩：打开菜单后可继续滚动列表验证跟随。'
-                '需要点外部关闭时传 showBarrier: true。'
+            text: '标准选择用 Pop.dropMenu；任意内容用 Pop.menu。'
+                '两者默认相同交互：透明 Barrier、底层不可滚、点空白关闭。'
+                '需要滚动跟随传 showBarrier: false；需要暗色遮罩传 barrierColor。'
                 'Anchor 卸载以 anchorDetached 关闭。',
           ),
           const SizedBox(height: 8),
           const LabStatusBar(),
           LabGroup(
             title: 'DropMenu · 一级筛选',
-            subtitle: '主题化液态玻璃、系统勾选图标、禁用项；默认透明 Barrier 可点外关闭。',
+            subtitle: '主题化液态玻璃、系统勾选图标、禁用项；默认与 Pop.menu 相同：透明 Barrier、点外关闭。',
             children: [
               Align(
                 alignment: Alignment.centerLeft,
@@ -273,8 +274,8 @@ class _MenuLabPageState extends State<MenuLabPage> {
             ],
           ),
           LabGroup(
-            title: '原始 Pop.menu · 滚动跟随（默认无遮罩）',
-            subtitle: '打开菜单后继续上下滑动列表，菜单应跟着走。',
+            title: 'Pop.menu · 滚动跟随（高级：showBarrier: false）',
+            subtitle: '关闭 Barrier 后底层可滚，菜单经 Follower 跟随 Anchor。',
             children: [
               SizedBox(
                 height: 220,
@@ -290,7 +291,10 @@ class _MenuLabPageState extends State<MenuLabPage> {
                         controller: _scrollAnchor,
                         child: IconButton(
                           icon: const Icon(Icons.more_vert),
-                          onPressed: () => _openMenu(_scrollAnchor),
+                          onPressed: () => _openMenu(
+                            _scrollAnchor,
+                            showBarrier: false,
+                          ),
                         ),
                       ),
                     );
@@ -300,7 +304,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
             ],
           ),
           LabGroup(
-            title: '遮罩对比',
+            title: 'Barrier 对比',
             children: [
               Align(
                 alignment: Alignment.centerLeft,
@@ -308,7 +312,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
                   controller: _plainAnchor,
                   child: FilledButton.tonal(
                     onPressed: () => _openMenu(_plainAnchor),
-                    child: const Text('无遮罩（默认）'),
+                    child: const Text('默认 · 透明 Barrier · 点外关闭'),
                   ),
                 ),
               ),
@@ -319,9 +323,9 @@ class _MenuLabPageState extends State<MenuLabPage> {
                   child: OutlinedButton(
                     onPressed: () => _openMenu(
                       _barrierAnchor,
-                      showBarrier: true,
+                      barrierColor: const Color(0x8A000000),
                     ),
-                    child: const Text('有遮罩 · 点外部关闭'),
+                    child: const Text('暗色遮罩 · 点外部关闭'),
                   ),
                 ),
               ),

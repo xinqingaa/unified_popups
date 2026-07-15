@@ -154,8 +154,9 @@ final birthday = await Pop.date(
 );
 ```
 
-Menu 使用合成图层跟随 Anchor，滚动时无需重新计算坐标。**默认无全屏遮罩**，
-便于底层继续滚动；需要点外部关闭时传 `showBarrier: true`：
+Menu 使用合成图层跟随 Anchor，滚动时无需重新计算坐标。**默认透明 Barrier**：
+点空白关闭、底层不可滚。需要滚动跟随时传 `showBarrier: false`；需要暗色蒙层时传
+`barrierColor`：
 
 ```dart
 final menuAnchor = PopupAnchorController();
@@ -167,7 +168,8 @@ PopupAnchor(
     onPressed: () async {
       final action = await Pop.menu<String>(
         anchor: menuAnchor,
-        // showBarrier: true, // 需要点外部关闭时打开
+        // showBarrier: false, // 允许底层滚动并跟随
+        // barrierColor: Color(0x8A000000), // 暗色遮罩
         builder: (dismiss) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -183,8 +185,8 @@ PopupAnchor(
 
 Anchor 卸载时 Menu 会以 `PopupDismissReason.anchorDetached` 自动关闭。
 
-标准一级/二级选择菜单使用 `Pop.dropMenu`。它默认启用透明 Barrier，点击菜单外
-即可关闭，并提供主题化液态玻璃、系统勾选图标、禁用态和二级分组展开：
+标准一级/二级选择菜单使用 `Pop.dropMenu`。它与 `Pop.menu` 默认 Barrier 行为相同
+（透明、可点外关闭），并提供主题化液态玻璃、系统勾选图标、禁用态和二级分组展开：
 
 ```dart
 final status = await Pop.dropMenu<String>(

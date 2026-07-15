@@ -661,8 +661,9 @@ await Pop.dropMenu<String>(
 - `DropMenuStyle`：约束、圆角、玻璃样式、文本/分隔线/选中/箭头/二级面板颜色、
   文字样式和图标 Builder。默认宽度范围为 140–240。
 
-`Pop.dropMenu` 默认使用透明且可关闭的 Barrier，因此点击菜单外关闭但不会绘制
-暗色遮罩。需要底层继续滚动时可传 `showBarrier: false`。一级选项返回 `T` 并关闭；
+`Pop.dropMenu` 与 `Pop.menu` 默认交互一致：透明且可关闭的 Barrier，因此点击菜单
+外关闭但不会绘制暗色遮罩，同时挡住底层滚动。需要底层继续滚动并跟随 Anchor 时可传
+`showBarrier: false`。一级选项返回 `T` 并关闭；
 二级选项通过 `onSelected` / Item `onTap` 通知业务，只以尺寸 + 淡入动画收起当前
 Section，不关闭外层菜单。此时外层 Future 会在菜单最终关闭时结束，通常返回 null。
 direct 项仍由 `closeOnSelect` 决定关闭整个菜单还是仅更新选中态。
@@ -743,9 +744,9 @@ Future<T?> Pop.menu<T>({
   EdgeInsetsGeometry? padding,
   BoxConstraints? constraints,
   Decoration? decoration,
-  bool showBarrier = false,
+  bool showBarrier = true,
   bool barrierDismissible = true,
-  Color? barrierColor,
+  Color barrierColor = Colors.transparent,
 })
 ```
 
@@ -758,16 +759,33 @@ Future<T?> Pop.menu<T>({
 | `padding` | `EdgeInsets.zero` | 菜单容器内边距。 |
 | `constraints` | 最小宽 120、最大宽 280 | 菜单尺寸约束。 |
 | `decoration` | 主题 surface、圆角 8、阴影 | 菜单装饰。 |
-| `showBarrier` | `false` | 是否显示全屏遮罩。默认关闭，便于底层滚动与菜单跟随；需要点外部关闭时设为 `true`。 |
+| `showBarrier` | `true` | 是否显示全屏遮罩。默认开启（透明），点外关闭且挡住底层滚动。 |
 | `barrierDismissible` | `true` | 遮罩可点关；仅在 `showBarrier=true` 时生效。 |
-| `barrierColor` | `Color(0x8A000000)` | 遮罩颜色；仅在 `showBarrier=true` 时生效。 |
+| `barrierColor` | `Colors.transparent` | 遮罩颜色；默认透明不可见。需要暗色蒙层时自行传入。 |
 
+`Pop.menu` 与 `Pop.dropMenu` 默认交互一致：透明可点关 Barrier、底层不可滚、点空白关闭。
 Menu 通过 `CompositedTransformTarget/Follower` 跟随 Anchor；滚动、布局变化和
 Transform 不需要重新计算坐标。Anchor 卸载时以
 `PopupDismissReason.anchorDetached` 自动关闭。
 
-高级 `MenuConfig<T>` 的 `barrier` 默认亦为 `PopupBarrierConfig.hidden()`；需要遮罩时传入
-可见的 `PopupBarrierConfig`。另支持 `PopupMenuStyle`、behavior、ownership、
+#### 高级：允许底层滚动并跟随
+
+关闭 Barrier 后事件落到下层，列表可滚，菜单继续跟随 Anchor：
+
+```dart
+await Pop.menu<String>(
+  anchor: anchor,
+  showBarrier: false,
+  builder: (dismiss) => ...,
+);
+```
+
+需要暗色遮罩时保留 `showBarrier: true` 并设置 `barrierColor`（例如
+`Color(0x8A000000)`）。
+
+高级 `MenuConfig<T>` 的 `barrier` 默认亦为透明可关闭
+`PopupBarrierConfig(color: Colors.transparent)`；要滚动跟随时传入
+`PopupBarrierConfig.hidden()`。另支持 `PopupMenuStyle`、behavior、ownership、
 animationConfig 和 lifecycle。
 
 ## Custom Popup

@@ -59,8 +59,8 @@ await handle.dismissed;
 
 将 `GlobalKey anchorKey` 替换为稳定的 `PopupAnchorController`，用
 `PopupAnchor` 包裹触发 Widget，并把 `anchor:` 传给 `Pop.menu`。删除坐标轮询、
-RenderBox 重试和手动滚动位置更新。v2 Menu **默认无遮罩**，打开后可继续滚动以验证
-跟随；需要点外部关闭时传 `showBarrier: true`。
+RenderBox 重试和手动滚动位置更新。v2 Menu 与 DropMenu **默认透明 Barrier**（点外
+关闭、底层不可滚）；需要滚动跟随时传 `showBarrier: false`。
 
 ## 5. Loading 和 Toast 迁移
 

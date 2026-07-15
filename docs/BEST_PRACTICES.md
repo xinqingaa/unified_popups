@@ -82,16 +82,18 @@ PopupAnchor(
 不要再用 `GlobalKey + RenderBox` 手算位置。Anchor/Follower 能随滚动、布局和
 Transform 更新；Anchor 卸载会自动关闭 Menu。
 
-Menu **默认无全屏遮罩**，因此打开后仍可滚动底层列表并观察跟随。需要点外部关闭时：
+`Pop.menu` 与 `Pop.dropMenu` **默认透明 Barrier**：点外关闭、底层不可滚。需要
+打开后继续滚动底层列表并观察跟随时：
 
 ```dart
 Pop.menu(
   anchor: anchor,
-  showBarrier: true,
-  barrierDismissible: true,
+  showBarrier: false,
   builder: ...,
 );
 ```
+
+需要暗色蒙层时保留默认 `showBarrier: true`，并设置 `barrierColor`。
 
 ## 7. 路由与返回键
 

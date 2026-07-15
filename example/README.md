@@ -32,7 +32,7 @@ AppBar ⋯ 也可跳到 API 展柜。
 | Confirm / Date | 按钮 vs 遮罩/返回语义、outcome、堆叠、日期样式 |
 | Sheet | 四方向、三种拖拽（指示器仅底部）、键盘、dockToEdge、堆叠 |
 | FlowSheet | 全屏/半屏迷你栈、返回委托、产品 Flow 入口 |
-| Menu Anchor | 默认无遮罩滚动跟随、showBarrier 对比、边缘 placement、卸载关闭 |
+| Menu Anchor | 默认透明 Barrier 点外关闭、showBarrier: false 滚动跟随、边缘 placement、卸载关闭 |
 | Custom / Handle | CustomPopup、outcome/dismissed、tags/channel、查询 API |
 | 策略 | 返回顺序、persist/owner 路由、captureRoute、Ownership |
 | 异步边界 | Future/Stream/Timer/build 阶段调用 |

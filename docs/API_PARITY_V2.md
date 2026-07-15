@@ -121,10 +121,10 @@ MaterialApp(
 | `GlobalKey anchorKey` | `PopupAnchorController` + `PopupAnchor` | 替换 |
 | `anchorOffset` | `MenuConfig.offset` | 保留 |
 | builder/dismiss/result | 保留 | 保留 |
-| barrier、padding、constraints、decoration | `MenuConfig` / `PopupMenuStyle`；便捷 API 提供 `showBarrier`（**默认 false**） | 迁移/默认变更 |
+| barrier、padding、constraints、decoration | `MenuConfig` / `PopupMenuStyle`；便捷 API 提供 `showBarrier`（**默认 true，透明**） | 迁移/默认变更 |
 | animation 参数 | `PopupAnimationConfig` | 迁移 |
 | post-frame RenderBox 重试 | Target/Follower + placement delegate | 替换 |
-| Anchor 滚动后位置不变 | 自动跟随（默认无遮罩，底层可滚动） | 修复 |
+| Anchor 滚动后位置不变 | 自动跟随；滚动跟随时需 `showBarrier: false` | 修复 |
 | Anchor 卸载 | 自动以 anchorDetached 关闭 | 新增 |
 
 ## Date

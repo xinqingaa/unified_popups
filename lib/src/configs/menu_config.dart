@@ -48,7 +48,9 @@ final class MenuConfig<T> extends MenuConfigBase {
       backPolicy: PopupBackPolicy.dismiss,
     ),
     this.ownership = const PopupOwnership(),
-    this.barrier = const PopupBarrierConfig.hidden(),
+    // Transparent dismissible barrier: tap outside closes; blocks scroll under
+    // the menu. Pass PopupBarrierConfig.hidden() to allow scroll-follow.
+    this.barrier = const PopupBarrierConfig(color: Colors.transparent),
     this.animationConfig = const PopupAnimationConfig(
       type: PopupAnimationType.fade,
     ),
