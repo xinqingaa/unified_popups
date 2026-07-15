@@ -611,9 +611,9 @@ final status = await Pop.dropMenu<String>(
   menu: const DropMenu<String>.single(
     selectedValue: 'all',
     items: [
-      DropMenuItem(value: 'all', label: '全部订单'),
-      DropMenuItem(value: 'pending', label: '待成交'),
-      DropMenuItem(value: 'filled', label: '已成交'),
+      DropMenuItem(value: 'all', label: '全部'),
+      DropMenuItem(value: 'active', label: '处理中'),
+      DropMenuItem(value: 'done', label: '已完成'),
     ],
   ),
 );
@@ -627,18 +627,18 @@ final action = await Pop.dropMenu<String>(
   menu: DropMenu<String>.nested(
     sections: [
       DropMenuSection(
-        id: 'orderType',
-        label: '限价单',
+        id: 'displayMode',
+        label: '标准显示',
         items: const [
-          DropMenuItem(value: 'limit', label: '限价单', selected: true),
-          DropMenuItem(value: 'market', label: '市价单'),
+          DropMenuItem(value: 'standard', label: '标准显示', selected: true),
+          DropMenuItem(value: 'compact', label: '紧凑显示'),
         ],
       ),
       DropMenuSection.direct(
         id: 'confirm',
         item: DropMenuItem(
           value: 'confirm',
-          label: '下单二次确认',
+          label: '操作前确认',
           selected: true,
           showUnselectedIndicator: true,
           closeOnSelect: false,
@@ -658,7 +658,7 @@ final action = await Pop.dropMenu<String>(
   `selectedIcon`。
 - `DropMenuSection<T>`：可展开分组；`DropMenuSection.direct` 表示一级直接操作。
 - `DropMenuStyle`：约束、圆角、玻璃样式、文本/分隔线/选中/箭头/二级面板颜色、
-  文字样式和图标 Builder。
+  文字样式和图标 Builder。默认宽度范围为 140–240。
 
 `Pop.dropMenu` 默认使用透明且可关闭的 Barrier，因此点击菜单外关闭但不会绘制
 暗色遮罩。需要底层继续滚动时可传 `showBarrier: false`。普通选项返回 `T` 并关闭；
@@ -671,9 +671,25 @@ behavior、ownership、barrier、animationConfig 和 lifecycle。默认 conflict
 ### Liquid Glass
 
 DropMenu 默认使用从 `ThemeData.colorScheme` 解析的液态玻璃样式，自动适配明暗
-主题。`LiquidGlassStyle` 对外暴露背景、边框、按压高亮、阴影、模糊和描边配置；
+主题。`LiquidGlassStyle` 对外暴露背景、普通边框、顶部高光、按压高亮、阴影、
+模糊和描边配置；顶部高光可通过 `topHighlightColor` 独立于 `borderColor` 设置。
 `DropMenuStyle` 进一步暴露文字、禁用态、分隔线、选中色、二级背景和箭头颜色。
 颜色为 null 时采用主题默认值。
+
+```dart
+const style = DropMenuStyle(
+  constraints: BoxConstraints(minWidth: 140, maxWidth: 220),
+  glassStyle: LiquidGlassStyle(
+    backgroundColor: Color(0x88334455),
+    borderColor: Color(0x44556677),
+    topHighlightColor: Color(0xCCFFFFFF),
+  ),
+);
+```
+
+默认玻璃背景 Alpha 为浅色主题 `0xB3`、深色主题 `0x8C`。调用方传入带 Alpha 的
+`backgroundColor` 即可进一步控制透明度。一级菜单、二级选项以及一级 Section 的
+最后一项均自动省略底部分隔线。
 
 `LiquidGlass`、`LiquidGlassButton` 和 `LiquidGlassActionButton` 也作为独立公共组件
 导出，可在菜单之外复用。

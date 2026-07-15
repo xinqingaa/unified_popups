@@ -29,6 +29,8 @@
 - 新增主题化液态玻璃组件，以及一级/二级数据驱动的 `Pop.dropMenu` 和
   `Pop.openDropMenu`；支持系统/自定义勾选图标、禁用项、保持打开的设置项和完整
   颜色覆盖。
+- DropMenu 默认宽度收窄为 140–240，末项自动移除底部分隔线；液态玻璃降低默认
+  背景不透明度，并新增独立于普通边框的 `topHighlightColor`。
 - 修正 Menu 在透明可见 Barrier 下的 Follower 命中范围，菜单内容可正常接收点击，
   点击外部仍由 Barrier 关闭。
 - Loading 重复调用更新原逻辑 Entry，保留稳定 Handle，并从新配置重新开始计时。
@@ -50,7 +52,7 @@
 
 ### 示例和文档
 
-- Menu Lab 新增订单状态一级筛选和交易设置二级展开示例。
+- Menu Lab 新增通用一级筛选和二级设置展开示例。
 - FitPulse Example 全量迁移到 v2。
 - Example 启动页双入口：FitPulse 真实 App / API 展柜；展柜 AppBar 常驻 Entry
   计数，并新增「通用 Config」页说明两层 API。

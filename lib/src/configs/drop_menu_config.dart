@@ -52,6 +52,9 @@ final class DropMenuItem<T> {
   final bool selected;
   final bool disabled;
   final bool showUnselectedIndicator;
+
+  /// For flat/direct items, closes the whole menu. For nested options, closes
+  /// only the currently expanded section.
   final bool closeOnSelect;
   final VoidCallback? onTap;
 }
@@ -132,8 +135,8 @@ final class DropMenu<T> {
 final class DropMenuStyle {
   const DropMenuStyle({
     this.constraints = const BoxConstraints(
-      minWidth: 160,
-      maxWidth: 280,
+      minWidth: 140,
+      maxWidth: 240,
       maxHeight: 420,
     ),
     this.borderRadius = const BorderRadius.all(Radius.circular(18)),
@@ -256,10 +259,10 @@ final class DropMenuConfig<T> extends MenuConfigBase {
       menu: menu,
       style: menuStyle,
       onOpenSectionChanged: onOpenSectionChanged,
-      onItemSelected: (item) {
+      onItemSelected: (item, closeMenu) {
         item.onTap?.call();
         onSelected?.call(item.value);
-        if (item.closeOnSelect) typedHandle.complete(item.value);
+        if (closeMenu) typedHandle.complete(item.value);
       },
     );
   }

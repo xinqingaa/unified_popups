@@ -19,14 +19,14 @@ class _MenuLabPageState extends State<MenuLabPage> {
   final _edgeAnchor = PopupAnchorController();
   final _cornerAnchor = PopupAnchorController();
   final _detachAnchor = PopupAnchorController();
-  final _statusAnchor = PopupAnchorController();
-  final _tradeAnchor = PopupAnchorController();
+  final _filterAnchor = PopupAnchorController();
+  final _settingsAnchor = PopupAnchorController();
   bool _showDetachTarget = true;
-  String _orderStatus = 'all';
-  String _orderType = 'limit';
-  String _timeFrame = 'regular';
-  bool _secondConfirm = true;
-  bool _shortSellReminder = false;
+  String _filterValue = 'all';
+  String _displayMode = 'standard';
+  String _refreshMode = 'live';
+  bool _confirmBeforeAction = true;
+  bool _messageReminder = false;
 
   late final List<PopupAnchorController> _all = [
     _scrollAnchor,
@@ -35,8 +35,8 @@ class _MenuLabPageState extends State<MenuLabPage> {
     _edgeAnchor,
     _cornerAnchor,
     _detachAnchor,
-    _statusAnchor,
-    _tradeAnchor,
+    _filterAnchor,
+    _settingsAnchor,
   ];
 
   @override
@@ -47,86 +47,100 @@ class _MenuLabPageState extends State<MenuLabPage> {
     super.dispose();
   }
 
-  Future<void> _openStatusDropMenu() async {
-    final status = await Pop.dropMenu<String>(
-      anchor: _statusAnchor,
+  Future<void> _openFilterDropMenu() async {
+    final value = await Pop.dropMenu<String>(
+      anchor: _filterAnchor,
       menu: DropMenu<String>.single(
-        selectedValue: _orderStatus,
+        selectedValue: _filterValue,
         items: const <DropMenuItem<String>>[
-          DropMenuItem<String>(value: 'all', label: '全部订单'),
-          DropMenuItem<String>(value: 'pending', label: '待成交'),
-          DropMenuItem<String>(value: 'filled', label: '已成交'),
+          DropMenuItem<String>(value: 'all', label: '全部'),
+          DropMenuItem<String>(value: 'active', label: '处理中'),
+          DropMenuItem<String>(value: 'done', label: '已完成'),
           DropMenuItem<String>(
-            value: 'cancelled',
-            label: '已撤单（禁用示例）',
+            value: 'archived',
+            label: '已归档（禁用示例）',
             disabled: true,
           ),
         ],
       ),
     );
-    if (!mounted || status == null) return;
-    setState(() => _orderStatus = status);
-    labShowResult(context, '订单状态 → ${_statusLabel(status)}');
+    if (!mounted || value == null) return;
+    setState(() => _filterValue = value);
+    labShowResult(context, '筛选结果 → ${_filterLabel(value)}');
   }
 
-  Future<void> _openTradeDropMenu() async {
-    final action = await Pop.dropMenu<String>(
-      anchor: _tradeAnchor,
+  Future<void> _openSettingsDropMenu() async {
+    final colors = Theme.of(context).colorScheme;
+    await Pop.dropMenu<String>(
+      anchor: _settingsAnchor,
+      onSelected: _handleSettingsSelection,
+      style: DropMenuStyle(
+        constraints: const BoxConstraints(
+          minWidth: 140,
+          maxWidth: 220,
+          maxHeight: 420,
+        ),
+        glassStyle: LiquidGlassStyle(
+          backgroundColor: colors.surface.withAlpha(0x88),
+          borderColor: colors.outline.withAlpha(0x45),
+          topHighlightColor: colors.primary.withAlpha(0xA0),
+        ),
+      ),
       menu: DropMenu<String>.nested(
         sections: <DropMenuSection<String>>[
           DropMenuSection<String>(
-            id: 'orderType',
-            label: _orderType == 'limit' ? '限价单' : '市价单',
+            id: 'displayMode',
+            label: _displayMode == 'standard' ? '标准显示' : '紧凑显示',
             items: <DropMenuItem<String>>[
               DropMenuItem<String>(
-                value: 'order:limit',
-                label: '限价单',
-                selected: _orderType == 'limit',
+                value: 'display:standard',
+                label: '标准显示',
+                selected: _displayMode == 'standard',
               ),
               DropMenuItem<String>(
-                value: 'order:market',
-                label: '市价单',
-                selected: _orderType == 'market',
+                value: 'display:compact',
+                label: '紧凑显示',
+                selected: _displayMode == 'compact',
               ),
             ],
           ),
           DropMenuSection<String>(
-            id: 'timeFrame',
-            label: _timeFrame == 'regular' ? '正常交易时段' : '盘前盘后',
+            id: 'refreshMode',
+            label: _refreshMode == 'live' ? '实时刷新' : '节能刷新',
             items: <DropMenuItem<String>>[
               DropMenuItem<String>(
-                value: 'time:regular',
-                label: '正常交易时段',
-                selected: _timeFrame == 'regular',
+                value: 'refresh:live',
+                label: '实时刷新',
+                selected: _refreshMode == 'live',
               ),
               DropMenuItem<String>(
-                value: 'time:extended',
-                label: '盘前盘后',
-                selected: _timeFrame == 'extended',
+                value: 'refresh:saver',
+                label: '节能刷新',
+                selected: _refreshMode == 'saver',
               ),
             ],
           ),
           DropMenuSection<String>.direct(
-            id: 'secondConfirm',
+            id: 'confirmBeforeAction',
             item: DropMenuItem<String>(
               value: 'setting:confirm',
-              label: '下单二次确认',
-              selected: _secondConfirm,
+              label: '操作前确认',
+              selected: _confirmBeforeAction,
               showUnselectedIndicator: true,
               closeOnSelect: false,
               onTap: () {
                 if (mounted) {
-                  setState(() => _secondConfirm = !_secondConfirm);
+                  setState(() => _confirmBeforeAction = !_confirmBeforeAction);
                 }
               },
             ),
           ),
           DropMenuSection<String>.direct(
-            id: 'shortSellReminder',
+            id: 'messageReminder',
             item: DropMenuItem<String>(
-              value: 'setting:short',
-              label: '沽空提醒（自定义勾选图标）',
-              selected: _shortSellReminder,
+              value: 'setting:message',
+              label: '消息提醒（自定义图标）',
+              selected: _messageReminder,
               showUnselectedIndicator: true,
               closeOnSelect: false,
               selectedIcon: const Icon(
@@ -136,7 +150,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
               ),
               onTap: () {
                 if (mounted) {
-                  setState(() => _shortSellReminder = !_shortSellReminder);
+                  setState(() => _messageReminder = !_messageReminder);
                 }
               },
             ),
@@ -144,27 +158,33 @@ class _MenuLabPageState extends State<MenuLabPage> {
         ],
       ),
     );
-    if (!mounted || action == null) return;
-    setState(() {
-      switch (action) {
-        case 'order:limit':
-          _orderType = 'limit';
-        case 'order:market':
-          _orderType = 'market';
-        case 'time:regular':
-          _timeFrame = 'regular';
-        case 'time:extended':
-          _timeFrame = 'extended';
-      }
-    });
-    labShowResult(context, '二级菜单 → $action');
   }
 
-  String _statusLabel(String status) => switch (status) {
-        'pending' => '待成交',
-        'filled' => '已成交',
-        'cancelled' => '已撤单',
-        _ => '全部订单',
+  void _handleSettingsSelection(String action) {
+    if (!mounted) return;
+    var changed = true;
+    setState(() {
+      switch (action) {
+        case 'display:standard':
+          _displayMode = 'standard';
+        case 'display:compact':
+          _displayMode = 'compact';
+        case 'refresh:live':
+          _refreshMode = 'live';
+        case 'refresh:saver':
+          _refreshMode = 'saver';
+        default:
+          changed = false;
+      }
+    });
+    if (changed) labShowResult(context, '二级选项 → $action');
+  }
+
+  String _filterLabel(String value) => switch (value) {
+        'active' => '处理中',
+        'done' => '已完成',
+        'archived' => '已归档',
+        _ => '全部',
       };
 
   Future<void> _openMenu(
@@ -218,34 +238,34 @@ class _MenuLabPageState extends State<MenuLabPage> {
           const SizedBox(height: 8),
           const LabStatusBar(),
           LabGroup(
-            title: 'DropMenu · 一级订单筛选',
+            title: 'DropMenu · 一级筛选',
             subtitle: '主题化液态玻璃、系统勾选图标、禁用项；默认透明 Barrier 可点外关闭。',
             children: [
               Align(
                 alignment: Alignment.centerLeft,
                 child: PopupAnchor(
-                  controller: _statusAnchor,
+                  controller: _filterAnchor,
                   child: OutlinedButton.icon(
-                    onPressed: _openStatusDropMenu,
+                    onPressed: _openFilterDropMenu,
                     icon: const Icon(Icons.filter_list),
-                    label: Text('状态：${_statusLabel(_orderStatus)}'),
+                    label: Text('状态：${_filterLabel(_filterValue)}'),
                   ),
                 ),
               ),
             ],
           ),
           LabGroup(
-            title: 'DropMenu · 二级交易设置',
-            subtitle: '分组展开、单组展开、保持打开的设置开关，以及自定义勾选 Widget。',
+            title: 'DropMenu · 二级设置',
+            subtitle: '紧凑宽度、外部玻璃颜色、单组展开、保持打开与自定义勾选 Widget。',
             children: [
               Align(
                 alignment: Alignment.centerRight,
                 child: PopupAnchor(
-                  controller: _tradeAnchor,
+                  controller: _settingsAnchor,
                   child: FilledButton.tonalIcon(
-                    onPressed: _openTradeDropMenu,
+                    onPressed: _openSettingsDropMenu,
                     icon: const Icon(Icons.more_horiz),
-                    label: const Text('交易更多设置'),
+                    label: const Text('更多设置'),
                   ),
                 ),
               ),

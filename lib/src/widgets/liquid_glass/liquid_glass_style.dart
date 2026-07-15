@@ -8,6 +8,7 @@ final class LiquidGlassStyle {
   const LiquidGlassStyle({
     this.backgroundColor,
     this.borderColor,
+    this.topHighlightColor,
     this.pressHighlightColor,
     this.shadowColor,
     this.blurSigma = 24,
@@ -29,6 +30,9 @@ final class LiquidGlassStyle {
 
   final Color? backgroundColor;
   final Color? borderColor;
+
+  /// Gradient color painted along the top edge, independent from [borderColor].
+  final Color? topHighlightColor;
   final Color? pressHighlightColor;
   final Color? shadowColor;
   final double blurSigma;
@@ -44,6 +48,7 @@ final class LiquidGlassStyle {
   LiquidGlassStyle copyWith({
     Color? backgroundColor,
     Color? borderColor,
+    Color? topHighlightColor,
     Color? pressHighlightColor,
     Color? shadowColor,
     double? blurSigma,
@@ -59,6 +64,7 @@ final class LiquidGlassStyle {
     return LiquidGlassStyle(
       backgroundColor: backgroundColor ?? this.backgroundColor,
       borderColor: borderColor ?? this.borderColor,
+      topHighlightColor: topHighlightColor ?? this.topHighlightColor,
       pressHighlightColor: pressHighlightColor ?? this.pressHighlightColor,
       shadowColor: shadowColor ?? this.shadowColor,
       blurSigma: blurSigma ?? this.blurSigma,
@@ -79,6 +85,7 @@ final class ResolvedLiquidGlassStyle {
   const ResolvedLiquidGlassStyle({
     required this.backgroundColor,
     required this.borderColor,
+    required this.topHighlightColor,
     required this.pressHighlightColor,
     required this.shadowColor,
     required this.source,
@@ -86,6 +93,7 @@ final class ResolvedLiquidGlassStyle {
 
   final Color backgroundColor;
   final Color borderColor;
+  final Color topHighlightColor;
   final Color pressHighlightColor;
   final Color shadowColor;
   final LiquidGlassStyle source;
@@ -96,6 +104,7 @@ final class ResolvedLiquidGlassStyle {
         other is ResolvedLiquidGlassStyle &&
             backgroundColor == other.backgroundColor &&
             borderColor == other.borderColor &&
+            topHighlightColor == other.topHighlightColor &&
             pressHighlightColor == other.pressHighlightColor &&
             shadowColor == other.shadowColor &&
             source == other.source;
@@ -105,6 +114,7 @@ final class ResolvedLiquidGlassStyle {
   int get hashCode => Object.hash(
         backgroundColor,
         borderColor,
+        topHighlightColor,
         pressHighlightColor,
         shadowColor,
         source,
@@ -119,9 +129,11 @@ extension LiquidGlassStyleResolution on LiquidGlassStyle {
     final dark = theme.brightness == Brightness.dark;
     return ResolvedLiquidGlassStyle(
       backgroundColor:
-          backgroundColor ?? colors.surface.withAlpha(dark ? 0xB8 : 0xD9),
+          backgroundColor ?? colors.surface.withAlpha(dark ? 0x8C : 0xB3),
       borderColor:
-          borderColor ?? colors.onSurface.withAlpha(dark ? 0x2E : 0x24),
+          borderColor ?? colors.onSurface.withAlpha(dark ? 0x3D : 0x30),
+      topHighlightColor:
+          topHighlightColor ?? Colors.white.withAlpha(dark ? 0x8F : 0xB8),
       pressHighlightColor:
           pressHighlightColor ?? colors.onSurface.withAlpha(dark ? 0x24 : 0x18),
       shadowColor: shadowColor ?? colors.shadow.withAlpha(dark ? 0x73 : 0x38),

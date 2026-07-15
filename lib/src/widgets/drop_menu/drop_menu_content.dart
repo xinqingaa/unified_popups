@@ -15,7 +15,7 @@ class DropMenuContent<T> extends StatefulWidget {
 
   final DropMenu<T> menu;
   final DropMenuStyle style;
-  final ValueChanged<DropMenuItem<T>> onItemSelected;
+  final void Function(DropMenuItem<T> item, bool closeMenu) onItemSelected;
   final ValueChanged<String?>? onOpenSectionChanged;
 
   @override
@@ -47,7 +47,7 @@ class _DropMenuContentState<T> extends State<DropMenuContent<T>> {
   void _toggleSection(DropMenuSection<T> section) {
     if (section.disabled) return;
     if (section.type == DropMenuSectionType.direct) {
-      _select(section.directItem!);
+      _selectFlatOrDirect(section.directItem!);
       return;
     }
     setState(() {
@@ -56,14 +56,29 @@ class _DropMenuContentState<T> extends State<DropMenuContent<T>> {
     widget.onOpenSectionChanged?.call(_openSectionId);
   }
 
-  void _select(DropMenuItem<T> item) {
+  void _selectFlatOrDirect(DropMenuItem<T> item) {
     if (item.disabled) return;
     if (!item.closeOnSelect) {
       setState(() {
         _selectionOverrides[item] = !_isSelected(item);
       });
     }
-    widget.onItemSelected(item);
+    widget.onItemSelected(item, item.closeOnSelect);
+  }
+
+  void _selectNested(
+    DropMenuSection<T> section,
+    DropMenuItem<T> item,
+  ) {
+    if (item.disabled) return;
+    setState(() {
+      for (final option in section.items) {
+        _selectionOverrides[option] = identical(option, item);
+      }
+      if (item.closeOnSelect) _openSectionId = null;
+    });
+    widget.onItemSelected(item, false);
+    if (item.closeOnSelect) widget.onOpenSectionChanged?.call(null);
   }
 
   bool _isSelected(DropMenuItem<T> item) {
@@ -109,7 +124,7 @@ class _DropMenuContentState<T> extends State<DropMenuContent<T>> {
             selected: _isSelected(items[index]),
             style: widget.style,
             showDivider: index < items.length - 1,
-            onTap: () => _select(items[index]),
+            onTap: () => _selectFlatOrDirect(items[index]),
           ),
       ],
     );
@@ -121,15 +136,16 @@ class _DropMenuContentState<T> extends State<DropMenuContent<T>> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        for (final section in sections)
+        for (var index = 0; index < sections.length; index++)
           _Section<T>(
-            section: section,
-            expanded: _openSectionId == section.id,
+            section: sections[index],
+            expanded: _openSectionId == sections[index].id,
+            isLast: index == sections.length - 1,
             emptyText: widget.menu.emptyText,
             style: widget.style,
             isSelected: _isSelected,
-            onTap: () => _toggleSection(section),
-            onItemTap: _select,
+            onTap: () => _toggleSection(sections[index]),
+            onItemTap: (item) => _selectNested(sections[index], item),
           ),
       ],
     );
@@ -140,6 +156,7 @@ class _Section<T> extends StatelessWidget {
   const _Section({
     required this.section,
     required this.expanded,
+    required this.isLast,
     required this.emptyText,
     required this.style,
     required this.isSelected,
@@ -149,6 +166,7 @@ class _Section<T> extends StatelessWidget {
 
   final DropMenuSection<T> section;
   final bool expanded;
+  final bool isLast;
   final String emptyText;
   final DropMenuStyle style;
   final bool Function(DropMenuItem<T>) isSelected;
@@ -160,7 +178,8 @@ class _Section<T> extends StatelessWidget {
     final direct = section.type == DropMenuSectionType.direct;
     final colors = _ResolvedDropMenuColors.of(context, style);
     final primaryColor = section.disabled ? colors.disabled : colors.text;
-    final showDivider = section.showBottomDivider && !(expanded && !direct);
+    final showDivider =
+        section.showBottomDivider && !isLast && !(expanded && !direct);
     return Opacity(
       opacity: section.disabled ? 0.38 : 1,
       child: IgnorePointer(
@@ -218,39 +237,97 @@ class _Section<T> extends StatelessWidget {
                 ],
               ),
             ),
-            if (!direct && expanded)
-              Padding(
-                padding: style.nestedPanelMargin,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.nestedPanel,
-                    borderRadius: style.nestedPanelRadius,
-                  ),
-                  child: Padding(
-                    padding: style.nestedPanelPadding,
-                    child: section.items.isEmpty
-                        ? _EmptyRow(text: emptyText)
-                        : Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              for (var index = 0;
-                                  index < section.items.length;
-                                  index++)
-                                _OptionRow<T>(
-                                  item: section.items[index],
-                                  selected: isSelected(section.items[index]),
-                                  style: style,
-                                  showDivider: index < section.items.length - 1,
-                                  onTap: () => onItemTap(section.items[index]),
-                                ),
-                            ],
-                          ),
+            if (!direct)
+              _AnimatedSubmenu(
+                expanded: expanded,
+                sectionId: section.id,
+                child: Padding(
+                  padding: style.nestedPanelMargin,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.nestedPanel,
+                      borderRadius: style.nestedPanelRadius,
+                    ),
+                    child: Padding(
+                      padding: style.nestedPanelPadding,
+                      child: section.items.isEmpty
+                          ? _EmptyRow(text: emptyText)
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                for (var index = 0;
+                                    index < section.items.length;
+                                    index++)
+                                  _OptionRow<T>(
+                                    item: section.items[index],
+                                    selected: isSelected(section.items[index]),
+                                    style: style,
+                                    showDivider:
+                                        index < section.items.length - 1,
+                                    onTap: () =>
+                                        onItemTap(section.items[index]),
+                                  ),
+                              ],
+                            ),
+                    ),
                   ),
                 ),
               ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedSubmenu extends StatelessWidget {
+  const _AnimatedSubmenu({
+    required this.expanded,
+    required this.sectionId,
+    required this.child,
+  });
+
+  final bool expanded;
+  final String sectionId;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return AnimatedSwitcher(
+      duration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 200),
+      reverseDuration:
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 160),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (currentChild, previousChildren) {
+        return Stack(
+          alignment: Alignment.topCenter,
+          children: <Widget>[
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SizeTransition(
+            sizeFactor: animation,
+            alignment: Alignment.topCenter,
+            child: child,
+          ),
+        );
+      },
+      child: expanded
+          ? KeyedSubtree(
+              key: ValueKey<String>('drop_menu_submenu_$sectionId'),
+              child: child,
+            )
+          : SizedBox.shrink(
+              key: ValueKey<String>('drop_menu_submenu_closed_$sectionId'),
+            ),
     );
   }
 }

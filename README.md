@@ -192,15 +192,15 @@ final status = await Pop.dropMenu<String>(
   menu: const DropMenu<String>.single(
     selectedValue: 'all',
     items: [
-      DropMenuItem(value: 'all', label: '全部订单'),
-      DropMenuItem(value: 'pending', label: '待成交'),
+      DropMenuItem(value: 'all', label: '全部'),
+      DropMenuItem(value: 'active', label: '处理中'),
     ],
   ),
 );
 ```
 
 二级菜单使用 `DropMenu.nested` 和 `DropMenuSection`。设置类操作可传
-`closeOnSelect: false`，执行后保持菜单打开。完整的一级、二级订单风格示例见
+`closeOnSelect: false`，执行后保持菜单打开。完整的一级、二级通用示例见
 Example 的 `Menu / DropMenu` Lab。
 
 ## PopupHandle 与高级配置

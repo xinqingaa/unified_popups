@@ -29,7 +29,7 @@ final class LiquidGlassEdgePainter extends CustomPainter {
 
     final rrect = _safeRRect(rect);
     if (source.topStrokeWidth > 0) {
-      final transparent = style.borderColor.withAlpha(0);
+      final transparent = style.topHighlightColor.withAlpha(0);
       final paint = Paint()
         ..isAntiAlias = true
         ..style = PaintingStyle.stroke
@@ -41,8 +41,8 @@ final class LiquidGlassEdgePainter extends CustomPainter {
           Offset(rect.right, rect.top),
           <Color>[
             transparent,
-            style.borderColor,
-            style.borderColor,
+            style.topHighlightColor,
+            style.topHighlightColor,
             transparent,
           ],
           const <double>[0, 0.2, 0.8, 1],
