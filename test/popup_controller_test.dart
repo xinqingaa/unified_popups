@@ -74,6 +74,36 @@ void main() {
     expect(handle.state, PopupEntryState.disposed);
   });
 
+  test('open result exposes business result and null conflict decisions',
+      () async {
+    controller.attachHost();
+    final opened = controller.open<String, String>(
+      const PopupEntryRequest<String, String>(
+        channel: PopupChannel.menu,
+        config: 'first',
+        key: 'result-menu',
+      ),
+    );
+    final handle = opened.requireHandle();
+    controller.markPresented(handle.id);
+
+    final rejected = controller.open<String, String>(
+      const PopupEntryRequest<String, String>(
+        channel: PopupChannel.menu,
+        config: 'rejected',
+        key: 'result-menu',
+        conflictPolicy: PopupConflictPolicy.rejectNew,
+      ),
+    );
+    expect(rejected, isA<PopupRejected<String>>());
+    expect(await rejected.result, isNull);
+
+    final completion = handle.complete('selected');
+    expect(await opened.result, 'selected');
+    controller.markDisposed(handle.id);
+    await completion;
+  });
+
   test('only the first competing close commits an outcome', () async {
     controller.attachHost();
     final handle = open<bool, String>(

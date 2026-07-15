@@ -17,8 +17,12 @@
 
 ### 生命周期和管理
 
-- 所有高级 `openXxx` 与 `Pop.custom` 统一返回 `PopupOpenResult<T>`，完整表达
+- 每种能力收敛为唯一的 `Pop.xxx(Config)` 入口，删除全部 `openXxx` 和零散参数
+  重载；Config 成为唯一公开参数契约，`PopupTypeApi` 降为内部适配层。
+- 所有创建 API 统一返回 `PopupOpenResult<T>`，并新增 `.result` 便捷访问，完整表达
   opened、updated、toggledClosed 与 rejected；打开决策不再伪装成 Entry 关闭原因。
+- `PopupBehaviorConfig` 不再接收 channel；channel 由具体能力内部固定，避免无效
+  Config/channel 组合。
 - `PopupLifetime.until` 改为观察 Future settled：成功或失败都会以
   `externalEvent` 关闭，业务异常继续由原 Future 调用方处理。
 - PopupController 将 Entry Record、Handle 实现和 lifetime 资源拆入独立内部模块，
@@ -34,8 +38,8 @@
 
 - 标准 DropMenu 使用默认全局 key + `replaceExisting`，不同结果泛型之间也能安全
   替换，保证同时只有一个标准 DropMenu。
-- 新增主题化液态玻璃组件，以及一级/二级数据驱动的 `Pop.dropMenu` 和
-  `Pop.openDropMenu`；支持系统/自定义勾选图标、禁用项、保持打开的设置项和完整
+- 新增主题化液态玻璃组件，以及一级/二级数据驱动的 `Pop.dropMenu`；支持
+  系统/自定义勾选图标、禁用项、保持打开的设置项和完整
   颜色覆盖。
 - DropMenu 默认宽度收窄为 140–240，末项自动移除底部分隔线；液态玻璃降低默认
   背景不透明度，并新增独立于普通边框的 `topHighlightColor`。
@@ -62,7 +66,7 @@
 - FlowSheet 接入统一外层 Handle，同时保留内部页面栈、页面结果和生命周期。
 - Menu 改为 `PopupAnchorController + PopupAnchor`，随滚动和布局变化自动跟随，
   Anchor 卸载时自动关闭；**默认透明 Barrier**（与 DropMenu 一致：点外关闭、
-  底层不可滚）。需要滚动跟随时传 `showBarrier: false`。
+  底层不可滚）。需要滚动跟随时传 `PopupBarrierConfig.hidden()`。
 - 新增 `CustomPopupConfig`，自定义内容也接入统一生命周期和全局管理。
 
 ### 示例和文档
@@ -73,7 +77,7 @@
 - Menu Lab 新增通用一级筛选和二级设置展开示例。
 - FitPulse Example 全量迁移到 v2。
 - Example 启动页双入口：FitPulse 真实 App / API 展柜；展柜 AppBar 常驻 Entry
-  计数，并新增「通用 Config」页说明两层 API。
+  计数，并新增「通用 Config」页说明 Config-first 单入口 API。
 - Loading 有文案时自适应宽高；`LoadingConfig.position` 可错开多实例。
 - 技术实验室按类型分页覆盖整库能力；业务 Tab 保留真实用法示例。
 - Confirm Lab 增加默认线条与胶囊填充对照示例。

@@ -28,6 +28,18 @@ void main() {
     );
   });
 
+  test('DateConfig normalizes dates and clamps the initial value', () {
+    final config = DateConfig(
+      initialDate: DateTime(2010, 5, 4, 12),
+      minDate: DateTime(2020, 1, 2, 8),
+      maxDate: DateTime(2030, 1, 2, 8),
+    );
+
+    expect(config.range.initialDate, DateTime(2020, 1, 2));
+    expect(config.range.minDate, DateTime(2020, 1, 2));
+    expect(config.range.maxDate, DateTime(2030, 1, 2));
+  });
+
   testWidgets('date confirm returns the selected date', (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
@@ -35,11 +47,9 @@ void main() {
     final handle = PopupTypeApi(runtime)
         .date(
           DateConfig(
-            range: DateRangeConfig(
-              initialDate: initial,
-              minDate: DateTime(2020),
-              maxDate: DateTime(2030, 12, 31),
-            ),
+            initialDate: initial,
+            minDate: DateTime(2020),
+            maxDate: DateTime(2030, 12, 31),
             labels: const DateLabels(confirm: 'choose', cancel: 'cancel'),
             animationConfig:
                 const PopupAnimationConfig(duration: Duration.zero),
@@ -64,11 +74,9 @@ void main() {
     final handle = PopupTypeApi(runtime)
         .date(
           DateConfig(
-            range: DateRangeConfig(
-              initialDate: DateTime(2024),
-              minDate: DateTime(2020),
-              maxDate: DateTime(2030),
-            ),
+            initialDate: DateTime(2024),
+            minDate: DateTime(2020),
+            maxDate: DateTime(2030),
             animationConfig:
                 const PopupAnimationConfig(duration: Duration.zero),
           ),

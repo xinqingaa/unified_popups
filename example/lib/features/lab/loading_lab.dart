@@ -15,7 +15,7 @@ class LoadingLabPage extends StatefulWidget {
 }
 
 class _LoadingLabPageState extends State<LoadingLabPage> {
-  LoadingHandle? _handle;
+  UpdatablePopupHandle<void, LoadingConfig>? _handle;
   String _note = '';
 
   @override
@@ -38,21 +38,21 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 label: '分阶段更新文案',
                 subtitle: '同一 Loading，不闪进出场',
                 onPressed: () {
-                  Pop.loading(
+                  Pop.loading(const LoadingConfig(
                     message: '第一阶段…',
-                    duration: const Duration(seconds: 5),
-                  );
+                    lifetime: PopupLifetime.after(Duration(seconds: 5)),
+                  ));
                   Future<void>.delayed(const Duration(seconds: 1), () {
-                    Pop.loading(
+                    Pop.loading(const LoadingConfig(
                       message: '第二阶段：计时已重置',
-                      duration: const Duration(seconds: 3),
-                    );
+                      lifetime: PopupLifetime.after(Duration(seconds: 3)),
+                    ));
                   });
                   Future<void>.delayed(const Duration(milliseconds: 2200), () {
-                    Pop.loading(
+                    Pop.loading(const LoadingConfig(
                       message: '即将完成…',
-                      duration: const Duration(seconds: 2),
-                    );
+                      lifetime: PopupLifetime.after(Duration(seconds: 2)),
+                    ));
                   });
                   setState(() => _note = '已触发三次 loading 更新');
                 },
@@ -61,7 +61,10 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 label: '保存 Handle → update → dismiss',
                 outlined: true,
                 onPressed: () async {
-                  final handle = Pop.loading(message: 'Handle 持有中…');
+                  final handle = Pop.loading(
+                    const LoadingConfig(message: 'Handle 持有中…'),
+                  ).requireHandle()
+                      as UpdatablePopupHandle<void, LoadingConfig>;
                   setState(() {
                     _handle = handle;
                     _note = 'handle.isActive=${handle.isActive}';
@@ -84,7 +87,9 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 label: 'Pop.hideLoading()',
                 outlined: true,
                 onPressed: () async {
-                  Pop.loading(message: '可被 hideLoading 强制关闭');
+                  Pop.loading(
+                    const LoadingConfig(message: '可被 hideLoading 强制关闭'),
+                  );
                   await Future<void>.delayed(const Duration(milliseconds: 600));
                   await Pop.hideLoading();
                   if (mounted) setState(() => _note = 'hideLoading 完成');
@@ -115,7 +120,12 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 onPressed: () {
                   final done =
                       Future<void>.delayed(const Duration(milliseconds: 1500));
-                  Pop.loading(message: 'until 关闭中…', until: done);
+                  Pop.loading(
+                    LoadingConfig(
+                      message: 'until 关闭中…',
+                      lifetime: PopupLifetime.until(done),
+                    ),
+                  );
                 },
               ),
               LabAction(
@@ -128,9 +138,11 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                     () => throw StateError('Loading Lab simulated failure'),
                   );
                   final handle = Pop.loading(
-                    message: '等待失败 Future…',
-                    until: failed,
-                  );
+                    LoadingConfig(
+                      message: '等待失败 Future…',
+                      lifetime: PopupLifetime.until(failed),
+                    ),
+                  ).requireHandle();
                   final outcome = await handle.outcome;
                   if (mounted) {
                     setState(
@@ -144,10 +156,10 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 label: '仅 duration 2s',
                 outlined: true,
                 onPressed: () {
-                  Pop.loading(
+                  Pop.loading(const LoadingConfig(
                     message: '2 秒后自动关',
-                    duration: const Duration(seconds: 2),
-                  );
+                    lifetime: PopupLifetime.after(Duration(seconds: 2)),
+                  ));
                 },
               ),
             ],
@@ -159,10 +171,10 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 label: '打开 Loading 后按系统返回',
                 subtitle: '应挡住返回，Loading 不关',
                 onPressed: () {
-                  Pop.loading(
+                  Pop.loading(const LoadingConfig(
                     message: '返回应被 block · 2s 后自动关',
-                    duration: const Duration(seconds: 2),
-                  );
+                    lifetime: PopupLifetime.after(Duration(seconds: 2)),
+                  ));
                   setState(() => _note = '请立即按系统返回键验证 block');
                 },
               ),
@@ -170,10 +182,10 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 label: '长文案（不应截断）',
                 outlined: true,
                 onPressed: () {
-                  Pop.loading(
+                  Pop.loading(const LoadingConfig(
                     message: '正在同步健康数据并写入本地缓存，请稍候…',
-                    duration: const Duration(seconds: 3),
-                  );
+                    lifetime: PopupLifetime.after(Duration(seconds: 3)),
+                  ));
                 },
               ),
               LabAction(
@@ -181,7 +193,7 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 subtitle: '顶部上传 · 底部导出，可同时看见',
                 outlined: true,
                 onPressed: () {
-                  Pop.openLoading(
+                  Pop.loading(
                     const LoadingConfig(
                       message: '上传头像…',
                       position: PopupPosition.top,
@@ -194,7 +206,6 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                         color: Color(0x33000000),
                       ),
                       behavior: PopupBehaviorConfig(
-                        channel: PopupChannel.loading,
                         key: 'lab.loading.upload',
                         conflictPolicy: PopupConflictPolicy.stack,
                         backPolicy: PopupBackPolicy.block,
@@ -202,7 +213,7 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                       lifetime: PopupLifetime.after(Duration(seconds: 4)),
                     ),
                   );
-                  Pop.openLoading(
+                  Pop.loading(
                     const LoadingConfig(
                       message: '导出周报到本地…',
                       position: PopupPosition.bottom,
@@ -211,7 +222,6 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                       ),
                       barrier: PopupBarrierConfig.hidden(),
                       behavior: PopupBehaviorConfig(
-                        channel: PopupChannel.loading,
                         key: 'lab.loading.export',
                         conflictPolicy: PopupConflictPolicy.stack,
                         backPolicy: PopupBackPolicy.block,
@@ -233,7 +243,7 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
               LabAction(
                 label: '自定义指示器',
                 onPressed: () {
-                  Pop.openLoading(
+                  Pop.loading(
                     LoadingConfig(
                       message: '自定义 indicator',
                       indicator: LoadingIndicatorConfig(
@@ -254,14 +264,16 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 outlined: true,
                 onPressed: () {
                   Pop.loading(
-                    messageWidget: const Text(
-                      '富文本 Loading',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    const LoadingConfig(
+                      content: Text(
+                        '富文本 Loading',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      lifetime: PopupLifetime.after(Duration(seconds: 2)),
                     ),
-                    duration: const Duration(seconds: 2),
                   );
                 },
               ),

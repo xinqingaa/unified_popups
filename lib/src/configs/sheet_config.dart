@@ -9,7 +9,6 @@ import 'popup_animation_config.dart';
 import 'popup_back_policy.dart';
 import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
-import 'popup_channel.dart';
 import 'popup_position.dart';
 import 'popup_route_policy.dart';
 import 'popup_visual_config.dart';
@@ -140,7 +139,6 @@ final class SheetConfig<T> extends SheetConfigBase {
     this.keyboard = const SheetKeyboardConfig(),
     this.useSafeArea,
     this.behavior = const PopupBehaviorConfig(
-      channel: PopupChannel.sheet,
       routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,
       backPolicy: PopupBackPolicy.dismiss,
     ),

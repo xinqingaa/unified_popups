@@ -40,14 +40,16 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 subtitle: '试确认 / 取消 / 遮罩 / 返回',
                 onPressed: () async {
                   final result = await Pop.confirm(
-                    title: '删除记录',
-                    content: '删除后无法恢复。请分别试按钮与遮罩。',
-                    confirmText: '删除',
-                    cancelText: '取消',
-                    onConfirm: () => _setLast('onConfirm 已执行'),
-                    onCancel: () => _setLast('onCancel 已执行'),
-                  );
-                  _setLast('便捷 result=$result（另看上方 onConfirm/onCancel）');
+                    ConfirmConfig(
+                      title: '删除记录',
+                      content: '删除后无法恢复。请分别试按钮与遮罩。',
+                      confirmText: '删除',
+                      cancelText: '取消',
+                      onConfirm: () => _setLast('onConfirm 已执行'),
+                      onCancel: () => _setLast('onCancel 已执行'),
+                    ),
+                  ).result;
+                  _setLast('result=$result（另看上方 onConfirm/onCancel）');
                 },
               ),
               LabAction(
@@ -56,26 +58,29 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 outlined: true,
                 onPressed: () async {
                   final result = await Pop.confirm(
-                    title: '删除记录',
-                    content: '填充 / 胶囊风格（非默认）。',
-                    confirmText: '删除',
-                    cancelText: '取消',
-                    buttonStyle: ConfirmButtonStyle.filled,
-                    confirmBgColor: Colors.redAccent,
-                    style: const ConfirmStyle(
-                      buttonBorderRadius: BorderRadius.all(Radius.circular(24)),
-                      padding: EdgeInsets.all(24),
+                    const ConfirmConfig(
+                      title: '删除记录',
+                      content: '填充 / 胶囊风格（非默认）。',
+                      confirmText: '删除',
+                      cancelText: '取消',
+                      style: ConfirmStyle(
+                        buttonStyle: ConfirmButtonStyle.filled,
+                        confirmBackgroundColor: Colors.redAccent,
+                        buttonBorderRadius:
+                            BorderRadius.all(Radius.circular(24)),
+                        padding: EdgeInsets.all(24),
+                      ),
                     ),
-                  );
+                  ).result;
                   _setLast('胶囊 result=$result');
                 },
               ),
               LabAction(
-                label: 'openConfirm + outcome',
+                label: 'confirm + outcome',
                 subtitle: '区分 barrier / back / completed',
                 outlined: true,
                 onPressed: () async {
-                  final handle = Pop.openConfirm(
+                  final handle = Pop.confirm(
                     ConfirmConfig(
                       title: '高级 Confirm',
                       content: '关闭后读取 outcome.reason',
@@ -104,11 +109,13 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 outlined: true,
                 onPressed: () async {
                   final r = await Pop.confirm(
-                    title: '提示',
-                    content: '只有确认按钮',
-                    confirmText: '知道了',
-                    showCloseButton: true,
-                  );
+                    const ConfirmConfig(
+                      title: '提示',
+                      content: '只有确认按钮',
+                      confirmText: '知道了',
+                      showCloseButton: true,
+                    ),
+                  ).result;
                   _setLast('result=$r');
                 },
               ),
@@ -116,7 +123,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 label: '纵向按钮布局',
                 outlined: true,
                 onPressed: () {
-                  Pop.openConfirm(
+                  Pop.confirm(
                     const ConfirmConfig(
                       title: '纵向按钮',
                       content: 'buttonLayout = column',
@@ -130,7 +137,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 label: '自定义 Widget 标题/内容/扩展区',
                 outlined: true,
                 onPressed: () {
-                  Pop.openConfirm(
+                  Pop.confirm(
                     ConfirmConfig(
                       titleWidget: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -163,39 +170,46 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 label: 'Sheet 上再开 Confirm',
                 onPressed: () async {
                   await Pop.sheet<void>(
-                    title: '父级 Sheet',
-                    maxHeight: const SheetDimension.fraction(0.5),
-                    childBuilder: (dismiss) => Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                            'Confirm 默认 dismissWithParent：关 Sheet 会带走 Confirm。'),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: () async {
-                            final r = await Pop.confirm(
-                              title: '子 Confirm',
-                              content: '位于 Sheet 上方',
-                              cancelText: '取消',
-                            );
-                            if (context.mounted) {
-                              labShowResult(context, 'Confirm result=$r');
-                            }
-                          },
-                          child: const Text('打开 Confirm'),
-                        ),
-                        TextButton(
-                            onPressed: dismiss, child: const Text('关闭 Sheet')),
-                      ],
+                    SheetConfig<void>(
+                      header: const SheetHeaderConfig(title: '父级 Sheet'),
+                      size: const SheetSizeConfig(
+                        maxHeight: SheetDimension.fraction(0.5),
+                      ),
+                      builder: (context, handle) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                              'Confirm 默认 dismissWithParent：关 Sheet 会带走 Confirm。'),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                            onPressed: () async {
+                              final r = await Pop.confirm(
+                                const ConfirmConfig(
+                                  title: '子 Confirm',
+                                  content: '位于 Sheet 上方',
+                                  cancelText: '取消',
+                                ),
+                              ).result;
+                              if (context.mounted) {
+                                labShowResult(context, 'Confirm result=$r');
+                              }
+                            },
+                            child: const Text('打开 Confirm'),
+                          ),
+                          TextButton(
+                              onPressed: handle.dismiss,
+                              child: const Text('关闭 Sheet')),
+                        ],
+                      ),
                     ),
-                  );
+                  ).result;
                 },
               ),
               LabAction(
                 label: '外部 Handle.dismiss',
                 outlined: true,
                 onPressed: () async {
-                  final handle = Pop.openConfirm(
+                  final handle = Pop.confirm(
                     const ConfirmConfig(
                       title: '将被外部关闭',
                       content: '1 秒后 dismiss',
@@ -218,13 +232,17 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 label: '选择生日',
                 onPressed: () async {
                   final date = await Pop.date(
-                    title: '生日',
-                    confirmText: '确定',
-                    cancelText: '取消',
-                    initialDate: DateTime(1995, 6, 15),
-                    minDate: DateTime(1960),
-                    maxDate: DateTime.now(),
-                  );
+                    DateConfig(
+                      initialDate: DateTime(1995, 6, 15),
+                      minDate: DateTime(1960),
+                      maxDate: DateTime.now(),
+                      labels: const DateLabels(
+                        title: '生日',
+                        confirm: '确定',
+                        cancel: '取消',
+                      ),
+                    ),
+                  ).result;
                   _setLast(date == null ? 'Date 取消' : 'Date=$date');
                 },
               ),
@@ -233,13 +251,11 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                 outlined: true,
                 onPressed: () async {
                   final scheme = Theme.of(context).colorScheme;
-                  final date = await Pop.openDate(
+                  final date = await Pop.date(
                     DateConfig(
-                      range: DateRangeConfig(
-                        initialDate: DateTime.now(),
-                        minDate: DateTime(2000),
-                        maxDate: DateTime.now(),
-                      ),
+                      initialDate: DateTime.now(),
+                      minDate: DateTime(2000),
+                      maxDate: DateTime.now(),
                       labels: const DateLabels(
                         title: '训练日',
                         confirm: '选用',
@@ -253,7 +269,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                         radius: 20,
                       ),
                     ),
-                  ).requireHandle().result;
+                  ).result;
                   _setLast(date == null ? 'Date 取消' : 'Date=$date');
                 },
               ),

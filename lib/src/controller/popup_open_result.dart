@@ -22,6 +22,15 @@ sealed class PopupOpenResult<T> {
 
   bool get hasHandle => handleOrNull != null;
 
+  /// Waits for the business result when this request opened or updated an
+  /// entry. Requests rejected or consumed by toggle complete with `null`.
+  Future<T?> get result => switch (this) {
+        PopupOpened<T>(:final handle) ||
+        PopupUpdated<T>(:final handle) =>
+          handle.result,
+        PopupToggledClosed<T>() || PopupRejected<T>() => Future<T?>.value(),
+      };
+
   /// Returns the opened or updated handle when the caller knows that its
   /// conflict policy cannot reject or toggle the request.
   PopupHandle<T> requireHandle() {

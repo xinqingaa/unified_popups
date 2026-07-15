@@ -6,7 +6,6 @@ import 'popup_animation_config.dart';
 import 'popup_back_policy.dart';
 import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
-import 'popup_channel.dart';
 import 'popup_owner_policy.dart';
 import 'popup_position.dart';
 import 'popup_route_policy.dart';
@@ -75,12 +74,59 @@ final class DateStyle {
 }
 
 final class DateConfig implements PopupVisualConfig {
-  const DateConfig({
+  factory DateConfig({
+    DateTime? initialDate,
+    DateTime? minDate,
+    DateTime? maxDate,
+    DateLabels labels = const DateLabels(),
+    DateStyle style = const DateStyle(),
+    PopupBehaviorConfig behavior = const PopupBehaviorConfig(
+      routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,
+      backPolicy: PopupBackPolicy.dismiss,
+    ),
+    PopupOwnership ownership = const PopupOwnership(
+      policy: PopupOwnerPolicy.dismissWithParent,
+    ),
+    PopupBarrierConfig barrier = const PopupBarrierConfig(),
+    PopupPosition position = PopupPosition.bottom,
+    PopupAnimationConfig animationConfig = const PopupAnimationConfig(
+      type: PopupAnimationType.slideUp,
+      duration: Duration(milliseconds: 250),
+    ),
+    PopupLifecycleCallbacks<DateTime> lifecycle =
+        const PopupLifecycleCallbacks<DateTime>(),
+  }) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final min = DateUtils.dateOnly(minDate ?? DateTime(1960));
+    final max = DateUtils.dateOnly(maxDate ?? today);
+    final requested = DateUtils.dateOnly(initialDate ?? today);
+    final initial = requested.isBefore(min)
+        ? min
+        : requested.isAfter(max)
+            ? max
+            : requested;
+    return DateConfig.range(
+      range: DateRangeConfig(
+        initialDate: initial,
+        minDate: min,
+        maxDate: max,
+      ),
+      labels: labels,
+      style: style,
+      behavior: behavior,
+      ownership: ownership,
+      barrier: barrier,
+      position: position,
+      animationConfig: animationConfig,
+      lifecycle: lifecycle,
+    );
+  }
+
+  const DateConfig.range({
     required this.range,
     this.labels = const DateLabels(),
     this.style = const DateStyle(),
     this.behavior = const PopupBehaviorConfig(
-      channel: PopupChannel.date,
       routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,
       backPolicy: PopupBackPolicy.dismiss,
     ),

@@ -17,48 +17,57 @@ class _ProgressTabState extends State<ProgressTab> {
 
   Future<void> _pickStartDate() async {
     final date = await Pop.date(
-      title: '选择区间起始日',
-      initialDate: _rangeStart ?? DateTime.now(),
-      minDate: DateTime(2020),
-      maxDate: DateTime.now(),
-      confirmText: '确定',
-      cancelText: '取消',
-    );
+      DateConfig(
+        initialDate: _rangeStart ?? DateTime.now(),
+        minDate: DateTime(2020),
+        maxDate: DateTime.now(),
+        labels: const DateLabels(
+          title: '选择区间起始日',
+          confirm: '确定',
+          cancel: '取消',
+        ),
+      ),
+    ).result;
     if (date != null) {
       setState(() => _rangeStart = date);
-      Pop.toast(
+      Pop.toast(ToastConfig.text(
         '起始日：${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-      );
+      ));
     }
   }
 
   Future<void> _openMetricSheet() async {
     final picked = await Pop.sheet<String>(
-      title: '数据指标',
-      showDragHandle: true,
-      dragDismissMode: SheetDragDismissMode.fullBody,
-      childBuilder: (dismiss) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final m in ['体重', '体脂', '围度', '静息心率'])
-            ListTile(
-              title: Text(m),
-              onTap: () => dismiss(m),
-            ),
-        ],
+      SheetConfig<String>(
+        header: const SheetHeaderConfig(title: '数据指标'),
+        builder: (context, handle) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final m in ['体重', '体脂', '围度', '静息心率'])
+              ListTile(
+                title: Text(m),
+                onTap: () => handle.complete(m),
+              ),
+          ],
+        ),
       ),
-    );
+    ).result;
     if (picked != null) {
       setState(() => _metric = picked);
-      Pop.toast('已切换：$_metric');
+      Pop.toast(ToastConfig.text('已切换：$_metric'));
     }
   }
 
   Future<void> _exportReport() async {
     final export = Future<void>.delayed(const Duration(milliseconds: 1200));
-    Pop.loading(message: '导出周报…', until: export);
+    Pop.loading(
+      LoadingConfig(
+        message: '导出周报…',
+        lifetime: PopupLifetime.until(export),
+      ),
+    );
     await export;
-    Pop.toast('周报已生成', toastType: ToastType.success);
+    Pop.toast(const ToastConfig.text('周报已生成', type: ToastType.success));
   }
 
   @override

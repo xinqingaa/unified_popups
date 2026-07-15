@@ -9,47 +9,49 @@ class HomeTab extends StatelessWidget {
 
   Future<void> _syncHealth() async {
     final sync = Future<void>.delayed(const Duration(milliseconds: 1800));
-    Pop.loading(message: '连接健康服务…');
+    Pop.loading(const LoadingConfig(message: '连接健康服务…'));
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    Pop.loading(message: '拉取步数与消耗…');
+    Pop.loading(const LoadingConfig(message: '拉取步数与消耗…'));
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    Pop.loading(
+    Pop.loading(LoadingConfig(
       message: '写入本地…',
-      until: sync,
-    );
+      lifetime: PopupLifetime.until(sync),
+    ));
     await sync;
-    Pop.toast('同步完成', toastType: ToastType.success);
+    Pop.toast(const ToastConfig.text('同步完成', type: ToastType.success));
   }
 
   Future<void> _checkIn() async {
     final ok = await Pop.confirm(
-      title: '完成今日打卡',
-      content: '确认将今日训练标记为已完成？打卡后会计入连续天数。',
-      confirmText: '打卡',
-      cancelText: '取消',
-    );
+      const ConfirmConfig(
+        title: '完成今日打卡',
+        content: '确认将今日训练标记为已完成？打卡后会计入连续天数。',
+        confirmText: '打卡',
+        cancelText: '取消',
+      ),
+    ).result;
     if (ok == true) {
-      Pop.toast(
+      Pop.toast(const ToastConfig.text(
         '打卡成功，继续保持！',
-        toastType: ToastType.success,
+        type: ToastType.success,
         position: PopupPosition.bottom,
-      );
+      ));
     }
   }
 
   void _skipRestDay() {
-    Pop.toast(
+    Pop.toast(const ToastConfig.text(
       '今日目标尚未达成，建议完成至少 20 分钟活动',
-      toastType: ToastType.warn,
-    );
+      type: ToastType.warn,
+    ));
   }
 
   void _syncFailedDemo() {
-    Pop.toast(
+    Pop.toast(const ToastConfig.text(
       '网络异常，健康数据同步失败',
-      toastType: ToastType.error,
+      type: ToastType.error,
       position: PopupPosition.top,
-    );
+    ));
   }
 
   @override

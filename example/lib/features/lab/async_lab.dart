@@ -159,16 +159,16 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
       // 模拟网络请求
       Future.delayed(const Duration(milliseconds: 100)).then((_) {
         // 在 then 回调中调用 loading
-        Pop.loading(message: '处理数据中...');
+        Pop.loading(const LoadingConfig(message: '处理数据中...'));
         Future.delayed(const Duration(seconds: 2)).then((_) {
           Pop.hideLoading();
           _updateResult('场景1: 成功 - Future.then() 回调中调用 loading 正常');
-          Pop.toast('场景1测试成功', toastType: ToastType.success);
+          Pop.toast(const ToastConfig.text('场景1测试成功', type: ToastType.success));
         });
       });
     } catch (e) {
       _updateResult('场景1: 失败 - $e');
-      Pop.toast('场景1测试失败: $e', toastType: ToastType.error);
+      Pop.toast(ToastConfig.text('场景1测试失败: $e', type: ToastType.error));
     }
   }
 
@@ -180,17 +180,17 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // 在中间调用 loading
-      Pop.loading(message: '继续处理中...');
+      Pop.loading(const LoadingConfig(message: '继续处理中...'));
 
       // 第二步异步操作
       await Future.delayed(const Duration(seconds: 2));
 
       Pop.hideLoading();
       _updateResult('场景2: 成功 - async/await 中间调用 loading 正常');
-      Pop.toast('场景2测试成功', toastType: ToastType.success);
+      Pop.toast(const ToastConfig.text('场景2测试成功', type: ToastType.success));
     } catch (e) {
       _updateResult('场景2: 失败 - $e');
-      Pop.toast('场景2测试失败: $e', toastType: ToastType.error);
+      Pop.toast(ToastConfig.text('场景2测试失败: $e', type: ToastType.error));
     }
   }
 
@@ -203,13 +203,14 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
 
       stream.listen((data) {
         // 在 Stream 监听回调中调用 loading
-        Pop.loading(message: '处理流数据: $data');
+        Pop.loading(LoadingConfig(message: '处理流数据: $data'));
         Future.delayed(const Duration(seconds: 1)).then((_) {
           Pop.hideLoading();
           if (data == 2) {
             controller.close();
             _updateResult('场景3: 成功 - Stream 监听中调用 loading 正常');
-            Pop.toast('场景3测试成功', toastType: ToastType.success);
+            Pop.toast(
+                const ToastConfig.text('场景3测试成功', type: ToastType.success));
           }
         });
       });
@@ -224,7 +225,7 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
       });
     } catch (e) {
       _updateResult('场景3: 失败 - $e');
-      Pop.toast('场景3测试失败: $e', toastType: ToastType.error);
+      Pop.toast(ToastConfig.text('场景3测试失败: $e', type: ToastType.error));
     }
   }
 
@@ -234,16 +235,16 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
     try {
       Timer(const Duration(milliseconds: 100), () {
         // 在 Timer 回调中调用 loading
-        Pop.loading(message: '定时任务执行中...');
+        Pop.loading(const LoadingConfig(message: '定时任务执行中...'));
         Timer(const Duration(seconds: 2), () {
           Pop.hideLoading();
           _updateResult('场景4: 成功 - Timer 回调中调用 loading 正常');
-          Pop.toast('场景4测试成功', toastType: ToastType.success);
+          Pop.toast(const ToastConfig.text('场景4测试成功', type: ToastType.success));
         });
       });
     } catch (e) {
       _updateResult('场景4: 失败 - $e');
-      Pop.toast('场景4测试失败: $e', toastType: ToastType.error);
+      Pop.toast(ToastConfig.text('场景4测试失败: $e', type: ToastType.error));
     }
   }
 
@@ -255,16 +256,17 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
       // 这会在构建阶段之后立即执行，但可能仍在构建周期内
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // 这里调用 loading，验证 SafeOverlayEntry 是否正常工作
-        Pop.loading(message: 'postFrameCallback 中调用');
+        Pop.loading(const LoadingConfig(message: 'postFrameCallback 中调用'));
         Future.delayed(const Duration(seconds: 2)).then((_) {
           Pop.hideLoading();
           _updateResult('场景5: 成功 - postFrameCallback 中调用 loading 正常');
-          Pop.toast('场景5测试成功（关键测试）', toastType: ToastType.success);
+          Pop.toast(
+              const ToastConfig.text('场景5测试成功（关键测试）', type: ToastType.success));
         });
       });
     } catch (e) {
       _updateResult('场景5: 失败 - $e');
-      Pop.toast('场景5测试失败: $e', toastType: ToastType.error);
+      Pop.toast(ToastConfig.text('场景5测试失败: $e', type: ToastType.error));
     }
   }
 
@@ -282,12 +284,12 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
           .then((result) {
         if (result == true) {
           _updateResult('场景6: 成功 - initState 中异步调用 loading 正常');
-          Pop.toast('场景6测试成功', toastType: ToastType.success);
+          Pop.toast(const ToastConfig.text('场景6测试成功', type: ToastType.success));
         }
       });
     } catch (e) {
       _updateResult('场景6: 失败 - $e');
-      Pop.toast('场景6测试失败: $e', toastType: ToastType.error);
+      Pop.toast(ToastConfig.text('场景6测试失败: $e', type: ToastType.error));
     }
   }
 
@@ -306,12 +308,13 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
           .then((result) {
         if (result == true) {
           _updateResult('场景7: 成功 - build() 中直接调用 loading 正常（关键修复测试）');
-          Pop.toast('场景7测试成功（关键修复测试）', toastType: ToastType.success);
+          Pop.toast(const ToastConfig.text('场景7测试成功（关键修复测试）',
+              type: ToastType.success));
         }
       });
     } catch (e) {
       _updateResult('场景7: 失败 - $e');
-      Pop.toast('场景7测试失败: $e', toastType: ToastType.error);
+      Pop.toast(ToastConfig.text('场景7测试失败: $e', type: ToastType.error));
     }
   }
 }
@@ -330,7 +333,7 @@ class _TestInitStateWidgetState extends State<_TestInitStateWidget> {
     super.initState();
     // 在 initState 中异步调用 loading
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Pop.loading(message: 'initState 异步加载中...');
+      Pop.loading(const LoadingConfig(message: 'initState 异步加载中...'));
       Future.delayed(const Duration(seconds: 2)).then((_) {
         Pop.hideLoading();
         if (mounted) {
@@ -373,7 +376,7 @@ class _TestBuildDirectWidgetState extends State<_TestBuildDirectWidget> {
       _hasCalledLoading = true;
       // 直接调用，模拟在路由构建过程中立即初始化并调用 loading
       // 这会在构建阶段触发 overlay.insert()，需要延迟执行
-      Pop.loading(message: 'build() 中直接调用 loading...');
+      Pop.loading(const LoadingConfig(message: 'build() 中直接调用 loading...'));
       final navigator = Navigator.of(context);
       // 延迟关闭，验证弹窗是否正常显示
       Future.delayed(const Duration(seconds: 2)).then((_) {

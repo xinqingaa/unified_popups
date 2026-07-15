@@ -31,12 +31,8 @@ final class PopupTypeApi {
 
   final PopupRuntime runtime;
 
-  PopupOpenResult<void> openToast(ToastConfig config) {
+  PopupOpenResult<void> toast(ToastConfig config) {
     final behavior = config.behavior;
-    assert(
-      behavior.channel == PopupChannel.toast,
-      'ToastConfig must use PopupChannel.toast.',
-    );
     final initiallyQueued = _visibleToastCount(config.position) >= 3;
     final ownership = _captureOwnership(config.ownership);
     final lifecycle = PopupLifecycleCallbacks<void>(
@@ -71,10 +67,6 @@ final class PopupTypeApi {
 
   PopupOpenResult<void> loading(LoadingConfig config) {
     final behavior = config.behavior;
-    assert(
-      behavior.channel == PopupChannel.loading,
-      'LoadingConfig must use PopupChannel.loading.',
-    );
     return runtime.controller.open<void, LoadingConfig>(
       PopupEntryRequest<void, LoadingConfig>(
         channel: PopupChannel.loading,
@@ -95,10 +87,6 @@ final class PopupTypeApi {
 
   PopupOpenResult<bool> confirm(ConfirmConfig config) {
     final behavior = config.behavior;
-    assert(
-      behavior.channel == PopupChannel.confirm,
-      'ConfirmConfig must use PopupChannel.confirm.',
-    );
     return runtime.controller.open<bool, ConfirmConfig>(
       PopupEntryRequest<bool, ConfirmConfig>(
         channel: PopupChannel.confirm,
@@ -116,10 +104,6 @@ final class PopupTypeApi {
 
   PopupOpenResult<DateTime> date(DateConfig config) {
     final behavior = config.behavior;
-    assert(
-      behavior.channel == PopupChannel.date,
-      'DateConfig must use PopupChannel.date.',
-    );
     return runtime.controller.open<DateTime, DateConfig>(
       PopupEntryRequest<DateTime, DateConfig>(
         channel: PopupChannel.date,
@@ -137,10 +121,6 @@ final class PopupTypeApi {
 
   PopupOpenResult<T> sheet<T>(SheetConfig<T> config) {
     final behavior = config.behavior;
-    assert(
-      behavior.channel == PopupChannel.sheet,
-      'SheetConfig must use PopupChannel.sheet.',
-    );
     late PopupHandle<T> handle;
     final result = runtime.controller.open<T, SheetConfig<T>>(
       PopupEntryRequest<T, SheetConfig<T>>(
@@ -174,10 +154,6 @@ final class PopupTypeApi {
 
   PopupOpenResult<R> flowSheet<R>(FlowSheetConfig<R> config) {
     final behavior = config.behavior;
-    assert(
-      behavior.channel == PopupChannel.flowSheet,
-      'FlowSheetConfig must use PopupChannel.flowSheet.',
-    );
     config.controller.claimPopupSession();
     late PopupHandle<R> handle;
     late PopupOpenResult<R> result;
@@ -241,10 +217,6 @@ final class PopupTypeApi {
 
   PopupOpenResult<T> dropMenu<T>(DropMenuConfig<T> config) {
     final behavior = config.behavior;
-    assert(
-      behavior.channel == PopupChannel.menu,
-      'DropMenuConfig must use PopupChannel.menu.',
-    );
     if (!config.anchor.attached.value) {
       throw StateError(
           'PopupAnchor must be mounted before opening a drop menu.');

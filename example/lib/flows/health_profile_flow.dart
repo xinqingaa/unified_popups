@@ -11,19 +11,22 @@ class HealthProfileFlow {
     final controller = FlowSheetController<_HealthResult>();
     final draft = _HealthDraft();
     final result = await Pop.flowSheet<_HealthResult>(
-      controller: controller,
-      maxHeight: const SheetDimension.fraction(0.9),
-      dragDismissMode: SheetDragDismissMode.handleOnly,
-      barrierDismissible: false,
-      initialPage: _BasicsStepPage(controller: controller, draft: draft),
-    );
+      FlowSheetConfig<_HealthResult>(
+        controller: controller,
+        size: const SheetSizeConfig(
+          maxHeight: SheetDimension.fraction(0.9),
+        ),
+        drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
+        initialPage: _BasicsStepPage(controller: controller, draft: draft),
+      ),
+    ).result;
     if (result != null) {
-      Pop.toast(
+      Pop.toast(ToastConfig.text(
         '档案已保存：${result.name} · 风险等级 ${result.riskLevel}',
-        toastType: ToastType.success,
-      );
+        type: ToastType.success,
+      ));
     } else {
-      Pop.toast('已退出健康档案');
+      Pop.toast(const ToastConfig.text('已退出健康档案'));
     }
   }
 }

@@ -1,11 +1,9 @@
 import 'popup_back_policy.dart';
-import 'popup_channel.dart';
 import 'popup_conflict_policy.dart';
 import 'popup_route_policy.dart';
 
 final class PopupBehaviorConfig {
   const PopupBehaviorConfig({
-    required this.channel,
     this.key,
     this.tags = const <String>{},
     this.conflictPolicy = PopupConflictPolicy.stack,
@@ -13,7 +11,6 @@ final class PopupBehaviorConfig {
     this.backPolicy = PopupBackPolicy.dismiss,
   });
 
-  final PopupChannel channel;
   final String? key;
   final Set<String> tags;
   final PopupConflictPolicy conflictPolicy;
@@ -21,7 +18,6 @@ final class PopupBehaviorConfig {
   final PopupBackPolicy backPolicy;
 
   PopupBehaviorConfig copyWith({
-    PopupChannel? channel,
     String? key,
     Set<String>? tags,
     PopupConflictPolicy? conflictPolicy,
@@ -29,7 +25,6 @@ final class PopupBehaviorConfig {
     PopupBackPolicy? backPolicy,
   }) {
     return PopupBehaviorConfig(
-      channel: channel ?? this.channel,
       key: key ?? this.key,
       tags: tags ?? this.tags,
       conflictPolicy: conflictPolicy ?? this.conflictPolicy,

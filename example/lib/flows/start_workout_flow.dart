@@ -11,19 +11,23 @@ class StartWorkoutFlow {
   static Future<void> open() async {
     final controller = FlowSheetController<_WorkoutResult>();
     final result = await Pop.flowSheet<_WorkoutResult>(
-      controller: controller,
-      maxHeight: const SheetDimension.fraction(0.88),
-      dragDismissMode: SheetDragDismissMode.handleOnly,
-      barrierDismissible: true,
-      initialPage: _WorkoutListPage(controller: controller),
-    );
+      FlowSheetConfig<_WorkoutResult>(
+        controller: controller,
+        size: const SheetSizeConfig(
+          maxHeight: SheetDimension.fraction(0.88),
+        ),
+        drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
+        barrier: const PopupBarrierConfig(dismissible: true),
+        initialPage: _WorkoutListPage(controller: controller),
+      ),
+    ).result;
     if (result != null) {
-      Pop.toast(
+      Pop.toast(ToastConfig.text(
         '已开始「${result.title}」· ${result.sets} 组',
-        toastType: ToastType.success,
-      );
+        type: ToastType.success,
+      ));
     } else {
-      Pop.toast('已取消训练');
+      Pop.toast(const ToastConfig.text('已取消训练'));
     }
   }
 }

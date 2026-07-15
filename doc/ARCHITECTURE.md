@@ -33,7 +33,9 @@ v2 不处理多 Flutter Engine、后台 isolate 展示 UI、桌面多窗口共�
 
 ### Pop
 
-`Pop` 是推荐给业务使用的唯一入口。它只负责把便捷参数组装成类型 Config，并把调用交给默认 Runtime。它不保存 OverlayEntry、Timer、AnimationController、NavigatorState 或弹窗 Map。
+`Pop` 是推荐给业务使用的唯一入口。每种能力只有一个 `Pop.xxx(Config)` 方法；Config 是唯一参数契约，Pop 只把它交给内部类型适配器和默认 Runtime。它不保存 OverlayEntry、Timer、AnimationController、NavigatorState 或弹窗 Map。
+
+所有创建方法返回 `PopupOpenResult<T>`。业务可以忽略返回值、通过 `.result` 等待业务值，或通过 `requireHandle()` 获得命令式控制能力。Config 中不保存 channel；Toast、Sheet 等能力在适配器中固定自己的 channel，避免无效组合。
 
 ### PopupRuntime
 
@@ -110,7 +112,7 @@ Loading 和带 key 的 Toast 更新时保留同一个 Entry 和 Handle，递增 
 
 ### PopupConflictPolicy
 
-高级 `openXxx` 统一返回 `PopupOpenResult<T>`：
+所有 `Pop.xxx(Config)` 统一返回 `PopupOpenResult<T>`：
 
 | 策略 | 行为 | 返回 |
 | --- | --- | --- |
@@ -183,4 +185,3 @@ MaterialApp(
 ```
 
 若希望 Popup 也看到自定义 MediaQuery、ScreenUtil 或主题包装，应让 `Pop.hostBuilder` 位于这些包装内部；若包装只应作用于业务页面，则放在传入的 child 上。
-

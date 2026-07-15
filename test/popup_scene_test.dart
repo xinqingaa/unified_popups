@@ -53,9 +53,9 @@ void main() {
     final handles = <PopupHandle<void>>[];
     for (var index = 0; index < 4; index++) {
       handles.add(
-        (api.openToast(
-          ToastConfig(
-            message: 'toast-$index',
+        (api.toast(
+          ToastConfig.text(
+            'toast-$index',
             position: PopupPosition.top,
             lifetime: const PopupLifetime.manual(),
             animation: const PopupAnimationConfig(duration: Duration.zero),

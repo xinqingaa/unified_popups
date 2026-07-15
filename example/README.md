@@ -26,7 +26,7 @@ AppBar ⋯ 也可跳到 API 展柜。
 
 | 子页 | 覆盖 |
 | --- | --- |
-| 通用 Config | 两层 API、统一 PopupOpenResult、Barrier / Behavior / Lifetime / tags |
+| 通用 Config | Config-first 单入口、统一 PopupOpenResult、Barrier / Behavior / Lifetime / tags |
 | Toast | 类型/位置/样式、until 成功/失败、lane 排队、key 更新、toggle、barrier |
 | Loading | 原地更新、until 失败关闭、分位置双 Loading、Handle、返回 block |
 | Confirm / Date | 按钮 vs 遮罩/返回语义、outcome、堆叠、日期样式 |

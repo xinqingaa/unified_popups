@@ -215,9 +215,7 @@ void main() {
     Future<void> verify(
       PopupDismissReason expected,
       Future<void> Function(PopupRuntime runtime, String id) close, {
-      PopupBehaviorConfig behavior = const PopupBehaviorConfig(
-        channel: PopupChannel.confirm,
-      ),
+      PopupBehaviorConfig behavior = const PopupBehaviorConfig(),
     }) async {
       final runtime = PopupRuntime();
       runtime.attachHost(Object());
@@ -263,7 +261,6 @@ void main() {
         runtime.controller.handleRouteChanged(Object());
       },
       behavior: const PopupBehaviorConfig(
-        channel: PopupChannel.confirm,
         routePolicy: PopupRoutePolicy.dismissOnAnyRouteChange,
       ),
     );

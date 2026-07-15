@@ -64,7 +64,7 @@ class LabCatalog extends StatelessWidget {
       children: [
         const LabBanner(
           text: '按类型集中验收整库能力。右上角徽章随滚动保持可见。'
-              '「通用 Config」演示便捷 API 与高级 Config 两层用法。',
+              '「通用 Config」演示 Config-first 单入口和统一返回模型。',
         ),
         const SizedBox(height: 12),
         ...labEntries.map((e) => _LabTile(entry: e)),
@@ -91,7 +91,7 @@ final labEntries = <LabNavEntry>[
   LabNavEntry(
     icon: Icons.tune,
     title: '通用 Config',
-    subtitle: '两层 API · Barrier / Behavior / Lifetime / Ownership',
+    subtitle: '单入口 · Barrier / Behavior / Lifetime / Ownership',
     builder: (_) => const ConfigLabPage(),
   ),
   LabNavEntry(

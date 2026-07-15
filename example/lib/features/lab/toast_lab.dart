@@ -30,15 +30,18 @@ class ToastLabPage extends StatelessWidget {
                 label: 'success / warn / error / none',
                 subtitle: '依次弹出四种类型',
                 onPressed: () {
-                  Pop.toast('成功', toastType: ToastType.success);
+                  Pop.toast(
+                      const ToastConfig.text('成功', type: ToastType.success));
                   Future<void>.delayed(const Duration(milliseconds: 400), () {
-                    Pop.toast('警告', toastType: ToastType.warn);
+                    Pop.toast(
+                        const ToastConfig.text('警告', type: ToastType.warn));
                   });
                   Future<void>.delayed(const Duration(milliseconds: 800), () {
-                    Pop.toast('错误', toastType: ToastType.error);
+                    Pop.toast(
+                        const ToastConfig.text('错误', type: ToastType.error));
                   });
                   Future<void>.delayed(const Duration(milliseconds: 1200), () {
-                    Pop.toast('纯文本', toastType: ToastType.none);
+                    Pop.toast(const ToastConfig.text('纯文本'));
                   });
                 },
               ),
@@ -47,9 +50,11 @@ class ToastLabPage extends StatelessWidget {
                 subtitle: '三个位置各一条',
                 outlined: true,
                 onPressed: () {
-                  Pop.toast('顶部', position: PopupPosition.top);
-                  Pop.toast('居中', position: PopupPosition.center);
-                  Pop.toast('底部', position: PopupPosition.bottom);
+                  Pop.toast(const ToastConfig.text('顶部',
+                      position: PopupPosition.top));
+                  Pop.toast(const ToastConfig.text('居中'));
+                  Pop.toast(const ToastConfig.text('底部',
+                      position: PopupPosition.bottom));
                 },
               ),
               LabAction(
@@ -57,15 +62,16 @@ class ToastLabPage extends StatelessWidget {
                 outlined: true,
                 onPressed: () {
                   Pop.toast(
-                    null,
-                    messageWidget: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.bolt, color: Colors.amber),
-                        SizedBox(width: 8),
-                        Text('自定义 messageWidget',
-                            style: TextStyle(color: Colors.white)),
-                      ],
+                    const ToastConfig.content(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bolt, color: Colors.amber),
+                          SizedBox(width: 8),
+                          Text('自定义 messageWidget',
+                              style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -74,9 +80,9 @@ class ToastLabPage extends StatelessWidget {
                 label: '纵向布局 + 自定义样式',
                 outlined: true,
                 onPressed: () {
-                  Pop.openToast(
-                    ToastConfig(
-                      message: '纵向 Toast',
+                  Pop.toast(
+                    ToastConfig.text(
+                      '纵向 Toast',
                       type: ToastType.success,
                       layoutDirection: Axis.vertical,
                       style: ToastStyle(
@@ -103,8 +109,13 @@ class ToastLabPage extends StatelessWidget {
               LabAction(
                 label: '短 duration（800ms）',
                 onPressed: () {
-                  Pop.toast('800ms 后关闭',
-                      duration: const Duration(milliseconds: 800));
+                  Pop.toast(
+                    const ToastConfig.text(
+                      '800ms 后关闭',
+                      lifetime:
+                          PopupLifetime.after(Duration(milliseconds: 800)),
+                    ),
+                  );
                 },
               ),
               LabAction(
@@ -112,7 +123,12 @@ class ToastLabPage extends StatelessWidget {
                 outlined: true,
                 onPressed: () {
                   final done = Future<void>.delayed(const Duration(seconds: 2));
-                  Pop.toast('等待 until…', until: done);
+                  Pop.toast(
+                    ToastConfig.text(
+                      '等待 until…',
+                      lifetime: PopupLifetime.until(done),
+                    ),
+                  );
                 },
               ),
               LabAction(
@@ -124,9 +140,9 @@ class ToastLabPage extends StatelessWidget {
                     const Duration(seconds: 1),
                     () => throw StateError('Toast Lab simulated failure'),
                   );
-                  final handle = Pop.openToast(
-                    ToastConfig(
-                      message: '等待失败 Future…',
+                  final handle = Pop.toast(
+                    ToastConfig.text(
+                      '等待失败 Future…',
                       lifetime: PopupLifetime.until(failed),
                     ),
                   ).requireHandle();
@@ -146,9 +162,13 @@ class ToastLabPage extends StatelessWidget {
                 onPressed: () {
                   final done = Future<void>.delayed(const Duration(seconds: 1));
                   Pop.toast(
-                    'anyOf：应约 1s 关闭',
-                    duration: const Duration(seconds: 3),
-                    until: done,
+                    ToastConfig.text(
+                      'anyOf：应约 1s 关闭',
+                      lifetime: PopupLifetime.anyOf([
+                        const PopupLifetime.after(Duration(seconds: 3)),
+                        PopupLifetime.until(done),
+                      ]),
+                    ),
                   );
                 },
               ),
@@ -157,9 +177,11 @@ class ToastLabPage extends StatelessWidget {
                 outlined: true,
                 onPressed: () {
                   Pop.toast(
-                    '点我触发 onTap',
-                    duration: const Duration(seconds: 4),
-                    onTap: () => labShowResult(context, 'Toast onTap'),
+                    ToastConfig.text(
+                      '点我触发 onTap',
+                      lifetime: const PopupLifetime.after(Duration(seconds: 4)),
+                      onTap: () => labShowResult(context, 'Toast onTap'),
+                    ),
                   );
                 },
               ),
@@ -175,15 +197,18 @@ class ToastLabPage extends StatelessWidget {
                 onPressed: () {
                   for (var i = 1; i <= 5; i++) {
                     Pop.toast(
-                      '队列 #$i',
-                      position: PopupPosition.bottom,
-                      duration: const Duration(seconds: 3),
+                      ToastConfig.text(
+                        '队列 #$i',
+                        position: PopupPosition.bottom,
+                        lifetime:
+                            const PopupLifetime.after(Duration(seconds: 3)),
+                      ),
                     );
                   }
                 },
               ),
               LabAction(
-                label: '同 key 更新（openToast）',
+                label: '同 key 更新（同一 toast API）',
                 subtitle: '重复打开 lab.toast.status',
                 outlined: true,
                 onPressed: () {
@@ -199,9 +224,9 @@ class ToastLabPage extends StatelessWidget {
                 label: 'Toggle Toast',
                 subtitle: '点击在两种文案间切换',
                 onPressed: () {
-                  Pop.openToast(
-                    const ToastConfig(
-                      message: '点击切换 →',
+                  Pop.toast(
+                    const ToastConfig.text(
+                      '点击切换 →',
                       type: ToastType.warn,
                       toggle: ToastToggleConfig(
                         message: '已切换状态',
@@ -218,10 +243,11 @@ class ToastLabPage extends StatelessWidget {
                 outlined: true,
                 onPressed: () {
                   Pop.toast(
-                    '模态 Toast（点遮罩或等 duration）',
-                    showBarrier: true,
-                    barrierDismissible: true,
-                    duration: const Duration(seconds: 4),
+                    const ToastConfig.text(
+                      '模态 Toast（点遮罩或等 duration）',
+                      barrier: PopupBarrierConfig(dismissible: true),
+                      lifetime: PopupLifetime.after(Duration(seconds: 4)),
+                    ),
                   );
                 },
               ),
@@ -234,12 +260,11 @@ class ToastLabPage extends StatelessWidget {
 
   static Future<void> _showKeyedToast(BuildContext context) async {
     const key = 'lab.toast.status';
-    Pop.openToast(
-      ToastConfig(
-        message: '状态 A · ${DateTime.now().second}s',
+    Pop.toast(
+      ToastConfig.text(
+        '状态 A · ${DateTime.now().second}s',
         position: PopupPosition.bottom,
         behavior: const PopupBehaviorConfig(
-          channel: PopupChannel.toast,
           key: key,
           conflictPolicy: PopupConflictPolicy.updateExisting,
           backPolicy: PopupBackPolicy.ignore,
@@ -249,13 +274,12 @@ class ToastLabPage extends StatelessWidget {
     );
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!context.mounted) return;
-    Pop.openToast(
-      ToastConfig(
-        message: '状态 B · 已更新 · ${DateTime.now().second}s',
+    Pop.toast(
+      ToastConfig.text(
+        '状态 B · 已更新 · ${DateTime.now().second}s',
         type: ToastType.success,
         position: PopupPosition.bottom,
         behavior: const PopupBehaviorConfig(
-          channel: PopupChannel.toast,
           key: key,
           conflictPolicy: PopupConflictPolicy.updateExisting,
           backPolicy: PopupBackPolicy.ignore,

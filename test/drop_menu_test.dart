@@ -19,7 +19,6 @@ void main() {
       ),
     );
 
-    expect(config.behavior.channel, PopupChannel.menu);
     expect(config.behavior.key, PopupKeys.globalDropMenu);
     expect(
       config.behavior.conflictPolicy,
@@ -324,15 +323,17 @@ class _SingleMenuHarnessState extends State<_SingleMenuHarness> {
 
   Future<void> _open() async {
     final value = await Pop.dropMenu<String>(
-      anchor: _anchor,
-      menu: const DropMenu<String>.single(
-        selectedValue: 'all',
-        items: <DropMenuItem<String>>[
-          DropMenuItem<String>(value: 'all', label: '全部'),
-          DropMenuItem<String>(value: 'active', label: '处理中'),
-        ],
+      DropMenuConfig<String>(
+        anchor: _anchor,
+        menu: const DropMenu<String>.single(
+          selectedValue: 'all',
+          items: <DropMenuItem<String>>[
+            DropMenuItem<String>(value: 'all', label: '全部'),
+            DropMenuItem<String>(value: 'active', label: '处理中'),
+          ],
+        ),
       ),
-    );
+    ).result;
     if (mounted && value != null) setState(() => _result = value);
   }
 
@@ -374,37 +375,39 @@ class _NestedMenuHarnessState extends State<_NestedMenuHarness> {
 
   Future<void> _open() async {
     final value = await Pop.dropMenu<String>(
-      anchor: _anchor,
-      onSelected: (selection) {
-        if (mounted) setState(() => _result = selection);
-      },
-      menu: DropMenu<String>.nested(
-        sections: <DropMenuSection<String>>[
-          const DropMenuSection<String>(
-            id: 'display',
-            label: '显示模式',
-            items: <DropMenuItem<String>>[
-              DropMenuItem<String>(value: 'standard', label: '标准显示'),
-              DropMenuItem<String>(value: 'compact', label: '紧凑显示'),
-            ],
-          ),
-          DropMenuSection<String>.direct(
-            id: 'reminder',
-            item: DropMenuItem<String>(
-              value: 'reminder',
-              label: '提醒',
-              selected: _reminder,
-              closeOnSelect: false,
-              selectedIcon: const Icon(
-                Icons.star,
-                key: ValueKey<String>('custom-check'),
-              ),
-              onTap: () => _reminder = !_reminder,
+      DropMenuConfig<String>(
+        anchor: _anchor,
+        onSelected: (selection) {
+          if (mounted) setState(() => _result = selection);
+        },
+        menu: DropMenu<String>.nested(
+          sections: <DropMenuSection<String>>[
+            const DropMenuSection<String>(
+              id: 'display',
+              label: '显示模式',
+              items: <DropMenuItem<String>>[
+                DropMenuItem<String>(value: 'standard', label: '标准显示'),
+                DropMenuItem<String>(value: 'compact', label: '紧凑显示'),
+              ],
             ),
-          ),
-        ],
+            DropMenuSection<String>.direct(
+              id: 'reminder',
+              item: DropMenuItem<String>(
+                value: 'reminder',
+                label: '提醒',
+                selected: _reminder,
+                closeOnSelect: false,
+                selectedIcon: const Icon(
+                  Icons.star,
+                  key: ValueKey<String>('custom-check'),
+                ),
+                onTap: () => _reminder = !_reminder,
+              ),
+            ),
+          ],
+        ),
       ),
-    );
+    ).result;
     if (mounted && value != null) setState(() => _result = value);
   }
 
@@ -446,12 +449,14 @@ class _AutoPlacementHarnessState extends State<_AutoPlacementHarness> {
 
   void _open() {
     Pop.dropMenu<String>(
-      anchor: _anchor,
-      menu: const DropMenu<String>.single(
-        items: <DropMenuItem<String>>[
-          DropMenuItem<String>(value: 'one', label: '选项一'),
-          DropMenuItem<String>(value: 'two', label: '选项二'),
-        ],
+      DropMenuConfig<String>(
+        anchor: _anchor,
+        menu: const DropMenu<String>.single(
+          items: <DropMenuItem<String>>[
+            DropMenuItem<String>(value: 'one', label: '选项一'),
+            DropMenuItem<String>(value: 'two', label: '选项二'),
+          ],
+        ),
       ),
     );
   }

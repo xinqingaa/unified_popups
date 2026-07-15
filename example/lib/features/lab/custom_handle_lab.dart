@@ -55,7 +55,6 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                   final handle = Pop.custom<String>(
                     CustomPopupConfig<String>(
                       behavior: const PopupBehaviorConfig(
-                        channel: PopupChannel.custom,
                         key: 'lab.custom.phases',
                       ),
                       builder: (context, h) => _PhaseCard(handle: h),
@@ -84,7 +83,6 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                   Pop.custom<void>(
                     CustomPopupConfig<void>(
                       behavior: const PopupBehaviorConfig(
-                        channel: PopupChannel.custom,
                         key: 'lab.tag.a',
                         tags: {'lab-demo'},
                       ),
@@ -97,7 +95,6 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                   Pop.custom<void>(
                     CustomPopupConfig<void>(
                       behavior: const PopupBehaviorConfig(
-                        channel: PopupChannel.custom,
                         key: 'lab.tag.b',
                         tags: {'lab-demo'},
                       ),
@@ -123,10 +120,15 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                 label: '弹多个 Toast 后 dismissChannel(toast)',
                 outlined: true,
                 onPressed: () async {
-                  Pop.toast('ch-1', duration: const Duration(seconds: 8));
-                  Pop.toast('ch-2',
-                      position: PopupPosition.bottom,
-                      duration: const Duration(seconds: 8));
+                  Pop.toast(const ToastConfig.text(
+                    'ch-1',
+                    lifetime: PopupLifetime.after(Duration(seconds: 8)),
+                  ));
+                  Pop.toast(const ToastConfig.text(
+                    'ch-2',
+                    position: PopupPosition.bottom,
+                    lifetime: PopupLifetime.after(Duration(seconds: 8)),
+                  ));
                   await Future<void>.delayed(const Duration(milliseconds: 300));
                   final n = await Pop.dismissChannel(PopupChannel.toast);
                   if (mounted) {
@@ -138,16 +140,22 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                 label: 'dismissTop / dismissAll',
                 outlined: true,
                 onPressed: () async {
-                  Pop.toast('将被 dismissTop',
-                      duration: const Duration(seconds: 10));
+                  Pop.toast(const ToastConfig.text(
+                    '将被 dismissTop',
+                    lifetime: PopupLifetime.after(Duration(seconds: 10)),
+                  ));
                   await Pop.sheet<void>(
-                    title: '上层 Sheet',
-                    maxHeight: const SheetDimension.fraction(0.35),
-                    childBuilder: (d) => TextButton(
-                      onPressed: d,
-                      child: const Text('关'),
+                    SheetConfig<void>(
+                      header: const SheetHeaderConfig(title: '上层 Sheet'),
+                      size: const SheetSizeConfig(
+                        maxHeight: SheetDimension.fraction(0.35),
+                      ),
+                      builder: (context, handle) => TextButton(
+                        onPressed: handle.dismiss,
+                        child: const Text('关'),
+                      ),
                     ),
-                  );
+                  ).result;
                 },
               ),
               Row(
@@ -179,9 +187,10 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                 label: '查询 isVisibleKey / countChannel',
                 tonal: true,
                 onPressed: () {
-                  Pop.loading(
-                      message: '查询用 Loading',
-                      duration: const Duration(seconds: 3));
+                  Pop.loading(const LoadingConfig(
+                    message: '查询用 Loading',
+                    lifetime: PopupLifetime.after(Duration(seconds: 3)),
+                  ));
                   final visible = Pop.isVisibleKey(PopupKeys.globalLoading);
                   final active = Pop.isActiveKey(PopupKeys.globalLoading);
                   final count = Pop.countChannel(PopupChannel.loading);
@@ -203,7 +212,6 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
     final handle = Pop.custom<void>(
       CustomPopupConfig<void>(
         behavior: const PopupBehaviorConfig(
-          channel: PopupChannel.custom,
           key: 'lab.custom.external',
           routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,
         ),

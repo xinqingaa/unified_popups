@@ -53,21 +53,23 @@ class _MenuLabPageState extends State<MenuLabPage> {
 
   Future<void> _openFilterDropMenu() async {
     final value = await Pop.dropMenu<String>(
-      anchor: _filterAnchor,
-      menu: DropMenu<String>.single(
-        selectedValue: _filterValue,
-        items: const <DropMenuItem<String>>[
-          DropMenuItem<String>(value: 'all', label: '全部'),
-          DropMenuItem<String>(value: 'active', label: '处理中'),
-          DropMenuItem<String>(value: 'done', label: '已完成'),
-          DropMenuItem<String>(
-            value: 'archived',
-            label: '已归档（禁用示例）',
-            disabled: true,
-          ),
-        ],
+      DropMenuConfig<String>(
+        anchor: _filterAnchor,
+        menu: DropMenu<String>.single(
+          selectedValue: _filterValue,
+          items: const <DropMenuItem<String>>[
+            DropMenuItem<String>(value: 'all', label: '全部'),
+            DropMenuItem<String>(value: 'active', label: '处理中'),
+            DropMenuItem<String>(value: 'done', label: '已完成'),
+            DropMenuItem<String>(
+              value: 'archived',
+              label: '已归档（禁用示例）',
+              disabled: true,
+            ),
+          ],
+        ),
       ),
-    );
+    ).result;
     if (!mounted || value == null) return;
     setState(() => _filterValue = value);
     labShowResult(context, '筛选结果 → ${_filterLabel(value)}');
@@ -76,93 +78,96 @@ class _MenuLabPageState extends State<MenuLabPage> {
   Future<void> _openSettingsDropMenu() async {
     final colors = Theme.of(context).colorScheme;
     await Pop.dropMenu<String>(
-      anchor: _settingsAnchor,
-      offset: const Offset(0, 8),
-      onSelected: _handleSettingsSelection,
-      style: DropMenuStyle(
-        constraints: const BoxConstraints(
-          minWidth: 140,
-          maxWidth: 220,
-          maxHeight: 420,
+      DropMenuConfig<String>(
+        anchor: _settingsAnchor,
+        offset: const Offset(0, 8),
+        onSelected: _handleSettingsSelection,
+        menuStyle: DropMenuStyle(
+          constraints: const BoxConstraints(
+            minWidth: 140,
+            maxWidth: 220,
+            maxHeight: 420,
+          ),
+          glassStyle: LiquidGlassStyle(
+            backgroundColor: colors.surface.withAlpha(0x88),
+            borderColor: colors.outline.withAlpha(0x45),
+            topHighlightColor: colors.primary.withAlpha(0xA0),
+          ),
         ),
-        glassStyle: LiquidGlassStyle(
-          backgroundColor: colors.surface.withAlpha(0x88),
-          borderColor: colors.outline.withAlpha(0x45),
-          topHighlightColor: colors.primary.withAlpha(0xA0),
+        menu: DropMenu<String>.nested(
+          sections: <DropMenuSection<String>>[
+            DropMenuSection<String>(
+              id: 'displayMode',
+              label: _displayMode == 'standard' ? '标准显示' : '紧凑显示',
+              items: <DropMenuItem<String>>[
+                DropMenuItem<String>(
+                  value: 'display:standard',
+                  label: '标准显示',
+                  selected: _displayMode == 'standard',
+                ),
+                DropMenuItem<String>(
+                  value: 'display:compact',
+                  label: '紧凑显示',
+                  selected: _displayMode == 'compact',
+                ),
+              ],
+            ),
+            DropMenuSection<String>(
+              id: 'refreshMode',
+              label: _refreshMode == 'live' ? '实时刷新' : '节能刷新',
+              items: <DropMenuItem<String>>[
+                DropMenuItem<String>(
+                  value: 'refresh:live',
+                  label: '实时刷新',
+                  selected: _refreshMode == 'live',
+                ),
+                DropMenuItem<String>(
+                  value: 'refresh:saver',
+                  label: '节能刷新',
+                  selected: _refreshMode == 'saver',
+                ),
+              ],
+            ),
+            DropMenuSection<String>.direct(
+              id: 'confirmBeforeAction',
+              item: DropMenuItem<String>(
+                value: 'setting:confirm',
+                label: '操作前确认',
+                selected: _confirmBeforeAction,
+                showUnselectedIndicator: true,
+                closeOnSelect: false,
+                onTap: () {
+                  if (mounted) {
+                    setState(
+                        () => _confirmBeforeAction = !_confirmBeforeAction);
+                  }
+                },
+              ),
+            ),
+            DropMenuSection<String>.direct(
+              id: 'messageReminder',
+              item: DropMenuItem<String>(
+                value: 'setting:message',
+                label: '消息提醒（自定义图标）',
+                selected: _messageReminder,
+                showUnselectedIndicator: true,
+                closeOnSelect: false,
+                selectedIcon: const Icon(
+                  Icons.verified_rounded,
+                  size: 18,
+                  color: Colors.amber,
+                ),
+                onTap: () {
+                  if (mounted) {
+                    setState(() => _messageReminder = !_messageReminder);
+                  }
+                },
+              ),
+            ),
+          ],
         ),
       ),
-      menu: DropMenu<String>.nested(
-        sections: <DropMenuSection<String>>[
-          DropMenuSection<String>(
-            id: 'displayMode',
-            label: _displayMode == 'standard' ? '标准显示' : '紧凑显示',
-            items: <DropMenuItem<String>>[
-              DropMenuItem<String>(
-                value: 'display:standard',
-                label: '标准显示',
-                selected: _displayMode == 'standard',
-              ),
-              DropMenuItem<String>(
-                value: 'display:compact',
-                label: '紧凑显示',
-                selected: _displayMode == 'compact',
-              ),
-            ],
-          ),
-          DropMenuSection<String>(
-            id: 'refreshMode',
-            label: _refreshMode == 'live' ? '实时刷新' : '节能刷新',
-            items: <DropMenuItem<String>>[
-              DropMenuItem<String>(
-                value: 'refresh:live',
-                label: '实时刷新',
-                selected: _refreshMode == 'live',
-              ),
-              DropMenuItem<String>(
-                value: 'refresh:saver',
-                label: '节能刷新',
-                selected: _refreshMode == 'saver',
-              ),
-            ],
-          ),
-          DropMenuSection<String>.direct(
-            id: 'confirmBeforeAction',
-            item: DropMenuItem<String>(
-              value: 'setting:confirm',
-              label: '操作前确认',
-              selected: _confirmBeforeAction,
-              showUnselectedIndicator: true,
-              closeOnSelect: false,
-              onTap: () {
-                if (mounted) {
-                  setState(() => _confirmBeforeAction = !_confirmBeforeAction);
-                }
-              },
-            ),
-          ),
-          DropMenuSection<String>.direct(
-            id: 'messageReminder',
-            item: DropMenuItem<String>(
-              value: 'setting:message',
-              label: '消息提醒（自定义图标）',
-              selected: _messageReminder,
-              showUnselectedIndicator: true,
-              closeOnSelect: false,
-              selectedIcon: const Icon(
-                Icons.verified_rounded,
-                size: 18,
-                color: Colors.amber,
-              ),
-              onTap: () {
-                if (mounted) {
-                  setState(() => _messageReminder = !_messageReminder);
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+    ).result;
   }
 
   void _handleSettingsSelection(String action) {
@@ -192,38 +197,41 @@ class _MenuLabPageState extends State<MenuLabPage> {
         _ => '全部',
       };
 
-  Future<void> _openMenu(
+  Future<void> _showMenu(
     PopupAnchorController anchor, {
     MenuPlacement placement = MenuPlacement.auto,
-    bool showBarrier = true,
+    bool allowBackgroundScroll = false,
     Color barrierColor = Colors.transparent,
   }) async {
     final action = await Pop.menu<String>(
-      anchor: anchor,
-      placement: placement,
-      showBarrier: showBarrier,
-      barrierColor: barrierColor,
-      builder: (dismiss) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: const Text('编辑'),
-            onTap: () => dismiss('edit'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.share_outlined),
-            title: const Text('分享'),
-            onTap: () => dismiss('share'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: const Text('删除'),
-            onTap: () => dismiss('delete'),
-          ),
-        ],
+      MenuConfig<String>(
+        anchor: anchor,
+        placement: placement,
+        barrier: allowBackgroundScroll
+            ? const PopupBarrierConfig.hidden()
+            : PopupBarrierConfig(color: barrierColor),
+        builder: (context, handle) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('编辑'),
+              onTap: () => handle.complete('edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: const Text('分享'),
+              onTap: () => handle.complete('share'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: const Text('删除'),
+              onTap: () => handle.complete('delete'),
+            ),
+          ],
+        ),
       ),
-    );
+    ).result;
     if (!mounted) return;
     labShowResult(context, action == null ? 'Menu 关闭无结果' : 'Menu → $action');
   }
@@ -236,9 +244,9 @@ class _MenuLabPageState extends State<MenuLabPage> {
         padding: const EdgeInsets.all(16),
         children: [
           const LabBanner(
-            text: '标准选择用 Pop.dropMenu；任意内容用 Pop.menu。'
+            text: '标准选择和任意内容都使用唯一的 Config-first API。'
                 '两者默认相同交互：透明 Barrier、底层不可滚、点空白关闭。'
-                '需要滚动跟随传 showBarrier: false；需要暗色遮罩传 barrierColor。'
+                '需要滚动跟随使用 PopupBarrierConfig.hidden；需要暗色遮罩配置 color。'
                 'Anchor 卸载以 anchorDetached 关闭。',
           ),
           const SizedBox(height: 8),
@@ -297,7 +305,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
               LabAction(
                 label: '运行 DropMenu 替换演示',
                 onPressed: () async {
-                  final first = Pop.openDropMenu<String>(
+                  final first = Pop.dropMenu<String>(
                     DropMenuConfig<String>(
                       anchor: _replaceAnchorA,
                       menu: const DropMenu<String>.single(
@@ -310,7 +318,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
                   await Future<void>.delayed(
                     const Duration(milliseconds: 800),
                   );
-                  final second = Pop.openDropMenu<int>(
+                  final second = Pop.dropMenu<int>(
                     DropMenuConfig<int>(
                       anchor: _replaceAnchorB,
                       menu: const DropMenu<int>.single(
@@ -331,7 +339,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
             ],
           ),
           LabGroup(
-            title: 'Pop.menu · 滚动跟随（高级：showBarrier: false）',
+            title: 'Pop.menu · 滚动跟随（Barrier.hidden）',
             subtitle: '关闭 Barrier 后底层可滚，菜单经 Follower 跟随 Anchor。',
             children: [
               SizedBox(
@@ -348,9 +356,9 @@ class _MenuLabPageState extends State<MenuLabPage> {
                         controller: _scrollAnchor,
                         child: IconButton(
                           icon: const Icon(Icons.more_vert),
-                          onPressed: () => _openMenu(
+                          onPressed: () => _showMenu(
                             _scrollAnchor,
-                            showBarrier: false,
+                            allowBackgroundScroll: true,
                           ),
                         ),
                       ),
@@ -368,7 +376,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
                 child: PopupAnchor(
                   controller: _plainAnchor,
                   child: FilledButton.tonal(
-                    onPressed: () => _openMenu(_plainAnchor),
+                    onPressed: () => _showMenu(_plainAnchor),
                     child: const Text('默认 · 透明 Barrier · 点外关闭'),
                   ),
                 ),
@@ -378,7 +386,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
                 child: PopupAnchor(
                   controller: _barrierAnchor,
                   child: OutlinedButton(
-                    onPressed: () => _openMenu(
+                    onPressed: () => _showMenu(
                       _barrierAnchor,
                       barrierColor: const Color(0x8A000000),
                     ),
@@ -396,7 +404,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
                 child: PopupAnchor(
                   controller: _edgeAnchor,
                   child: OutlinedButton(
-                    onPressed: () => _openMenu(
+                    onPressed: () => _showMenu(
                       _edgeAnchor,
                       placement: MenuPlacement.belowEnd,
                     ),
@@ -409,7 +417,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
                 child: PopupAnchor(
                   controller: _cornerAnchor,
                   child: OutlinedButton(
-                    onPressed: () => _openMenu(
+                    onPressed: () => _showMenu(
                       _cornerAnchor,
                       placement: MenuPlacement.belowStart,
                     ),
@@ -426,7 +434,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
                 PopupAnchor(
                   controller: _detachAnchor,
                   child: FilledButton(
-                    onPressed: () => _openMenu(_detachAnchor),
+                    onPressed: () => _showMenu(_detachAnchor),
                     child: const Text('打开菜单'),
                   ),
                 ),
@@ -447,7 +455,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
                         const Duration(milliseconds: 50));
                   }
                   // ignore: unawaited_futures
-                  _openMenu(_detachAnchor);
+                  _showMenu(_detachAnchor);
                   await Future<void>.delayed(const Duration(milliseconds: 800));
                   if (mounted) setState(() => _showDetachTarget = false);
                 },

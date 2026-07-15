@@ -14,36 +14,39 @@ class CourseDetailPage extends StatelessWidget {
 
   Future<void> _adjustDifficulty() async {
     final level = await Pop.sheet<String>(
-      title: '调整难度',
-      showDragHandle: true,
-      childBuilder: (dismiss) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final label in ['初级', '中级', '进阶'])
-            ListTile(
-              title: Text(label),
-              onTap: () => dismiss(label),
-            ),
-        ],
+      SheetConfig<String>(
+        header: const SheetHeaderConfig(title: '调整难度'),
+        builder: (context, handle) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final label in ['初级', '中级', '进阶'])
+              ListTile(
+                title: Text(label),
+                onTap: () => handle.complete(label),
+              ),
+          ],
+        ),
       ),
-    );
+    ).result;
     if (level != null) {
-      Pop.toast('难度已设为 $level');
+      Pop.toast(ToastConfig.text('难度已设为 $level'));
     }
   }
 
   Future<void> _deletePlan(BuildContext context) async {
     final ok = await Pop.confirm(
-      title: '删除训练计划',
-      content: '确定删除「$title」？删除后不可恢复。',
-      confirmText: '删除',
-      cancelText: '取消',
-      style: const ConfirmStyle(
-        confirmStyle: TextStyle(color: Colors.red),
+      ConfirmConfig(
+        title: '删除训练计划',
+        content: '确定删除「$title」？删除后不可恢复。',
+        confirmText: '删除',
+        cancelText: '取消',
+        style: const ConfirmStyle(
+          confirmStyle: TextStyle(color: Colors.red),
+        ),
       ),
-    );
+    ).result;
     if (ok == true && context.mounted) {
-      Pop.toast('计划已删除', toastType: ToastType.success);
+      Pop.toast(const ToastConfig.text('计划已删除', type: ToastType.success));
       Navigator.of(context).pop();
     }
   }

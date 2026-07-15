@@ -4,7 +4,7 @@ import 'package:unified_popups/unified_popups.dart';
 import 'lab_section.dart';
 import 'lab_shell.dart';
 
-/// 演示便捷 API 与高级 Config 两层用法，以及通用配置对象。
+/// 演示 Config-first 单入口 API 与统一返回模型。
 class ConfigLabPage extends StatelessWidget {
   const ConfigLabPage({super.key});
 
@@ -16,41 +16,38 @@ class ConfigLabPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           const LabBanner(
-            text: '两层 API 不会打架：便捷 API 内部就是组装 Config。'
-                '日常用 Pop.toast/sheet/menu/dropMenu；需要 key/tags/策略/精确遮罩时用 openXxx(Config)。',
+            text: '每种能力只有一个 Pop.xxx(Config) 入口。普通调用可以忽略返回值，'
+                '需要结果或控制时再使用 result / requireHandle。',
           ),
           const SizedBox(height: 8),
           const LabGroup(
-            title: '怎么选',
+            title: '唯一选择',
             children: [
               LabNote(
-                '便捷层：少参数、等 Future 结果。\n'
-                '高级层：PopupHandle、PopupBarrierConfig、PopupBehaviorConfig、'
-                'PopupLifetime、PopupOwnership、lifecycle。\n'
-                '同一调用只走一层；不要既以为「扁平参数」又以为「Config 字段」会叠加。',
+                'Config 是唯一参数契约；Behavior、Barrier、Lifetime、Ownership、'
+                'Lifecycle 都是 Config 的分组字段。Builder 使用 V2 PopupHandle。',
               ),
             ],
           ),
           LabGroup(
-            title: '同一能力 · 两种写法',
+            title: '同一入口 · 不同配置深度',
             children: [
               LabAction(
-                label: '便捷：Toast + duration',
+                label: '普通：最小 ToastConfig',
                 onPressed: () {
-                  Pop.toast('便捷 API', duration: const Duration(seconds: 2));
+                  Pop.toast(const ToastConfig.text('最小 Config'));
                 },
               ),
               LabAction(
-                label: '高级：ToastConfig + PopupLifetime',
+                label: '高级：同一个 toast 方法',
                 outlined: true,
                 onPressed: () {
-                  Pop.openToast(
-                    const ToastConfig(
-                      message: '高级 Config',
+                  Pop.toast(
+                    const ToastConfig.text(
+                      '高级 Config',
                       type: ToastType.success,
                       lifetime: PopupLifetime.after(Duration(seconds: 2)),
                       behavior: PopupBehaviorConfig(
-                        channel: PopupChannel.toast,
                         key: 'lab.config.toast',
                         conflictPolicy: PopupConflictPolicy.updateExisting,
                         backPolicy: PopupBackPolicy.ignore,
@@ -63,18 +60,17 @@ class ConfigLabPage extends StatelessWidget {
           ),
           LabGroup(
             title: '统一 PopupOpenResult',
-            subtitle: '所有高级 openXxx 都返回 opened / updated / toggled / rejected。',
+            subtitle: '所有 Pop.xxx 都返回 opened / updated / toggled / rejected。',
             children: [
               LabAction(
                 label: '演示 opened → toggledClosed',
                 subtitle: '同 key Confirm 在 800ms 后再次 toggle',
                 onPressed: () async {
                   const behavior = PopupBehaviorConfig(
-                    channel: PopupChannel.confirm,
                     key: 'lab.config.toggle-confirm',
                     conflictPolicy: PopupConflictPolicy.toggle,
                   );
-                  final first = Pop.openConfirm(
+                  final first = Pop.confirm(
                     const ConfirmConfig(
                       content: '第一次返回 PopupOpened，随后自动 toggle 关闭',
                       behavior: behavior,
@@ -83,7 +79,7 @@ class ConfigLabPage extends StatelessWidget {
                   await Future<void>.delayed(
                     const Duration(milliseconds: 800),
                   );
-                  final second = Pop.openConfirm(
+                  final second = Pop.confirm(
                     const ConfirmConfig(
                       content: '不会创建第二个 Confirm',
                       behavior: behavior,
@@ -102,21 +98,20 @@ class ConfigLabPage extends StatelessWidget {
                 outlined: true,
                 onPressed: () {
                   const behavior = PopupBehaviorConfig(
-                    channel: PopupChannel.toast,
                     key: 'lab.config.result-toast',
                     conflictPolicy: PopupConflictPolicy.updateExisting,
                     backPolicy: PopupBackPolicy.ignore,
                   );
-                  final first = Pop.openToast(
-                    const ToastConfig(
-                      message: 'PopupOpened',
+                  final first = Pop.toast(
+                    const ToastConfig.text(
+                      'PopupOpened',
                       behavior: behavior,
                       lifetime: PopupLifetime.after(Duration(seconds: 3)),
                     ),
                   );
-                  final second = Pop.openToast(
-                    const ToastConfig(
-                      message: 'PopupUpdated · 同一个 Handle',
+                  final second = Pop.toast(
+                    const ToastConfig.text(
+                      'PopupUpdated · 同一个 Handle',
                       behavior: behavior,
                       lifetime: PopupLifetime.after(Duration(seconds: 3)),
                     ),
@@ -195,13 +190,12 @@ class ConfigLabPage extends StatelessWidget {
               LabAction(
                 label: 'tags + dismissTags',
                 onPressed: () {
-                  Pop.openToast(
-                    const ToastConfig(
-                      message: 'tag=demo',
+                  Pop.toast(
+                    const ToastConfig.text(
+                      'tag=demo',
                       position: PopupPosition.bottom,
                       lifetime: PopupLifetime.after(Duration(seconds: 8)),
                       behavior: PopupBehaviorConfig(
-                        channel: PopupChannel.toast,
                         tags: {'config-lab'},
                         backPolicy: PopupBackPolicy.ignore,
                       ),
@@ -210,7 +204,6 @@ class ConfigLabPage extends StatelessWidget {
                   Pop.custom<void>(
                     CustomPopupConfig<void>(
                       behavior: const PopupBehaviorConfig(
-                        channel: PopupChannel.custom,
                         key: 'lab.config.tagged',
                         tags: {'config-lab'},
                       ),
@@ -240,9 +233,9 @@ class ConfigLabPage extends StatelessWidget {
                 onPressed: () {
                   final until =
                       Future<void>.delayed(const Duration(seconds: 1));
-                  Pop.openToast(
-                    ToastConfig(
-                      message: 'anyOf：约 1s 关（非 5s）',
+                  Pop.toast(
+                    ToastConfig.text(
+                      'anyOf：约 1s 关（非 5s）',
                       lifetime: PopupLifetime.anyOf([
                         const PopupLifetime.after(Duration(seconds: 5)),
                         PopupLifetime.until(until),

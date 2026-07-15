@@ -1,8 +1,6 @@
 library unified_popups;
 
 export 'src/api/pop.dart' show Pop;
-export 'src/api/popup_type_api.dart'
-    show LoadingHandle, PopupTypeApi, ToastHandle;
 export 'src/configs/confirm_config.dart';
 export 'src/configs/custom_popup_config.dart';
 export 'src/configs/date_config.dart';

@@ -5,7 +5,6 @@ import 'package:unified_popups/src/api/popup_type_api.dart';
 import 'package:unified_popups/src/configs/loading_config.dart';
 import 'package:unified_popups/src/configs/popup_barrier_config.dart';
 import 'package:unified_popups/src/configs/popup_behavior_config.dart';
-import 'package:unified_popups/src/configs/popup_channel.dart';
 import 'package:unified_popups/src/configs/popup_conflict_policy.dart';
 import 'package:unified_popups/src/configs/popup_position.dart';
 import 'package:unified_popups/src/configs/toast_config.dart';
@@ -24,9 +23,9 @@ void main() {
     final api = PopupTypeApi(runtime);
     final handles = <PopupHandle<void>>[];
     for (var index = 0; index < 5; index++) {
-      final result = api.openToast(
-        ToastConfig(
-          message: 'toast-$index',
+      final result = api.toast(
+        ToastConfig.text(
+          'toast-$index',
           position: PopupPosition.top,
           lifetime: const PopupLifetime.manual(),
         ),
@@ -150,9 +149,9 @@ void main() {
         )
         .requireHandle();
     final toast = api
-        .openToast(
-          ToastConfig(
-            message: 'waiting',
+        .toast(
+          ToastConfig.text(
+            'waiting',
             lifetime: PopupLifetime.until(toastDone.future),
           ),
         )
@@ -184,13 +183,12 @@ void main() {
     runtime.attachHost(Object());
     final api = PopupTypeApi(runtime);
     const behavior = PopupBehaviorConfig(
-      channel: PopupChannel.toast,
       key: 'status',
       conflictPolicy: PopupConflictPolicy.updateExisting,
     );
-    final result = api.openToast(
-      const ToastConfig(
-        message: 'first',
+    final result = api.toast(
+      const ToastConfig.text(
+        'first',
         behavior: behavior,
         lifetime: PopupLifetime.manual(),
       ),
@@ -200,8 +198,8 @@ void main() {
 
     expect(
       handle.update(
-        const ToastConfig(
-          message: 'moved',
+        const ToastConfig.text(
+          'moved',
           position: PopupPosition.bottom,
           behavior: behavior,
           lifetime: PopupLifetime.manual(),
@@ -211,8 +209,8 @@ void main() {
     );
     expect(
       handle.update(
-        const ToastConfig(
-          message: 'modal',
+        const ToastConfig.text(
+          'modal',
           behavior: behavior,
           barrier: PopupBarrierConfig(),
           lifetime: PopupLifetime.manual(),
@@ -226,8 +224,8 @@ void main() {
 
     expect(
       handle.update(
-        const ToastConfig(
-          message: 'second',
+        const ToastConfig.text(
+          'second',
           behavior: behavior,
           lifetime: PopupLifetime.manual(),
         ),

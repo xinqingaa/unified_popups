@@ -1,11 +1,11 @@
 # unified_popups
 
 面向 Flutter 的统一全局弹窗系统。业务代码只使用 `Pop.*`，不需要持有
-`BuildContext`、`navigatorKey` 或到处注入 Controller。
+`BuildContext`、`navigatorKey` 或在页面间传递弹窗 Controller。
 
-支持 `toast`、`loading`、`confirm`、`sheet`、`flowSheet`、`date`、`menu`
-和 `custom`。所有类型共享同一套 Runtime、路由/返回策略、生命周期和
-`PopupHandle`。
+支持 Toast、Loading、Confirm、Date、Sheet、FlowSheet、Menu、DropMenu 和
+Custom。v2 遵循一个明确规则：**一种能力、一个 `Pop.xxx(Config)` 入口、一个
+`PopupOpenResult<T>` 返回模型。**
 
 ## 安装与初始化
 
@@ -14,271 +14,221 @@ dependencies:
   unified_popups: ^2.0.0
 ```
 
-应用只需接入一次 Host 和路由观察者：
-
 ```dart
-import 'package:flutter/material.dart';
-import 'package:unified_popups/unified_popups.dart';
-
-void main() => runApp(const MyApp());
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorObservers: [Pop.routeObserver],
-      builder: Pop.hostBuilder,
-      home: const HomePage(),
-    );
-  }
-}
-```
-
-初始化后，页面、Service、Flow、Timer 或网络回调中都直接调用：
-
-```dart
-Pop.toast('保存成功', toastType: ToastType.success);
-```
-
-无需传递 `context` 或 Controller。`Pop.ready` 可用于必须等待 Host 挂载的
-启动任务；首帧前发起的弹窗也会由 Runtime 暂存，Host 就绪后再显示。
-
-## 便捷 API
-
-### Toast 与 Loading
-
-```dart
-Pop.toast(
-  '同步完成',
-  position: PopupPosition.bottom,
-  duration: const Duration(seconds: 2),
-);
-
-final requestDone = fetchData();
-Pop.toast(
-  '正在同步',
-  until: requestDone,
+MaterialApp(
+  navigatorObservers: [Pop.routeObserver],
+  builder: Pop.hostBuilder,
+  home: const HomePage(),
 );
 ```
 
-`until` 允许外部 Future 决定关闭；Future 成功或失败结束都会关闭 Popup，业务错误
-仍由原 Future 的调用方处理。同时传入 `duration` 和 `until` 时，任一条件先到即关闭。
+首次 Host 挂载前发起的 Popup 会进入 `pendingHost`，Host 就绪后再显示。
+
+## 唯一 API 形式
 
 ```dart
-final loading = Pop.loading(message: '第一阶段…');
-Pop.loading(
-  message: '第二阶段…',
-  duration: const Duration(seconds: 2),
-);
-
-await loading.dismiss(); // 或 Pop.hideLoading()
+Pop.toast(const ToastConfig.text('保存成功'));
+Pop.loading(const LoadingConfig(message: '提交中'));
+Pop.confirm(const ConfirmConfig(content: '确定继续吗？'));
+Pop.date(DateConfig(initialDate: DateTime.now()));
+Pop.sheet<String>(SheetConfig<String>(builder: ...));
+Pop.flowSheet<Result>(FlowSheetConfig<Result>(...));
+Pop.menu<String>(MenuConfig<String>(...));
+Pop.dropMenu<String>(DropMenuConfig<String>(...));
+Pop.custom<String>(CustomPopupConfig<String>(...));
 ```
 
-Loading 使用稳定 key。重复调用不会叠加新层，而是更新当前内容并从新配置
-重新开始计时；也可通过 `until` 或 handle 从外部关闭。
+所有方法都返回 `PopupOpenResult<T>`。不关心返回值时直接忽略：
 
-### Confirm
+```dart
+Pop.toast(const ToastConfig.text('保存成功'));
+```
+
+需要业务值时使用 `.result`：
 
 ```dart
 final confirmed = await Pop.confirm(
-  title: '删除记录',
-  content: '删除后无法恢复。',
-  confirmText: '删除',
-  cancelText: '取消',
-  onConfirm: () => analytics.track('confirm_delete'),
-  onCancel: () => analytics.track('cancel_delete'),
-);
-
-if (confirmed == true) {
-  await deleteRecord();
-}
+  const ConfirmConfig(
+    title: '删除记录',
+    content: '删除后无法恢复。',
+    confirmText: '删除',
+    cancelText: '取消',
+  ),
+).result;
 ```
 
-`onConfirm` 和 `onCancel` 只对应各自按钮。遮罩、关闭按钮、返回键等关闭原因
-不会伪装成取消按钮点击；业务仍可用 `Future<bool?>` 获取结果。
-
-默认底部为分割线按钮（`ConfirmButtonStyle.divider`）。需要胶囊/填充风格时：
+需要命令式控制时获取 Handle：
 
 ```dart
-await Pop.confirm(
-  title: '删除记录',
-  content: '删除后无法恢复。',
-  confirmText: '删除',
-  cancelText: '取消',
-  buttonStyle: ConfirmButtonStyle.filled,
-  confirmBgColor: Colors.redAccent,
-);
+final handle = Pop.loading(
+  const LoadingConfig(message: '上传中'),
+).requireHandle();
+
+await handle.dismiss();
 ```
 
-### Sheet 与 FlowSheet
+## Toast 与 Loading
+
+Toast 用命名构造器区分文本和 Widget 内容：
 
 ```dart
-final action = await Pop.sheet<String>(
-  title: '选择操作',
-  maxHeight: const SheetDimension.fraction(0.6),
-  childBuilder: (dismiss) => ListView(
-    shrinkWrap: true,
-    children: [
-      ListTile(title: const Text('复制'), onTap: () => dismiss('copy')),
-      ListTile(title: const Text('删除'), onTap: () => dismiss('delete')),
-    ],
+Pop.toast(
+  const ToastConfig.text(
+    '同步完成',
+    type: ToastType.success,
+    position: PopupPosition.bottom,
+    lifetime: PopupLifetime.after(Duration(seconds: 2)),
+  ),
+);
+
+Pop.toast(
+  const ToastConfig.content(
+    Row(children: [Icon(Icons.check), Text('自定义内容')]),
   ),
 );
 ```
 
-Sheet 支持四个方向、键盘避让、边缘停靠以及
-`fullBody` / `contentWhenAtTop` / `handleOnly` 三种拖拽策略。
+`PopupLifetime.until` 在 Future 成功或失败结束时都会关闭 Popup：
 
 ```dart
-final controller = FlowSheetController<bool>();
-final completed = await Pop.flowSheet<bool>(
-  controller: controller,
-  initialPage: const FirstStepPage(),
-  maxHeight: const SheetDimension.fraction(0.9),
+final request = saveData();
+Pop.loading(
+  LoadingConfig(
+    message: '保存中',
+    lifetime: PopupLifetime.until(request),
+  ),
 );
+await request; // 业务错误仍由业务代码处理
 ```
 
-FlowSheet 页面使用 `nav.push`、`nav.pop`、`nav.replace`、
-`nav.completeCurrent` 和 `nav.closeAll`。它与 Sheet 共用渲染和关闭体系，但保留
-内部页面栈与精细生命周期。
-
-### Date 与 Menu
+Loading 默认使用全局 key 和 `updateExisting`。重复调用会更新原 Entry，而不是先关
+再开：
 
 ```dart
-final birthday = await Pop.date(
-  initialDate: DateTime(2000, 1, 1),
-  minDate: DateTime(1960),
-  maxDate: DateTime.now(),
-);
+Pop.loading(const LoadingConfig(message: '10%'));
+Pop.loading(const LoadingConfig(message: '80%')); // PopupUpdated
 ```
 
-Menu 使用合成图层跟随 Anchor，滚动时无需重新计算坐标。**默认透明 Barrier**：
-点空白关闭、底层不可滚。需要滚动跟随时传 `showBarrier: false`；需要暗色蒙层时传
-`barrierColor`：
+## V2 PopupHandle
+
+Sheet、Menu 和 Custom 的 Builder 直接获得稳定的 `PopupHandle<T>`：
 
 ```dart
-final menuAnchor = PopupAnchorController();
+final selected = await Pop.sheet<String>(
+  SheetConfig<String>(
+    header: const SheetHeaderConfig(title: '选择操作'),
+    size: const SheetSizeConfig(
+      maxHeight: SheetDimension.fraction(0.6),
+    ),
+    builder: (context, handle) => Column(
+      children: [
+        ListTile(
+          title: const Text('复制'),
+          onTap: () => handle.complete('copy'),
+        ),
+        TextButton(
+          onPressed: handle.dismiss,
+          child: const Text('取消'),
+        ),
+      ],
+    ),
+  ),
+).result;
+```
+
+- `complete(value)`：业务正常完成，可携带结果，reason 为 `completed`。
+- `dismiss()`：普通取消或外部关闭，不携带业务结果。
+- `outcome`：value 与准确的 `PopupDismissReason`。
+- `dismissed`：退出动画完成、视觉节点彻底移除后完成。
+
+## Menu 与 DropMenu
+
+```dart
+final anchor = PopupAnchorController();
 
 PopupAnchor(
-  controller: menuAnchor,
+  controller: anchor,
   child: IconButton(
     icon: const Icon(Icons.more_horiz),
     onPressed: () async {
       final action = await Pop.menu<String>(
-        anchor: menuAnchor,
-        // showBarrier: false, // 允许底层滚动并跟随
-        // barrierColor: Color(0x8A000000), // 暗色遮罩
-        builder: (dismiss) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(title: const Text('编辑'), onTap: () => dismiss('edit')),
-            ListTile(title: const Text('删除'), onTap: () => dismiss('delete')),
-          ],
+        MenuConfig<String>(
+          anchor: anchor,
+          builder: (context, handle) => Column(
+            children: [
+              ListTile(
+                title: const Text('编辑'),
+                onTap: () => handle.complete('edit'),
+              ),
+            ],
+          ),
         ),
-      );
+      ).result;
     },
   ),
 );
 ```
 
-Anchor 卸载时 Menu 会以 `PopupDismissReason.anchorDetached` 自动关闭。
-
-标准一级/二级选择菜单使用 `Pop.dropMenu`。它与 `Pop.menu` 默认 Barrier 行为相同
-（透明、可点外关闭），并提供主题化液态玻璃、系统勾选图标、禁用态和二级分组展开：
+Menu 默认使用透明、可点击关闭的 Barrier。需要底层继续滚动并让菜单跟随 Anchor：
 
 ```dart
-final status = await Pop.dropMenu<String>(
-  anchor: menuAnchor,
-  menu: const DropMenu<String>.single(
-    selectedValue: 'all',
-    items: [
-      DropMenuItem(value: 'all', label: '全部'),
-      DropMenuItem(value: 'active', label: '处理中'),
-    ],
-  ),
-);
+barrier: const PopupBarrierConfig.hidden(),
 ```
 
-二级菜单使用 `DropMenu.nested` 和 `DropMenuSection`。设置类操作可传
-`closeOnSelect: false`，执行后保持菜单打开。完整的一级、二级通用示例见
-Example 的 `Menu / DropMenu` Lab。
+DropMenu 使用 `DropMenu.single` 或 `DropMenu.nested` 数据模型。标准 DropMenu 默认
+使用全局 key 和 `replaceExisting`，因此同一时刻只保留一个标准 DropMenu。
 
-二级分组使用尺寸 + 淡入动画展开。选择二级选项后只收起当前分组，外层菜单继续
-显示；通过 `onSelected` 或 Item 的 `onTap` 接收选择。一级菜单选项仍会返回结果并
-关闭整个菜单。
-
-`MenuPlacement.auto` 根据菜单首次布局的实际尺寸和 SafeArea 可用空间选择上下及
-左右方向，并在本次打开期间锁定；需要固定位置时仍可传 `placement` 和 `offset`。
-
-## PopupHandle 与高级配置
-
-便捷 API 面向日常调用；需要区分关闭原因、外部精确控制或定制策略时，使用
-`openXxx(Config)`：
+## FlowSheet
 
 ```dart
-final handle = Pop.openSheet<String>(
-  SheetConfig<String>(
-    behavior: const PopupBehaviorConfig(
-      channel: PopupChannel.sheet,
-      tags: {'checkout'},
-      routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,
-    ),
-    builder: (context, handle) => ListTile(
-      title: const Text('选择'),
-      onTap: () => handle.complete('selected'),
+final controller = FlowSheetController<OrderResult>();
+final result = await Pop.flowSheet<OrderResult>(
+  FlowSheetConfig<OrderResult>(
+    controller: controller,
+    initialPage: const FirstStepPage(),
+    size: const SheetSizeConfig(
+      maxHeight: SheetDimension.fraction(0.9),
     ),
   ),
-).requireHandle();
-
-final result = await handle.result;
-final outcome = await handle.outcome;
-await handle.dismissed;
+).result;
 ```
 
-- `complete(value)`：立即完成业务结果，然后执行退场动画。
-- `dismiss()`：无业务结果地请求关闭。
-- `result`：兼容 `T?` 业务结果。
-- `outcome`：包含 value 与准确的 `PopupDismissReason`。
-- `dismissed`：视觉节点彻底移除后完成。
+内部页面使用 `nav.push`、`nav.replace`、`nav.pop(result)`、
+`nav.completeCurrent(result)` 和 `nav.closeAll(result)`。
 
-所有高级 `openXxx` 和 `Pop.custom` 统一返回 `PopupOpenResult<T>`，用
-`PopupOpened/PopupUpdated/PopupToggledClosed/PopupRejected` 明确表达冲突决策。
-确定策略一定产生 Handle 时可以使用 `requireHandle()`。
+## 冲突与批量管理
 
-## 全局与外部关闭
+`PopupBehaviorConfig` 不包含 channel；channel 由 `Pop.toast/Pop.sheet/...` 能力本身
+确定：
 
 ```dart
-await handle.dismiss();
+behavior: const PopupBehaviorConfig(
+  key: 'sync-status',
+  tags: {'network'},
+  conflictPolicy: PopupConflictPolicy.updateExisting,
+  routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,
+),
+```
+
+冲突结果包括 `PopupOpened`、`PopupUpdated`、`PopupToggledClosed` 和
+`PopupRejected`。
+
+```dart
 await Pop.dismissTop();
 await Pop.dismissChannel(PopupChannel.sheet);
-await Pop.dismissTags({'checkout'});
+await Pop.dismissTags({'network'});
 await Pop.dismissAll();
-
-final visible = Pop.hasChannel(PopupChannel.confirm);
-final count = Pop.countChannel(PopupChannel.toast);
 ```
 
-`key` 用于唯一资源/更新冲突，`tags` 用于业务批量管理，`channel` 用于类型查询
-和批量关闭。它们不再隐式决定返回键或路由行为。
-
-## 堆叠、返回键与跨路由
-
-- Sheet / FlowSheet 上可继续显示 Toast、Confirm、Menu 等弹层。
-- 系统返回键由 `Pop.routeObserver` 注册的 Route `PopEntry` 接管，优先处理最上层
-  可拦截弹窗；弹窗处理完成后，下一次返回才退出路由。
-- `PopupRoutePolicy.persist` 跨路由保留。
-- `dismissWhenOwnerRouteChanges` 在所属路由变化时关闭。
-- `dismissOnAnyRouteChange` 在任意根路由变化时关闭。
-- FlowSheet 返回键优先退内部页面，位于首页时再关闭整个 FlowSheet。
-
-不要创建多个全局 Host。测试需要隔离状态时可直接构造独立的 `PopupRuntime`。
-
-详细文档：
+## 文档
 
 - [架构设计与实现原理](doc/ARCHITECTURE.md)
 - [完整 API 与参数参考](doc/API_REFERENCE.md)
-- [v1 与 v2 对比及迁移指南](doc/MIGRATION_V1_TO_V2.md)
+- [v1 与 v2 对比及迁移](doc/MIGRATION_V1_TO_V2.md)
 
-可运行验收入口见 [Example](example/lib/main.dart)。
+Example 包含 FitPulse 产品流程和按能力划分的 Lab：
+
+```bash
+cd example
+flutter run
+```

@@ -11,7 +11,6 @@ import 'popup_animation_config.dart';
 import 'popup_back_policy.dart';
 import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
-import 'popup_channel.dart';
 import 'popup_conflict_policy.dart';
 import 'popup_keys.dart';
 import 'popup_position.dart';
@@ -200,7 +199,7 @@ final class DropMenuStyle {
   final DropMenuExpandIconBuilder? expandIconBuilder;
 }
 
-/// Advanced configuration for the handle-returning drop-menu API.
+/// Complete configuration for the single `Pop.dropMenu` entrypoint.
 final class DropMenuConfig<T> extends MenuConfigBase {
   DropMenuConfig({
     required this.anchor,
@@ -211,7 +210,6 @@ final class DropMenuConfig<T> extends MenuConfigBase {
     this.onSelected,
     this.onOpenSectionChanged,
     this.behavior = const PopupBehaviorConfig(
-      channel: PopupChannel.menu,
       key: PopupKeys.globalDropMenu,
       conflictPolicy: PopupConflictPolicy.replaceExisting,
       routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,

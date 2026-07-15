@@ -6,7 +6,6 @@ import '../controller/popup_ownership.dart';
 import 'popup_animation_config.dart';
 import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
-import 'popup_channel.dart';
 import 'popup_position.dart';
 import 'popup_visual_config.dart';
 
@@ -17,7 +16,7 @@ abstract class CustomPopupConfigBase implements PopupVisualConfig {
 final class CustomPopupConfig<T> extends CustomPopupConfigBase {
   CustomPopupConfig({
     required this.builder,
-    this.behavior = const PopupBehaviorConfig(channel: PopupChannel.custom),
+    this.behavior = const PopupBehaviorConfig(),
     this.ownership = const PopupOwnership(),
     this.barrier = const PopupBarrierConfig(),
     this.position = PopupPosition.center,

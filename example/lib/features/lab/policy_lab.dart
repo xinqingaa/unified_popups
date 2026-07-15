@@ -39,22 +39,26 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                 onPressed: () async {
                   unawaited(
                     Pop.sheet<void>(
-                      title: '底层 Sheet',
-                      maxHeight: const SheetDimension.fraction(0.4),
-                      childBuilder: (d) => const Text(
-                        '先出 Toast 与 Loading，再连按系统返回观察顺序。',
+                      SheetConfig<void>(
+                        header: const SheetHeaderConfig(title: '底层 Sheet'),
+                        size: const SheetSizeConfig(
+                          maxHeight: SheetDimension.fraction(0.4),
+                        ),
+                        builder: (context, handle) => const Text(
+                          '先出 Toast 与 Loading，再连按系统返回观察顺序。',
+                        ),
                       ),
-                    ),
+                    ).result,
                   );
                   await Future<void>.delayed(const Duration(milliseconds: 400));
-                  Pop.loading(
+                  Pop.loading(const LoadingConfig(
                     message: 'block 返回 · 8s',
-                    duration: const Duration(seconds: 8),
-                  );
-                  Pop.toast(
+                    lifetime: PopupLifetime.after(Duration(seconds: 8)),
+                  ));
+                  Pop.toast(const ToastConfig.text(
                     'ignore 返回',
-                    duration: const Duration(seconds: 8),
-                  );
+                    lifetime: PopupLifetime.after(Duration(seconds: 8)),
+                  ));
                   setState(() => _note = '请连续按系统返回');
                 },
               ),
@@ -75,13 +79,12 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                 label: 'persist Toast 后 push 下一页',
                 subtitle: 'Toast 应仍在',
                 onPressed: () {
-                  Pop.openToast(
-                    const ToastConfig(
-                      message: '跨路由 persist Toast',
+                  Pop.toast(
+                    const ToastConfig.text(
+                      '跨路由 persist Toast',
                       position: PopupPosition.bottom,
                       lifetime: PopupLifetime.after(Duration(seconds: 8)),
                       behavior: PopupBehaviorConfig(
-                        channel: PopupChannel.toast,
                         routePolicy: PopupRoutePolicy.persist,
                         backPolicy: PopupBackPolicy.ignore,
                       ),
@@ -102,13 +105,12 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                 subtitle: 'Confirm 应随路由变化关闭',
                 outlined: true,
                 onPressed: () {
-                  Pop.openConfirm(
+                  Pop.confirm(
                     const ConfirmConfig(
                       title: '所属路由 Confirm',
                       content: 'push 后应自动关闭',
                       cancelText: '取消',
                       behavior: PopupBehaviorConfig(
-                        channel: PopupChannel.confirm,
                         routePolicy:
                             PopupRoutePolicy.dismissWhenOwnerRouteChanges,
                       ),
@@ -136,14 +138,13 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                   setState(() => _note = '已 captureRoute，模拟请求 1s…');
                   await Future<void>.delayed(const Duration(seconds: 1));
                   if (!mounted) return;
-                  Pop.openConfirm(
+                  Pop.confirm(
                     ConfirmConfig(
                       title: '异步归属',
                       content: '使用 capture 的 routeOwner',
                       cancelText: '取消',
                       ownership: PopupOwnership(routeToken: owner),
                       behavior: const PopupBehaviorConfig(
-                        channel: PopupChannel.confirm,
                         routePolicy:
                             PopupRoutePolicy.dismissWhenOwnerRouteChanges,
                       ),
@@ -166,14 +167,13 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                         onReady: () async {
                           await Future<void>.delayed(
                               const Duration(seconds: 1));
-                          Pop.openConfirm(
+                          Pop.confirm(
                             ConfirmConfig(
                               title: '不应出现',
                               content: '若看到此框，说明失效 token 未拦截',
                               cancelText: '取消',
                               ownership: PopupOwnership(routeToken: owner),
                               behavior: const PopupBehaviorConfig(
-                                channel: PopupChannel.confirm,
                                 routePolicy: PopupRoutePolicy
                                     .dismissWhenOwnerRouteChanges,
                               ),
@@ -194,30 +194,34 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                 label: 'Sheet + 子 Confirm（关 Sheet 级联）',
                 onPressed: () {
                   Pop.sheet<void>(
-                    title: '父 Sheet',
-                    maxHeight: const SheetDimension.fraction(0.45),
-                    childBuilder: (dismiss) => Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FilledButton(
-                          onPressed: () {
-                            Pop.openConfirm(
-                              const ConfirmConfig(
-                                title: '子 Confirm',
-                                content: 'dismissWithParent',
-                                cancelText: '取消',
-                              ),
-                            );
-                          },
-                          child: const Text('打开子 Confirm'),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text('打开 Confirm 后点关闭 Sheet，Confirm 应一并消失。'),
-                        TextButton(
-                          onPressed: dismiss,
-                          child: const Text('关闭父 Sheet'),
-                        ),
-                      ],
+                    SheetConfig<void>(
+                      header: const SheetHeaderConfig(title: '父 Sheet'),
+                      size: const SheetSizeConfig(
+                        maxHeight: SheetDimension.fraction(0.45),
+                      ),
+                      builder: (context, handle) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FilledButton(
+                            onPressed: () {
+                              Pop.confirm(
+                                const ConfirmConfig(
+                                  title: '子 Confirm',
+                                  content: 'dismissWithParent',
+                                  cancelText: '取消',
+                                ),
+                              );
+                            },
+                            child: const Text('打开子 Confirm'),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('打开 Confirm 后点关闭 Sheet，Confirm 应一并消失。'),
+                          TextButton(
+                            onPressed: handle.dismiss,
+                            child: const Text('关闭父 Sheet'),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },

@@ -7,7 +7,6 @@ import 'popup_animation_config.dart';
 import 'popup_back_policy.dart';
 import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
-import 'popup_channel.dart';
 import 'popup_position.dart';
 import 'popup_visual_config.dart';
 
@@ -61,9 +60,8 @@ final class ToastToggleConfig {
 }
 
 final class ToastConfig implements PopupVisualConfig {
-  const ToastConfig({
-    this.message,
-    this.content,
+  const ToastConfig.text(
+    String this.message, {
     this.position = PopupPosition.center,
     this.type = ToastType.none,
     this.icon,
@@ -72,7 +70,6 @@ final class ToastConfig implements PopupVisualConfig {
     this.toggle,
     this.onTap,
     this.behavior = const PopupBehaviorConfig(
-      channel: PopupChannel.toast,
       backPolicy: PopupBackPolicy.ignore,
     ),
     this.ownership = const PopupOwnership(),
@@ -82,7 +79,28 @@ final class ToastConfig implements PopupVisualConfig {
       Duration(milliseconds: 1200),
     ),
     this.lifecycle = const PopupLifecycleCallbacks<void>(),
-  }) : assert(message != null || content != null);
+  }) : content = null;
+
+  const ToastConfig.content(
+    Widget this.content, {
+    this.position = PopupPosition.center,
+    this.type = ToastType.none,
+    this.icon,
+    this.layoutDirection = Axis.horizontal,
+    this.style = const ToastStyle(),
+    this.toggle,
+    this.onTap,
+    this.behavior = const PopupBehaviorConfig(
+      backPolicy: PopupBackPolicy.ignore,
+    ),
+    this.ownership = const PopupOwnership(),
+    this.barrier = const PopupBarrierConfig.hidden(),
+    this.animation,
+    this.lifetime = const PopupLifetime.after(
+      Duration(milliseconds: 1200),
+    ),
+    this.lifecycle = const PopupLifecycleCallbacks<void>(),
+  }) : message = null;
 
   final String? message;
   final Widget? content;

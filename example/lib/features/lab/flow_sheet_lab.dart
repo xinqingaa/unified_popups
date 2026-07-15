@@ -76,28 +76,39 @@ class FlowSheetLabPage extends StatelessWidget {
   static Future<void> _openFullScreenFlow() async {
     final controller = FlowSheetController<String>();
     final result = await Pop.flowSheet<String>(
-      controller: controller,
-      maxHeight: const SheetDimension.fraction(1),
-      barrierDismissible: false,
-      initialPage: _MiniPageA(controller: controller),
-    );
+      FlowSheetConfig<String>(
+        controller: controller,
+        size: const SheetSizeConfig(
+          maxHeight: SheetDimension.fraction(1),
+        ),
+        initialPage: _MiniPageA(controller: controller),
+      ),
+    ).result;
     Pop.toast(
-      result == null ? '全屏 Flow 取消' : '全屏 Flow 结果：$result',
-      toastType: result == null ? ToastType.warn : ToastType.success,
+      ToastConfig.text(
+        result == null ? '全屏 Flow 取消' : '全屏 Flow 结果：$result',
+        type: result == null ? ToastType.warn : ToastType.success,
+      ),
     );
   }
 
   static Future<void> _openMiniFlow() async {
     final controller = FlowSheetController<String>();
     final result = await Pop.flowSheet<String>(
-      controller: controller,
-      maxHeight: const SheetDimension.fraction(0.55),
-      barrierDismissible: true,
-      initialPage: _MiniPageA(controller: controller),
-    );
+      FlowSheetConfig<String>(
+        controller: controller,
+        size: const SheetSizeConfig(
+          maxHeight: SheetDimension.fraction(0.55),
+        ),
+        barrier: const PopupBarrierConfig(dismissible: true),
+        initialPage: _MiniPageA(controller: controller),
+      ),
+    ).result;
     Pop.toast(
-      result == null ? '迷你 Flow 取消' : '迷你 Flow 结果：$result',
-      toastType: result == null ? ToastType.warn : ToastType.success,
+      ToastConfig.text(
+        result == null ? '迷你 Flow 取消' : '迷你 Flow 结果：$result',
+        type: result == null ? ToastType.warn : ToastType.success,
+      ),
     );
   }
 }

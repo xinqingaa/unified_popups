@@ -7,16 +7,18 @@ class SettingsPage extends StatelessWidget {
 
   Future<void> _clearCache() async {
     final ok = await Pop.confirm(
-      title: '清除缓存',
-      content: '将清除本地训练草稿与临时图片缓存，不会删除已同步的健康数据。',
-      confirmText: '清除',
-      cancelText: '取消',
-    );
+      const ConfirmConfig(
+        title: '清除缓存',
+        content: '将清除本地训练草稿与临时图片缓存，不会删除已同步的健康数据。',
+        confirmText: '清除',
+        cancelText: '取消',
+      ),
+    ).result;
     if (ok == true) {
-      Pop.loading(message: '清理中…');
+      Pop.loading(const LoadingConfig(message: '清理中…'));
       await Future<void>.delayed(const Duration(milliseconds: 600));
       Pop.hideLoading();
-      Pop.toast('缓存已清除', toastType: ToastType.success);
+      Pop.toast(const ToastConfig.text('缓存已清除', type: ToastType.success));
     }
   }
 

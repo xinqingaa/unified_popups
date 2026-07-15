@@ -7,7 +7,6 @@ import 'popup_animation_config.dart';
 import 'popup_back_policy.dart';
 import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
-import 'popup_channel.dart';
 import 'popup_conflict_policy.dart';
 import 'popup_position.dart';
 import 'popup_keys.dart';
@@ -48,7 +47,6 @@ final class LoadingConfig implements PopupVisualConfig {
     this.style = const LoadingStyle(),
     this.indicator = const LoadingIndicatorConfig(),
     this.behavior = const PopupBehaviorConfig(
-      channel: PopupChannel.loading,
       key: PopupKeys.globalLoading,
       conflictPolicy: PopupConflictPolicy.updateExisting,
       backPolicy: PopupBackPolicy.block,
