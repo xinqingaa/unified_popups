@@ -23,6 +23,9 @@ class MenuRenderer extends StatefulWidget {
 
 class _MenuRendererState extends State<MenuRenderer> {
   Widget? _content;
+  final GlobalKey _menuSurfaceKey = GlobalKey();
+  MenuPlacement? _resolvedAutoPlacement;
+  bool _measurementScheduled = false;
 
   @override
   void initState() {
@@ -48,7 +51,12 @@ class _MenuRendererState extends State<MenuRenderer> {
   Widget build(BuildContext context) {
     final config = widget.config;
     _content ??= config.buildContent(context, widget.handle);
-    final placement = _resolvePlacement(context);
+    final waitingForAutoMeasurement = config.placement == MenuPlacement.auto &&
+        _resolvedAutoPlacement == null;
+    if (waitingForAutoMeasurement) _scheduleAutoPlacementResolution();
+    final placement = config.placement == MenuPlacement.auto
+        ? _resolvedAutoPlacement ?? MenuPlacement.belowStart
+        : config.placement;
     final anchors = switch (placement) {
       MenuPlacement.belowStart => (Alignment.bottomLeft, Alignment.topLeft),
       MenuPlacement.belowEnd => (Alignment.bottomRight, Alignment.topRight),
@@ -77,15 +85,21 @@ class _MenuRendererState extends State<MenuRenderer> {
             targetAnchor: anchors.$1,
             followerAnchor: anchors.$2,
             offset: config.offset,
-            child: Material(
-              color: Colors.transparent,
-              child: ConstrainedBox(
-                constraints: config.style.constraints,
-                child: DecoratedBox(
-                  decoration: decoration,
-                  child: Padding(
-                    padding: config.style.padding,
-                    child: _content!,
+            child: Opacity(
+              opacity: waitingForAutoMeasurement ? 0 : 1,
+              child: KeyedSubtree(
+                key: _menuSurfaceKey,
+                child: Material(
+                  color: Colors.transparent,
+                  child: ConstrainedBox(
+                    constraints: config.style.constraints,
+                    child: DecoratedBox(
+                      decoration: decoration,
+                      child: Padding(
+                        padding: config.style.padding,
+                        child: _content!,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -96,17 +110,100 @@ class _MenuRendererState extends State<MenuRenderer> {
     );
   }
 
-  MenuPlacement _resolvePlacement(BuildContext context) {
-    if (widget.config.placement != MenuPlacement.auto) {
-      return widget.config.placement;
-    }
-    final rect = widget.config.anchor.globalRect;
-    if (rect == null) return MenuPlacement.belowStart;
-    final screen = MediaQuery.sizeOf(context);
-    final above = screen.height - rect.bottom <
-        widget.config.style.constraints.maxHeight.clamp(120, 320);
-    final end = rect.center.dx > screen.width / 2;
-    if (above) return end ? MenuPlacement.aboveEnd : MenuPlacement.aboveStart;
-    return end ? MenuPlacement.belowEnd : MenuPlacement.belowStart;
+  void _scheduleAutoPlacementResolution() {
+    if (_measurementScheduled) return;
+    _measurementScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measurementScheduled = false;
+      if (!mounted || _resolvedAutoPlacement != null) return;
+      final renderObject = _menuSurfaceKey.currentContext?.findRenderObject();
+      final anchorRect = widget.config.anchor.globalRect;
+      if (renderObject is! RenderBox ||
+          !renderObject.attached ||
+          !renderObject.hasSize ||
+          anchorRect == null) {
+        setState(() => _resolvedAutoPlacement = MenuPlacement.belowStart);
+        return;
+      }
+      final media = MediaQuery.of(context);
+      setState(() {
+        _resolvedAutoPlacement = _resolveAutoPlacement(
+          anchorRect: anchorRect,
+          menuSize: renderObject.size,
+          media: media,
+          offset: widget.config.offset,
+        );
+      });
+    });
   }
+}
+
+MenuPlacement _resolveAutoPlacement({
+  required Rect anchorRect,
+  required Size menuSize,
+  required MediaQueryData media,
+  required Offset offset,
+}) {
+  final top = media.padding.top;
+  final bottom = media.size.height -
+      (media.viewInsets.bottom > media.padding.bottom
+          ? media.viewInsets.bottom
+          : media.padding.bottom);
+  final left = media.padding.left;
+  final right = media.size.width - media.padding.right;
+
+  final belowTop = anchorRect.bottom + offset.dy;
+  final aboveTop = anchorRect.top + offset.dy - menuSize.height;
+  final belowOverflow = _axisOverflow(
+    start: belowTop,
+    end: belowTop + menuSize.height,
+    min: top,
+    max: bottom,
+  );
+  final aboveOverflow = _axisOverflow(
+    start: aboveTop,
+    end: aboveTop + menuSize.height,
+    min: top,
+    max: bottom,
+  );
+  final placeBelow = belowOverflow == 0 ||
+      (aboveOverflow != 0 && belowOverflow <= aboveOverflow);
+
+  final startLeft = anchorRect.left + offset.dx;
+  final endLeft = anchorRect.right + offset.dx - menuSize.width;
+  final startOverflow = _axisOverflow(
+    start: startLeft,
+    end: startLeft + menuSize.width,
+    min: left,
+    max: right,
+  );
+  final endOverflow = _axisOverflow(
+    start: endLeft,
+    end: endLeft + menuSize.width,
+    min: left,
+    max: right,
+  );
+  final preferEnd = anchorRect.center.dx > media.size.width / 2;
+  final alignEnd = switch ((startOverflow, endOverflow)) {
+    (0, 0) => preferEnd,
+    (_, 0) => true,
+    (0, _) => false,
+    _ => endOverflow < startOverflow,
+  };
+
+  if (placeBelow) {
+    return alignEnd ? MenuPlacement.belowEnd : MenuPlacement.belowStart;
+  }
+  return alignEnd ? MenuPlacement.aboveEnd : MenuPlacement.aboveStart;
+}
+
+double _axisOverflow({
+  required double start,
+  required double end,
+  required double min,
+  required double max,
+}) {
+  final before = start < min ? min - start : 0.0;
+  final after = end > max ? end - max : 0.0;
+  return before + after;
 }

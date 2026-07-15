@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../configs/drop_menu_config.dart';
+import '../../renderers/popup_entry_animation.dart';
 import '../liquid_glass/liquid_glass.dart';
 import '../liquid_glass/liquid_glass_style.dart';
 
@@ -92,23 +93,33 @@ class _DropMenuContentState<T> extends State<DropMenuContent<T>> {
   @override
   Widget build(BuildContext context) {
     final style = widget.style;
+    // Fade only labels/icons inside the glass. BackdropFilter must stay outside
+    // any OpacityLayer or blur samples the wrong buffer until opacity hits 1.
+    Widget body = Padding(
+      padding: style.panelMargin,
+      child: ClipRRect(
+        borderRadius: style.nestedPanelRadius,
+        child: SingleChildScrollView(
+          child: widget.menu.mode == DropMenuMode.single
+              ? _buildSingleMenu(context)
+              : _buildNestedMenu(context),
+        ),
+      ),
+    );
+    final entryAnimation = PopupEntryAnimation.maybeOf(context);
+    if (entryAnimation != null &&
+        entryAnimation.fadeContentOnly &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      body = FadeTransition(opacity: entryAnimation.animation, child: body);
+    }
     return LiquidGlass(
       borderRadius: style.borderRadius,
       style: style.glassStyle,
       blurSigma: style.blurSigma,
       blurDelay: style.blurDelay,
+      backdropBlendMode: BlendMode.src,
       enableShadow: style.enableShadow,
-      child: Padding(
-        padding: style.panelMargin,
-        child: ClipRRect(
-          borderRadius: style.nestedPanelRadius,
-          child: SingleChildScrollView(
-            child: widget.menu.mode == DropMenuMode.single
-                ? _buildSingleMenu(context)
-                : _buildNestedMenu(context),
-          ),
-        ),
-      ),
+      child: body,
     );
   }
 

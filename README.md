@@ -207,6 +207,9 @@ Example 的 `Menu / DropMenu` Lab。
 显示；通过 `onSelected` 或 Item 的 `onTap` 接收选择。一级菜单选项仍会返回结果并
 关闭整个菜单。
 
+`MenuPlacement.auto` 根据菜单首次布局的实际尺寸和 SafeArea 可用空间选择上下及
+左右方向，并在本次打开期间锁定；需要固定位置时仍可传 `placement` 和 `offset`。
+
 ## PopupHandle 与高级配置
 
 便捷 API 面向日常调用；需要区分关闭原因、外部精确控制或定制策略时，使用

@@ -679,6 +679,11 @@ DropMenu 默认使用从 `ThemeData.colorScheme` 解析的液态玻璃样式，�
 `DropMenuStyle` 进一步暴露文字、禁用态、分隔线、选中色、二级背景和箭头颜色。
 颜色为 null 时采用主题默认值。
 
+通用 `LiquidGlass.backdropBlendMode` 默认为 Flutter 的 `BlendMode.srcOver`。
+DropMenu 打开动画只淡入面板内的文字/图标，玻璃与 `BackdropFilter` 保持不透明，
+避免父级 OpacityLayer 改变模糊采样；DropMenu 的 BackdropFilter 额外使用
+`BlendMode.src`。
+
 ```dart
 const style = DropMenuStyle(
   constraints: BoxConstraints(minWidth: 140, maxWidth: 220),
@@ -696,11 +701,14 @@ const style = DropMenuStyle(
 
 ### 定位与偏移
 
-`MenuPlacement.auto` 按以下规则决定方向：
+`MenuPlacement.auto` 会先完成一次不可见布局，取得菜单实际宽高，再按以下规则决定
+方向：
 
-- Anchor 下方剩余高度小于菜单最大高度阈值（限制在 120–320）时向上弹出，否则
-  向下弹出。
-- Anchor 中心位于屏幕右半侧时按 end 对齐，否则按 start 对齐。
+- 在 SafeArea 内，下方能够容纳实际菜单时优先向下弹出。
+- 下方放不下而上方能够容纳时向上弹出；两侧都放不下时选择溢出更少的一侧。
+- 横向使用实际菜单宽度检查 start/end；两侧都能放下时按 Anchor 所在屏幕半区选择。
+- `offset` 会参与可用空间计算。方向在本次菜单打开期间锁定，二级展开不会让整个
+  菜单突然翻到另一侧。
 
 需要固定方向时传 `belowStart`、`belowEnd`、`aboveStart` 或 `aboveEnd`。`offset`
 在完成 Anchor 对齐后应用，坐标始终是正 X 向右、正 Y 向下：

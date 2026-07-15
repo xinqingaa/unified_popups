@@ -14,6 +14,38 @@ void main() {
     await tester.pump();
 
     await tester.tap(find.text('打开一级菜单'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 70));
+    final menuFinder = find.byType(DropMenuContent<String>);
+    final backdrop = tester.widget<BackdropFilter>(
+      find.descendant(
+        of: menuFinder,
+        matching: find.byType(BackdropFilter),
+      ),
+    );
+    expect(backdrop.blendMode, BlendMode.src);
+    // Glass/BackdropFilter must not sit under the entry FadeTransition.
+    final entryFades = tester.widgetList<FadeTransition>(
+      find.ancestor(of: menuFinder, matching: find.byType(FadeTransition)),
+    );
+    expect(entryFades, isEmpty);
+    final contentFades = tester.widgetList<FadeTransition>(
+      find.descendant(of: menuFinder, matching: find.byType(FadeTransition)),
+    );
+    expect(
+      contentFades.any(
+        (fade) => fade.opacity.value > 0 && fade.opacity.value < 1,
+      ),
+      isTrue,
+    );
+    final backdropAncestors = find.ancestor(
+      of: find.descendant(
+        of: menuFinder,
+        matching: find.byType(BackdropFilter),
+      ),
+      matching: find.byType(FadeTransition),
+    );
+    expect(backdropAncestors, findsNothing);
     await tester.pumpAndSettle();
     expect(find.text('处理中'), findsOneWidget);
     expect(find.byIcon(Icons.check_rounded), findsOneWidget);
@@ -162,12 +194,56 @@ void main() {
         .single;
     expect(edgePainter.style.borderColor, borderOverride);
     expect(edgePainter.style.topHighlightColor, highlightOverride);
+    expect(
+      tester.widget<BackdropFilter>(find.byType(BackdropFilter)).blendMode,
+      BlendMode.srcOver,
+    );
   });
 
   test('drop menu uses compact default width constraints', () {
     final constraints = const DropMenuStyle().constraints;
     expect(constraints.minWidth, 140);
     expect(constraints.maxWidth, 240);
+  });
+
+  testWidgets('auto placement uses actual height and prefers fitting below',
+      (tester) async {
+    await tester.pumpWidget(
+      const _TestApp(
+        child: _AutoPlacementHarness(bottom: 140),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey<String>('auto-anchor')));
+    await tester.pumpAndSettle();
+
+    final anchorRect = tester.getRect(
+      find.byKey(const ValueKey<String>('auto-anchor')),
+    );
+    final menuRect = tester.getRect(find.byType(DropMenuContent<String>));
+    expect(menuRect.height, lessThan(140));
+    expect(menuRect.top, closeTo(anchorRect.bottom, 0.1));
+    expect(menuRect.right, closeTo(anchorRect.right, 0.1));
+  });
+
+  testWidgets('auto placement chooses above when below cannot fit',
+      (tester) async {
+    await tester.pumpWidget(
+      const _TestApp(
+        child: _AutoPlacementHarness(bottom: 20),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey<String>('auto-anchor')));
+    await tester.pumpAndSettle();
+
+    final anchorRect = tester.getRect(
+      find.byKey(const ValueKey<String>('auto-anchor')),
+    );
+    final menuRect = tester.getRect(find.byType(DropMenuContent<String>));
+    expect(menuRect.bottom, closeTo(anchorRect.top, 0.1));
   });
 }
 
@@ -327,6 +403,59 @@ class _NestedMenuHarnessState extends State<_NestedMenuHarness> {
         ),
         Text('结果：${_result ?? '-'}'),
       ],
+    );
+  }
+}
+
+class _AutoPlacementHarness extends StatefulWidget {
+  const _AutoPlacementHarness({required this.bottom});
+
+  final double bottom;
+
+  @override
+  State<_AutoPlacementHarness> createState() => _AutoPlacementHarnessState();
+}
+
+class _AutoPlacementHarnessState extends State<_AutoPlacementHarness> {
+  final _anchor = PopupAnchorController();
+
+  @override
+  void dispose() {
+    _anchor.attached.dispose();
+    super.dispose();
+  }
+
+  void _open() {
+    Pop.dropMenu<String>(
+      anchor: _anchor,
+      menu: const DropMenu<String>.single(
+        items: <DropMenuItem<String>>[
+          DropMenuItem<String>(value: 'one', label: '选项一'),
+          DropMenuItem<String>(value: 'two', label: '选项二'),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: Stack(
+        children: <Widget>[
+          Positioned(
+            right: 24,
+            bottom: widget.bottom,
+            child: PopupAnchor(
+              controller: _anchor,
+              child: FilledButton(
+                key: const ValueKey<String>('auto-anchor'),
+                onPressed: _open,
+                child: const Text('自动定位'),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

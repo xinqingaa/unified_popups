@@ -74,7 +74,6 @@ class _MenuLabPageState extends State<MenuLabPage> {
     await Pop.dropMenu<String>(
       anchor: _settingsAnchor,
       offset: const Offset(0, 8),
-      placement: MenuPlacement.belowEnd,
       onSelected: _handleSettingsSelection,
       style: DropMenuStyle(
         constraints: const BoxConstraints(

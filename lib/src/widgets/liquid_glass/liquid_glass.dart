@@ -18,6 +18,7 @@ class LiquidGlass extends StatefulWidget {
     this.style = LiquidGlassStyle.standard,
     this.blurSigma,
     this.blurDelay = Duration.zero,
+    this.backdropBlendMode = BlendMode.srcOver,
     this.enableShadow = false,
     super.key,
   });
@@ -31,6 +32,12 @@ class LiquidGlass extends StatefulWidget {
   final LiquidGlassStyle style;
   final double? blurSigma;
   final Duration blurDelay;
+
+  /// Blend mode used when compositing the filtered backdrop.
+  ///
+  /// [BlendMode.src] avoids double blending when an ancestor uses an opacity
+  /// save layer. The default keeps Flutter's broadly supported behavior.
+  final BlendMode backdropBlendMode;
   final bool enableShadow;
 
   @override
@@ -116,6 +123,7 @@ class _LiquidGlassState extends State<LiquidGlass> {
       child: _blurActive && sigma > 0
           ? BackdropFilter(
               filter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+              blendMode: widget.backdropBlendMode,
               child: interior,
             )
           : interior,

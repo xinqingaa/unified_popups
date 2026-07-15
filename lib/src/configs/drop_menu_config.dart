@@ -217,6 +217,8 @@ final class DropMenuConfig<T> extends MenuConfigBase {
     ),
     this.ownership = const PopupOwnership(),
     this.barrier = const PopupBarrierConfig(color: Colors.transparent),
+    // Entry progress still drives content fade; PopupScene skips wrapping the
+    // glass/BackdropFilter in FadeTransition so blur stays correct.
     this.animationConfig = const PopupAnimationConfig(
       type: PopupAnimationType.fade,
       duration: Duration(milliseconds: 140),

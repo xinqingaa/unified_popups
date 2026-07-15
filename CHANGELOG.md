@@ -33,6 +33,11 @@
   背景不透明度，并新增独立于普通边框的 `topHighlightColor`。
 - 二级 Section 新增尺寸 + 淡入展开/收起动画；选择二级选项只收起当前 Section，
   外层菜单保持显示，并通过 `onSelected` / Item `onTap` 通知业务。
+- DropMenu 打开时只淡入菜单文字/图标，液态玻璃与 BackdropFilter 保持不透明，
+  避免父级 OpacityLayer 导致模糊在末帧突然变实；BackdropFilter 仍使用
+  `BlendMode.src` 作为额外防护。通用 LiquidGlass 仍保留默认 `srcOver`。
+- Menu `auto` 改为先测量实际菜单尺寸，再结合 SafeArea、offset 和上下左右溢出
+  决定 placement，并在菜单会话内锁定方向。
 - 修正 Menu 在透明可见 Barrier 下的 Follower 命中范围，菜单内容可正常接收点击，
   点击外部仍由 Barrier 关闭。
 - Loading 重复调用更新原逻辑 Entry，保留稳定 Handle，并从新配置重新开始计时。

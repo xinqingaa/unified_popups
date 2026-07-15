@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../configs/drop_menu_config.dart';
 import '../configs/popup_animation_config.dart';
 import '../configs/popup_position.dart';
 import '../configs/popup_visual_config.dart';
@@ -9,6 +10,7 @@ import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_entry_snapshot.dart';
 import '../controller/popup_entry_state.dart';
 import '../runtime/popup_runtime.dart';
+import 'popup_entry_animation.dart';
 import 'popup_renderer_delegate.dart';
 
 /// Default declaration scene used by the global host.
@@ -277,7 +279,18 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     if (entryFocus != null) {
       content = Focus(focusNode: entryFocus, child: content);
     }
-    content = _transition(content, animation, animationConfig.type);
+    content = PopupEntryAnimation(
+      animation: animation,
+      fadeContentOnly: widget.entry.config is DropMenuConfig &&
+          animationConfig.type == PopupAnimationType.fade,
+      child: content,
+    );
+    content = _transition(
+      content,
+      animation,
+      animationConfig.type,
+      config: widget.entry.config,
+    );
     if (!widget.fullScreen) return content;
 
     final barrier = _visual.barrier;
@@ -332,8 +345,15 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
   Widget _transition(
     Widget child,
     Animation<double> animation,
-    PopupAnimationType type,
-  ) {
+    PopupAnimationType type, {
+    Object? config,
+  }) {
+    // DropMenu fades only its interior labels/icons. Wrapping BackdropFilter in
+    // FadeTransition makes blur sample an OpacityLayer buffer until opacity
+    // hits 1.0, which snaps the glass on the last frame.
+    if (config is DropMenuConfig && type == PopupAnimationType.fade) {
+      return child;
+    }
     return switch (type) {
       PopupAnimationType.none => child,
       PopupAnimationType.fade => FadeTransition(
