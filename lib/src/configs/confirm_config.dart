@@ -25,6 +25,19 @@ enum ConfirmButtonStyle {
   filled,
 }
 
+/// One confirm-dialog action payload.
+///
+/// Text and custom Widget variants are structurally exclusive, so callers do
+/// not need to remember which field takes precedence.
+final class ConfirmAction {
+  const ConfirmAction.text(String this.text) : child = null;
+
+  const ConfirmAction.content(Widget this.child) : text = null;
+
+  final String? text;
+  final Widget? child;
+}
+
 final class ConfirmStyle {
   const ConfirmStyle({
     this.buttonStyle = ConfirmButtonStyle.divider,
@@ -86,10 +99,8 @@ final class ConfirmConfig implements PopupVisualConfig {
     this.content,
     this.contentWidget,
     this.bodyExtension,
-    this.confirmText = 'confirm',
-    this.confirmButton,
-    this.cancelText,
-    this.cancelButton,
+    this.confirmAction = const ConfirmAction.text('confirm'),
+    this.cancelAction,
     this.showCloseButton = true,
     this.imagePath,
     this.imageWidth,
@@ -112,17 +123,17 @@ final class ConfirmConfig implements PopupVisualConfig {
       duration: Duration(milliseconds: 250),
     ),
     this.lifecycle = const PopupLifecycleCallbacks<bool>(),
-  }) : assert(content != null || contentWidget != null);
+  })  : assert(title == null || titleWidget == null),
+        assert(content == null || contentWidget == null),
+        assert(content != null || contentWidget != null);
 
   final String? title;
   final Widget? titleWidget;
   final String? content;
   final Widget? contentWidget;
   final Widget? bodyExtension;
-  final String confirmText;
-  final Widget? confirmButton;
-  final String? cancelText;
-  final Widget? cancelButton;
+  final ConfirmAction confirmAction;
+  final ConfirmAction? cancelAction;
   final bool showCloseButton;
   final String? imagePath;
   final double? imageWidth;

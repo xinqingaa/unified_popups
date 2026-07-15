@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:unified_popups/unified_popups.dart';
 
+import '../app/app_pop.dart';
+
 /// 开始训练 FlowSheet：课程列表 → 详情组数 → 确认码。
 ///
 /// 展示 push/pop、completeCurrent+closeAll、按页 dragDismissMode、maintainState。
@@ -10,24 +12,18 @@ class StartWorkoutFlow {
 
   static Future<void> open() async {
     final controller = FlowSheetController<_WorkoutResult>();
-    final result = await Pop.flowSheet<_WorkoutResult>(
-      FlowSheetConfig<_WorkoutResult>(
-        controller: controller,
-        size: const SheetSizeConfig(
-          maxHeight: SheetDimension.fraction(0.88),
-        ),
-        drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
-        barrier: const PopupBarrierConfig(dismissible: true),
-        initialPage: _WorkoutListPage(controller: controller),
+    final result = await AppPop.flowSheet<_WorkoutResult>(
+      controller: controller,
+      size: const SheetSizeConfig(
+        maxHeight: SheetDimension.fraction(0.88),
       ),
-    ).result;
+      drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
+      initialPage: _WorkoutListPage(controller: controller),
+    );
     if (result != null) {
-      Pop.toast(ToastConfig.text(
-        '已开始「${result.title}」· ${result.sets} 组',
-        type: ToastType.success,
-      ));
+      AppPop.success('已开始「${result.title}」· ${result.sets} 组');
     } else {
-      Pop.toast(const ToastConfig.text('已取消训练'));
+      AppPop.info('已取消训练');
     }
   }
 }

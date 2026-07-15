@@ -21,6 +21,8 @@
   重载；Config 成为唯一公开参数契约，`PopupTypeApi` 降为内部适配层。
 - 所有创建 API 统一返回 `PopupOpenResult<T>`，并新增 `.result` 便捷访问，完整表达
   opened、updated、toggledClosed 与 rejected；打开决策不再伪装成 Entry 关闭原因。
+- 收敛 package 导出面，`PopupRuntime`、`PopupController`、`PopupHost`、
+  `PopupScene` 和 Renderer Base 类型不再构成稳定公开 API。
 - `PopupBehaviorConfig` 不再接收 channel；channel 由具体能力内部固定，避免无效
   Config/channel 组合。
 - `PopupLifetime.until` 改为观察 Future settled：成功或失败都会以
@@ -53,6 +55,8 @@
 - 修正 Menu 在透明可见 Barrier 下的 Follower 命中范围，菜单内容可正常接收点击，
   点击外部仍由 Barrier 关闭。
 - Loading 重复调用更新原逻辑 Entry，保留稳定 Handle，并从新配置重新开始计时。
+- Loading 使用 `indicator/text/content` 三种互斥构造器；Confirm 和 Sheet Header
+  拒绝同时提供 String 与 Widget 同义载荷。
 - Toast 和 Loading 支持倒计时、外部 Future、Handle 手动关闭或组合条件。
 - Confirm 新增按钮专属 `onConfirm` 与 `onCancel`，同时保留
   `Future<bool?>` 业务结果。
@@ -71,13 +75,18 @@
 
 ### 示例和文档
 
+- FitPulse 产品区新增 App 级 `AppPop` 门面，统一品牌默认值与普通业务返回；产品流程
+  覆盖 Toast、Loading、Confirm、Date、Sheet、FlowSheet、Menu、DropMenu 和 Custom，
+  API Lab 保留原始 SDK 契约。
+- 重写 `PopupOpenResult`、`.result`、`requireHandle()`、Builder Handle、Outcome 与
+  dismissed 的调用决策和时序说明。
 - Example 增加 Toast/Loading `until` 失败关闭、统一 `PopupOpenResult` 和 DropMenu
   全局替换验收入口。
 - 详细文档收敛为架构原理、完整 API 参考、v1/v2 对比迁移三篇核心文档。
 - Menu Lab 新增通用一级筛选和二级设置展开示例。
 - FitPulse Example 全量迁移到 v2。
-- Example 启动页双入口：FitPulse 真实 App / API 展柜；展柜 AppBar 常驻 Entry
-  计数，并新增「通用 Config」页说明 Config-first 单入口 API。
+- Example 启动页双入口：FitPulse 真实 App / API 展柜；新增「通用 Config」页说明
+  Config-first 单入口 API。
 - Loading 有文案时自适应宽高；`LoadingConfig.position` 可错开多实例。
 - 技术实验室按类型分页覆盖整库能力；业务 Tab 保留真实用法示例。
 - Confirm Lab 增加默认线条与胶囊填充对照示例。

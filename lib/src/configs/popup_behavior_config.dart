@@ -19,13 +19,17 @@ final class PopupBehaviorConfig {
 
   PopupBehaviorConfig copyWith({
     String? key,
+    bool clearKey = false,
     Set<String>? tags,
     PopupConflictPolicy? conflictPolicy,
     PopupRoutePolicy? routePolicy,
     PopupBackPolicy? backPolicy,
   }) {
+    if (clearKey && key != null) {
+      throw ArgumentError('key and clearKey cannot be used together.');
+    }
     return PopupBehaviorConfig(
-      key: key ?? this.key,
+      key: clearKey ? null : key ?? this.key,
       tags: tags ?? this.tags,
       conflictPolicy: conflictPolicy ?? this.conflictPolicy,
       routePolicy: routePolicy ?? this.routePolicy,

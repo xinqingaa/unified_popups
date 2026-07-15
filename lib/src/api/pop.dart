@@ -25,7 +25,6 @@ import 'popup_type_api.dart';
 abstract final class Pop {
   static PopupRuntime _runtime = PopupRuntime();
 
-  static PopupRuntime get runtime => _runtime;
   static NavigatorObserver get routeObserver => _runtime.routeObserver;
   static bool get isReady => _runtime.isReady;
   static Future<void> get ready => _runtime.ready;

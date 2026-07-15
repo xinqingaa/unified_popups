@@ -33,9 +33,31 @@ v2 不处理多 Flutter Engine、后台 isolate 展示 UI、桌面多窗口共�
 
 ### Pop
 
-`Pop` 是推荐给业务使用的唯一入口。每种能力只有一个 `Pop.xxx(Config)` 方法；Config 是唯一参数契约，Pop 只把它交给内部类型适配器和默认 Runtime。它不保存 OverlayEntry、Timer、AnimationController、NavigatorState 或弹窗 Map。
+`Pop` 是 SDK 唯一公开创建入口。每种能力只有一个 `Pop.xxx(Config)` 方法；Config
+是唯一参数契约，Pop 只把它交给内部类型适配器和默认 Runtime。它不保存
+OverlayEntry、Timer、AnimationController、NavigatorState 或弹窗 Map。
 
-所有创建方法返回 `PopupOpenResult<T>`。业务可以忽略返回值、通过 `.result` 等待业务值，或通过 `requireHandle()` 获得命令式控制能力。Config 中不保存 channel；Toast、Sheet 等能力在适配器中固定自己的 channel，避免无效组合。
+真实产品可以在其上增加 `AppPop`：由 App 层固定品牌样式、国际化、埋点和默认策略，
+再向页面提供 `Future<bool> confirm(...)` 等业务形状方法。这个门面不创建第二套 SDK
+状态，也不绕过 Pop；它只是把完整 Config 契约收口到应用自己的设计系统。
+
+所有创建方法同步返回 `PopupOpenResult<T>`。它先表达本次请求的打开决策，而不是
+业务值或 Handle：
+
+- `.result` 将打开决策投影成 `Future<T?>`，供普通业务等待结果。
+- `.requireHandle()` 同步提取命令式 Handle，无 Handle 时抛出异常。
+- `.handleOrNull` 适合 reject/toggle 是合法分支的调用方。
+- 不读取成员时，调用方拿到的仍是 `PopupOpenResult<T>`，不是 Handle。
+
+`await` 只负责等待 `.result`、`handle.outcome`、`handle.dismissed` 等 Future，不决定
+API 返回哪一种模型。完整调用决策见 [API 参考](API_REFERENCE.md)。
+
+Config 中不保存 channel；Toast、Sheet 等能力在适配器中固定自己的 channel，避免
+无效组合。
+
+公开 package 入口只导出业务 Config、结果/Handle、FlowSheet 契约、Anchor 和必要
+策略。`PopupRuntime`、`PopupController`、`PopupHost`、`PopupScene` 以及 Renderer
+Base 类型属于内部实现，不是稳定公开契约。
 
 ### PopupRuntime
 

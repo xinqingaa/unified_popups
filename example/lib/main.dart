@@ -86,7 +86,7 @@ class ExampleHomePage extends StatelessWidget {
                     ),
                     title: const Text('API 展柜'),
                     subtitle: const Text(
-                      'Toast → Loading → Sheet → Flow · 右上角 Entry 计数',
+                      'Toast → Loading → Sheet → Flow · 原始 SDK 契约',
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {

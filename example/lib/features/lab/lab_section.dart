@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:unified_popups/unified_popups.dart';
 
 /// Shared building blocks for Lab pages.
 class LabBanner extends StatelessWidget {
@@ -138,39 +137,26 @@ class _Label extends StatelessWidget {
   }
 }
 
-/// Sticky badge for AppBar — stays visible while Lab pages scroll.
+/// Sticky badge for AppBar — avoids exposing SDK runtime internals to Example.
 class LabEntryBadge extends StatelessWidget {
   const LabEntryBadge({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Pop.runtime.controller,
-      builder: (context, _) {
-        final entries = Pop.runtime.controller.entries;
-        final active =
-            entries.where((e) => e.state.isActive || e.state.isMounted).length;
-        final queued =
-            entries.where((e) => e.state == PopupEntryState.queued).length;
-        final label = queued > 0 ? '$active+$queued' : '$active';
-        return Tooltip(
-          message: '活跃/挂载 Entry：$active'
-              '${queued > 0 ? ' · 排队 $queued' : ''}',
-          child: Chip(
-            visualDensity: VisualDensity.compact,
-            label: Text('Entry $label'),
-            avatar: Icon(
-              Icons.layers_outlined,
-              size: 16,
-              color: Theme.of(context).colorScheme.onSecondaryContainer,
-            ),
-            labelStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSecondaryContainer,
-            ),
-            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          ),
-        );
-      },
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: '原始 SDK 能力展柜',
+      child: Chip(
+        visualDensity: VisualDensity.compact,
+        label: const Text('SDK Lab'),
+        avatar: Icon(
+          Icons.layers_outlined,
+          size: 16,
+          color: scheme.onSecondaryContainer,
+        ),
+        labelStyle: TextStyle(color: scheme.onSecondaryContainer),
+        backgroundColor: scheme.secondaryContainer,
+      ),
     );
   }
 }

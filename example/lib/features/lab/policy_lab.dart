@@ -51,8 +51,8 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                     ).result,
                   );
                   await Future<void>.delayed(const Duration(milliseconds: 400));
-                  Pop.loading(const LoadingConfig(
-                    message: 'block 返回 · 8s',
+                  Pop.loading(const LoadingConfig.text(
+                    'block 返回 · 8s',
                     lifetime: PopupLifetime.after(Duration(seconds: 8)),
                   ));
                   Pop.toast(const ToastConfig.text(
@@ -109,7 +109,7 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                     const ConfirmConfig(
                       title: '所属路由 Confirm',
                       content: 'push 后应自动关闭',
-                      cancelText: '取消',
+                      cancelAction: ConfirmAction.text('取消'),
                       behavior: PopupBehaviorConfig(
                         routePolicy:
                             PopupRoutePolicy.dismissWhenOwnerRouteChanges,
@@ -142,7 +142,7 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                     ConfirmConfig(
                       title: '异步归属',
                       content: '使用 capture 的 routeOwner',
-                      cancelText: '取消',
+                      cancelAction: const ConfirmAction.text('取消'),
                       ownership: PopupOwnership(routeToken: owner),
                       behavior: const PopupBehaviorConfig(
                         routePolicy:
@@ -171,7 +171,7 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                             ConfirmConfig(
                               title: '不应出现',
                               content: '若看到此框，说明失效 token 未拦截',
-                              cancelText: '取消',
+                              cancelAction: const ConfirmAction.text('取消'),
                               ownership: PopupOwnership(routeToken: owner),
                               behavior: const PopupBehaviorConfig(
                                 routePolicy: PopupRoutePolicy
@@ -208,7 +208,7 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                                 const ConfirmConfig(
                                   title: '子 Confirm',
                                   content: 'dismissWithParent',
-                                  cancelText: '取消',
+                                  cancelAction: ConfirmAction.text('取消'),
                                 ),
                               );
                             },

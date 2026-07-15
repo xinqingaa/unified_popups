@@ -23,8 +23,8 @@ void main() {
     api.confirm(
       const ConfirmConfig(
         content: 'divider?',
-        confirmText: 'yes',
-        cancelText: 'no',
+        confirmAction: ConfirmAction.text('yes'),
+        cancelAction: ConfirmAction.text('no'),
         animationConfig: PopupAnimationConfig(duration: Duration.zero),
       ),
     );
@@ -46,8 +46,8 @@ void main() {
     api.confirm(
       const ConfirmConfig(
         content: 'filled?',
-        confirmText: 'yes',
-        cancelText: 'no',
+        confirmAction: ConfirmAction.text('yes'),
+        cancelAction: ConfirmAction.text('no'),
         animationConfig: PopupAnimationConfig(duration: Duration.zero),
         style: ConfirmStyle(
           buttonStyle: ConfirmButtonStyle.filled,
@@ -80,8 +80,8 @@ void main() {
           ConfirmConfig(
             content: 'continue?',
             bodyExtension: const Text('extra'),
-            confirmText: 'yes',
-            cancelText: 'no',
+            confirmAction: const ConfirmAction.text('yes'),
+            cancelAction: const ConfirmAction.text('no'),
             animationConfig:
                 const PopupAnimationConfig(duration: Duration.zero),
             lifecycle: PopupLifecycleCallbacks<bool>(
@@ -114,8 +114,8 @@ void main() {
         .confirm(
           ConfirmConfig(
             content: 'close me',
-            confirmText: 'yes',
-            cancelText: 'no',
+            confirmAction: const ConfirmAction.text('yes'),
+            cancelAction: const ConfirmAction.text('no'),
             animationConfig:
                 const PopupAnimationConfig(duration: Duration.zero),
             onConfirm: () => confirms++,

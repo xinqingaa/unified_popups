@@ -43,8 +43,8 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     ConfirmConfig(
                       title: '删除记录',
                       content: '删除后无法恢复。请分别试按钮与遮罩。',
-                      confirmText: '删除',
-                      cancelText: '取消',
+                      confirmAction: const ConfirmAction.text('删除'),
+                      cancelAction: const ConfirmAction.text('取消'),
                       onConfirm: () => _setLast('onConfirm 已执行'),
                       onCancel: () => _setLast('onCancel 已执行'),
                     ),
@@ -61,8 +61,8 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     const ConfirmConfig(
                       title: '删除记录',
                       content: '填充 / 胶囊风格（非默认）。',
-                      confirmText: '删除',
-                      cancelText: '取消',
+                      confirmAction: ConfirmAction.text('删除'),
+                      cancelAction: ConfirmAction.text('取消'),
                       style: ConfirmStyle(
                         buttonStyle: ConfirmButtonStyle.filled,
                         confirmBackgroundColor: Colors.redAccent,
@@ -84,8 +84,8 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     ConfirmConfig(
                       title: '高级 Confirm',
                       content: '关闭后读取 outcome.reason',
-                      cancelText: '取消',
-                      confirmText: '确定',
+                      cancelAction: const ConfirmAction.text('取消'),
+                      confirmAction: const ConfirmAction.text('确定'),
                       onConfirm: () {},
                       onCancel: () {},
                       lifecycle: PopupLifecycleCallbacks<bool>(
@@ -112,7 +112,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     const ConfirmConfig(
                       title: '提示',
                       content: '只有确认按钮',
-                      confirmText: '知道了',
+                      confirmAction: ConfirmAction.text('知道了'),
                       showCloseButton: true,
                     ),
                   ).result;
@@ -127,7 +127,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     const ConfirmConfig(
                       title: '纵向按钮',
                       content: 'buttonLayout = column',
-                      cancelText: '取消',
+                      cancelAction: ConfirmAction.text('取消'),
                       buttonLayout: ConfirmButtonLayout.column,
                     ),
                   );
@@ -155,8 +155,17 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                         color: Colors.black12,
                         child: const Text('额外区域 bodyExtension'),
                       ),
-                      confirmText: '确定',
-                      cancelText: '取消',
+                      confirmAction: const ConfirmAction.content(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check, size: 18),
+                            SizedBox(width: 6),
+                            Text('确定'),
+                          ],
+                        ),
+                      ),
+                      cancelAction: const ConfirmAction.text('取消'),
                     ),
                   );
                 },
@@ -187,7 +196,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                                 const ConfirmConfig(
                                   title: '子 Confirm',
                                   content: '位于 Sheet 上方',
-                                  cancelText: '取消',
+                                  cancelAction: ConfirmAction.text('取消'),
                                 ),
                               ).result;
                               if (context.mounted) {
@@ -213,7 +222,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     const ConfirmConfig(
                       title: '将被外部关闭',
                       content: '1 秒后 dismiss',
-                      cancelText: '取消',
+                      cancelAction: ConfirmAction.text('取消'),
                     ),
                   ).requireHandle();
                   await Future<void>.delayed(const Duration(seconds: 1));

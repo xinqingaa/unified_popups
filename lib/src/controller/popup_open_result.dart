@@ -22,8 +22,12 @@ sealed class PopupOpenResult<T> {
 
   bool get hasHandle => handleOrNull != null;
 
-  /// Waits for the business result when this request opened or updated an
-  /// entry. Requests rejected or consumed by toggle complete with `null`.
+  /// Projects this synchronous opening decision into a business-result Future.
+  ///
+  /// Opened and updated requests wait for the entry result. Rejected requests
+  /// and requests consumed by toggle complete immediately with `null`. This is
+  /// intentionally a lossy convenience: use [handleOrNull], [requireHandle],
+  /// or pattern matching when the opening decision or dismissal reason matters.
   Future<T?> get result => switch (this) {
         PopupOpened<T>(:final handle) ||
         PopupUpdated<T>(:final handle) =>
@@ -31,8 +35,11 @@ sealed class PopupOpenResult<T> {
         PopupToggledClosed<T>() || PopupRejected<T>() => Future<T?>.value(),
       };
 
-  /// Returns the opened or updated handle when the caller knows that its
-  /// conflict policy cannot reject or toggle the request.
+  /// Extracts the opened or updated handle synchronously.
+  ///
+  /// Throws when the conflict policy rejected the request or consumed it by
+  /// toggling an existing entry closed. Use [handleOrNull] when either outcome
+  /// is valid for the caller.
   PopupHandle<T> requireHandle() {
     final handle = handleOrNull;
     if (handle != null) return handle;

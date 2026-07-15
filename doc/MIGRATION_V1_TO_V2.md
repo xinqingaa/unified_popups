@@ -105,11 +105,14 @@ v2：
 
 ```dart
 final handle = Pop.loading(
-  const LoadingConfig(message: '提交中'),
+  const LoadingConfig.text('提交中'),
 ).requireHandle();
 ```
 
 重复调用仍更新默认全局 Loading Entry。
+
+纯指示器使用 `LoadingConfig.indicator()`，Widget 内容使用
+`LoadingConfig.content(widget)`；三种构造不会产生 message/content 冲突。
 
 ### Confirm 与 Date
 
@@ -124,7 +127,11 @@ v2：
 
 ```dart
 final ok = await Pop.confirm(
-  const ConfirmConfig(content: '确定继续？'),
+  const ConfirmConfig(
+    content: '确定继续？',
+    confirmAction: ConfirmAction.text('确定'),
+    cancelAction: ConfirmAction.text('取消'),
+  ),
 ).result;
 
 final date = await Pop.date(
@@ -238,6 +245,14 @@ final value = await Pop.confirm(config).result;
 - opened/updated：等待 Handle 结果。
 - toggled/rejected：立即返回 null。
 - 不需要结果：直接忽略整个 `PopupOpenResult`。
+
+`await` 不决定返回的是 Handle 还是业务值。`Pop.xxx(config)` 始终先同步返回
+`PopupOpenResult<T>`；`.result` 返回可等待的业务 Future，`.requireHandle()` 同步
+提取 Handle，什么成员都不读取时得到的就是原始打开决策。
+
+真实 App 建议再增加 `AppPop` 门面，将 `.result`、品牌样式、国际化和默认策略封装
+起来。普通页面使用 `await AppPop.confirm(...)`，只有基础设施层直接处理
+`PopupOpenResult` 或外部 Handle。
 
 ## 6. 通用参数迁移
 

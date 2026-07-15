@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:unified_popups/unified_popups.dart';
+
+import '../../app/app_pop.dart';
 
 /// 设置二级页：验证 confirm 随路由返回关闭。
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   Future<void> _clearCache() async {
-    final ok = await Pop.confirm(
-      const ConfirmConfig(
-        title: '清除缓存',
-        content: '将清除本地训练草稿与临时图片缓存，不会删除已同步的健康数据。',
-        confirmText: '清除',
-        cancelText: '取消',
-      ),
-    ).result;
-    if (ok == true) {
-      Pop.loading(const LoadingConfig(message: '清理中…'));
-      await Future<void>.delayed(const Duration(milliseconds: 600));
-      Pop.hideLoading();
-      Pop.toast(const ToastConfig.text('缓存已清除', type: ToastType.success));
+    final ok = await AppPop.confirm(
+      title: '清除缓存',
+      content: '将清除本地训练草稿与临时图片缓存，不会删除已同步的健康数据。',
+      confirmText: '清除',
+    );
+    if (ok) {
+      await AppPop.runLoading<void>(
+        message: '清理中…',
+        task: Future<void>.delayed(const Duration(milliseconds: 600)),
+      );
+      AppPop.success('缓存已清除');
     }
   }
 

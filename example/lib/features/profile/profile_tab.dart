@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
+import '../../app/app_pop.dart';
 import '../../flows/health_profile_flow.dart';
 import '../../widgets/section_header.dart';
 import 'settings_page.dart';
@@ -16,93 +17,111 @@ class _ProfileTabState extends State<ProfileTab> {
   String _nickname = 'Runner_Lee';
   DateTime? _birthday;
 
-  Future<void> _editNickname() async {
-    final controller = TextEditingController(text: _nickname);
-    final result = await Pop.sheet<String>(
-      SheetConfig<String>(
-        header: const SheetHeaderConfig(title: '编辑昵称'),
-        drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
-        keyboard: const SheetKeyboardConfig(adjustForKeyboard: true),
-        size: const SheetSizeConfig(
-          maxHeight: SheetDimension.fraction(0.42),
-        ),
-        builder: (context, handle) => Padding(
-          padding: const EdgeInsets.all(8),
+  Future<void> _showMembership() {
+    return AppPop.custom<void>(
+      builder: (context, handle) => Card(
+        margin: const EdgeInsets.symmetric(horizontal: 28),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: '昵称',
-                  border: OutlineInputBorder(),
-                ),
+              Icon(
+                Icons.workspace_premium,
+                size: 48,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 12),
+              const Text(
+                'FitPulse 连续训练会员',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text('本月完成 8 次训练，再完成 2 次即可解锁新徽章。'),
+              const SizedBox(height: 20),
               FilledButton(
-                onPressed: () => handle.complete(controller.text.trim()),
-                child: const Text('保存'),
+                onPressed: handle.dismiss,
+                child: const Text('知道了'),
               ),
             ],
           ),
         ),
       ),
-    ).result;
+    );
+  }
+
+  Future<void> _editNickname() async {
+    final controller = TextEditingController(text: _nickname);
+    final result = await AppPop.sheet<String>(
+      title: '编辑昵称',
+      drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
+      keyboard: const SheetKeyboardConfig(adjustForKeyboard: true),
+      size: const SheetSizeConfig(
+        maxHeight: SheetDimension.fraction(0.42),
+      ),
+      builder: (context, handle) => Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: '昵称',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () => handle.complete(controller.text.trim()),
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+      ),
+    );
     controller.dispose();
     if (result != null && result.isNotEmpty) {
       setState(() => _nickname = result);
-      Pop.toast(const ToastConfig.text('昵称已更新', type: ToastType.success));
+      AppPop.success('昵称已更新');
     }
   }
 
   Future<void> _pickBirthday() async {
-    final date = await Pop.date(
-      DateConfig(
-        initialDate: _birthday ?? DateTime(1995, 6, 15),
-        minDate: DateTime(1960),
-        maxDate: DateTime.now(),
-        labels: const DateLabels(
-          title: '选择生日',
-          confirm: '确定',
-          cancel: '取消',
-        ),
-      ),
-    ).result;
+    final date = await AppPop.date(
+      initialDate: _birthday ?? DateTime(1995, 6, 15),
+      minDate: DateTime(1960),
+      maxDate: DateTime.now(),
+      title: '选择生日',
+    );
     if (date != null) {
       setState(() => _birthday = date);
-      Pop.toast(ToastConfig.text(
+      AppPop.info(
         '生日：${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-      ));
+      );
     }
   }
 
   Future<void> _logout() async {
     var typed = '';
-    final ok = await Pop.confirm(
-      ConfirmConfig(
-        title: '退出登录',
-        content: '退出后本地训练缓存将保留。请输入 EXIT 确认。',
-        confirmText: '退出',
-        cancelText: '取消',
-        style: const ConfirmStyle(
-          confirmStyle: TextStyle(color: Colors.red),
-        ),
-        bodyExtension: TextField(
-          onChanged: (value) => typed = value,
-          decoration: const InputDecoration(
-            hintText: '输入 EXIT',
-            border: OutlineInputBorder(),
-          ),
+    final ok = await AppPop.confirm(
+      title: '退出登录',
+      content: '退出后本地训练缓存将保留。请输入 EXIT 确认。',
+      confirmText: '退出',
+      destructive: true,
+      bodyExtension: TextField(
+        onChanged: (value) => typed = value,
+        decoration: const InputDecoration(
+          hintText: '输入 EXIT',
+          border: OutlineInputBorder(),
         ),
       ),
-    ).result;
-    if (ok == true) {
+    );
+    if (ok) {
       if (typed.trim() == 'EXIT') {
-        Pop.toast(const ToastConfig.text('已退出登录'));
+        AppPop.info('已退出登录');
       } else {
-        Pop.toast(
-          const ToastConfig.text('请输入 EXIT 确认', type: ToastType.warn),
-        );
+        AppPop.warning('请输入 EXIT 确认');
       }
     }
   }
@@ -158,6 +177,12 @@ class _ProfileTabState extends State<ProfileTab> {
           onPressed: () => HealthProfileFlow.open(),
           icon: const Icon(Icons.health_and_safety_outlined),
           label: const Text('完善健康档案'),
+        ),
+        const SizedBox(height: 10),
+        FilledButton.tonalIcon(
+          onPressed: _showMembership,
+          icon: const Icon(Icons.workspace_premium_outlined),
+          label: const Text('查看会员进度（Custom）'),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(

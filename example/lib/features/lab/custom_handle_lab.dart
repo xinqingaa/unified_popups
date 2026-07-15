@@ -187,8 +187,8 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                 label: '查询 isVisibleKey / countChannel',
                 tonal: true,
                 onPressed: () {
-                  Pop.loading(const LoadingConfig(
-                    message: '查询用 Loading',
+                  Pop.loading(const LoadingConfig.text(
+                    '查询用 Loading',
                     lifetime: PopupLifetime.after(Duration(seconds: 3)),
                   ));
                   final visible = Pop.isVisibleKey(PopupKeys.globalLoading);

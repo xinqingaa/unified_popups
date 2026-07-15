@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:unified_popups/unified_popups.dart';
-
+import '../../app/app_pop.dart';
 import '../../widgets/metric_card.dart';
 import '../../widgets/section_header.dart';
 
@@ -16,58 +15,46 @@ class _ProgressTabState extends State<ProgressTab> {
   String _metric = '体重';
 
   Future<void> _pickStartDate() async {
-    final date = await Pop.date(
-      DateConfig(
-        initialDate: _rangeStart ?? DateTime.now(),
-        minDate: DateTime(2020),
-        maxDate: DateTime.now(),
-        labels: const DateLabels(
-          title: '选择区间起始日',
-          confirm: '确定',
-          cancel: '取消',
-        ),
-      ),
-    ).result;
+    final date = await AppPop.date(
+      initialDate: _rangeStart ?? DateTime.now(),
+      minDate: DateTime(2020),
+      maxDate: DateTime.now(),
+      title: '选择区间起始日',
+    );
     if (date != null) {
       setState(() => _rangeStart = date);
-      Pop.toast(ToastConfig.text(
+      AppPop.info(
         '起始日：${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-      ));
+      );
     }
   }
 
   Future<void> _openMetricSheet() async {
-    final picked = await Pop.sheet<String>(
-      SheetConfig<String>(
-        header: const SheetHeaderConfig(title: '数据指标'),
-        builder: (context, handle) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final m in ['体重', '体脂', '围度', '静息心率'])
-              ListTile(
-                title: Text(m),
-                onTap: () => handle.complete(m),
-              ),
-          ],
-        ),
+    final picked = await AppPop.sheet<String>(
+      title: '数据指标',
+      builder: (context, handle) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final m in ['体重', '体脂', '围度', '静息心率'])
+            ListTile(
+              title: Text(m),
+              onTap: () => handle.complete(m),
+            ),
+        ],
       ),
-    ).result;
+    );
     if (picked != null) {
       setState(() => _metric = picked);
-      Pop.toast(ToastConfig.text('已切换：$_metric'));
+      AppPop.info('已切换：$_metric');
     }
   }
 
   Future<void> _exportReport() async {
-    final export = Future<void>.delayed(const Duration(milliseconds: 1200));
-    Pop.loading(
-      LoadingConfig(
-        message: '导出周报…',
-        lifetime: PopupLifetime.until(export),
-      ),
+    await AppPop.runLoading<void>(
+      message: '导出周报…',
+      task: Future<void>.delayed(const Duration(milliseconds: 1200)),
     );
-    await export;
-    Pop.toast(const ToastConfig.text('周报已生成', type: ToastType.success));
+    AppPop.success('周报已生成');
   }
 
   @override

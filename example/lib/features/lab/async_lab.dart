@@ -159,7 +159,7 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
       // 模拟网络请求
       Future.delayed(const Duration(milliseconds: 100)).then((_) {
         // 在 then 回调中调用 loading
-        Pop.loading(const LoadingConfig(message: '处理数据中...'));
+        Pop.loading(const LoadingConfig.text('处理数据中...'));
         Future.delayed(const Duration(seconds: 2)).then((_) {
           Pop.hideLoading();
           _updateResult('场景1: 成功 - Future.then() 回调中调用 loading 正常');
@@ -180,7 +180,7 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // 在中间调用 loading
-      Pop.loading(const LoadingConfig(message: '继续处理中...'));
+      Pop.loading(const LoadingConfig.text('继续处理中...'));
 
       // 第二步异步操作
       await Future.delayed(const Duration(seconds: 2));
@@ -203,7 +203,7 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
 
       stream.listen((data) {
         // 在 Stream 监听回调中调用 loading
-        Pop.loading(LoadingConfig(message: '处理流数据: $data'));
+        Pop.loading(LoadingConfig.text('处理流数据: $data'));
         Future.delayed(const Duration(seconds: 1)).then((_) {
           Pop.hideLoading();
           if (data == 2) {
@@ -235,7 +235,7 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
     try {
       Timer(const Duration(milliseconds: 100), () {
         // 在 Timer 回调中调用 loading
-        Pop.loading(const LoadingConfig(message: '定时任务执行中...'));
+        Pop.loading(const LoadingConfig.text('定时任务执行中...'));
         Timer(const Duration(seconds: 2), () {
           Pop.hideLoading();
           _updateResult('场景4: 成功 - Timer 回调中调用 loading 正常');
@@ -256,7 +256,7 @@ class _AsyncLabPageState extends State<AsyncLabPage> {
       // 这会在构建阶段之后立即执行，但可能仍在构建周期内
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // 这里调用 loading，验证 SafeOverlayEntry 是否正常工作
-        Pop.loading(const LoadingConfig(message: 'postFrameCallback 中调用'));
+        Pop.loading(const LoadingConfig.text('postFrameCallback 中调用'));
         Future.delayed(const Duration(seconds: 2)).then((_) {
           Pop.hideLoading();
           _updateResult('场景5: 成功 - postFrameCallback 中调用 loading 正常');
@@ -333,7 +333,7 @@ class _TestInitStateWidgetState extends State<_TestInitStateWidget> {
     super.initState();
     // 在 initState 中异步调用 loading
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Pop.loading(const LoadingConfig(message: 'initState 异步加载中...'));
+      Pop.loading(const LoadingConfig.text('initState 异步加载中...'));
       Future.delayed(const Duration(seconds: 2)).then((_) {
         Pop.hideLoading();
         if (mounted) {
@@ -376,7 +376,7 @@ class _TestBuildDirectWidgetState extends State<_TestBuildDirectWidget> {
       _hasCalledLoading = true;
       // 直接调用，模拟在路由构建过程中立即初始化并调用 loading
       // 这会在构建阶段触发 overlay.insert()，需要延迟执行
-      Pop.loading(const LoadingConfig(message: 'build() 中直接调用 loading...'));
+      Pop.loading(const LoadingConfig.text('build() 中直接调用 loading...'));
       final navigator = Navigator.of(context);
       // 延迟关闭，验证弹窗是否正常显示
       Future.delayed(const Duration(seconds: 2)).then((_) {

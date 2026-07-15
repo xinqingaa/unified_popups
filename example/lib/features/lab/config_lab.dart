@@ -129,8 +129,8 @@ class ConfigLabPage extends StatelessWidget {
             title: 'PopupBarrierConfig',
             children: [
               LabAction(
-                label: 'Menu 默认 hidden（可滚动）',
-                subtitle: '见 Menu 展柜；此处用 Custom 演示 hidden',
+                label: 'hidden Barrier（底层可滚动）',
+                subtitle: 'Menu 默认透明可点关；此处用 Custom 演示 hidden',
                 onPressed: () {
                   Pop.custom<void>(
                     CustomPopupConfig<void>(

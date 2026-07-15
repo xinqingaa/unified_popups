@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
-import '../../app/fit_pulse_metrics.dart';
+import '../../app/app_pop.dart';
 import '../../flows/start_workout_flow.dart';
 import '../../widgets/section_header.dart';
 import 'course_detail_page.dart';
@@ -28,6 +28,7 @@ class WorkoutsTab extends StatefulWidget {
 class _WorkoutsTabState extends State<WorkoutsTab> {
   String _filter = '全部';
   bool _vibrateReminder = true;
+  final PopupAnchorController _filterAnchor = PopupAnchorController();
 
   late final List<_Course> _courses = [
     _Course(
@@ -48,180 +49,140 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
   ];
 
   Future<void> _openFilter() async {
-    final scheme = Theme.of(context).colorScheme;
-    final picked = await Pop.sheet<String>(
-      SheetConfig<String>(
-        header: const SheetHeaderConfig(title: '筛选课程'),
-        drag: SheetDragConfig(
-          mode: SheetDragDismissMode.contentWhenAtTop,
-          handleColor: scheme.primary,
-        ),
-        size: const SheetSizeConfig(
-          maxHeight: SheetDimension.fraction(0.55),
-        ),
-        dock: const SheetDockConfig(
-          enabled: true,
-          edgeGap: FitPulseMetrics.sheetDockEdgeGap,
-        ),
-        builder: (context, handle) => ListView(
-          children: [
-            for (final label in [
-              '全部',
-              '初级',
-              '中级',
-              '进阶',
-              '有氧',
-              '力量',
-              '拉伸',
-              '核心'
-            ])
-              ListTile(
-                title: Text(label),
-                trailing: _filter == label
-                    ? Icon(Icons.check, color: scheme.primary)
-                    : null,
-                onTap: () => handle.complete(label),
-              ),
-          ],
-        ),
+    final labels = ['全部', '初级', '中级', '进阶', '有氧', '力量', '拉伸', '核心'];
+    final picked = await AppPop.dropMenu<String>(
+      anchor: _filterAnchor,
+      menu: DropMenu<String>.single(
+        selectedValue: _filter,
+        items: [
+          for (final label in labels)
+            DropMenuItem<String>(
+              value: label,
+              label: label,
+              selected: label == _filter,
+            ),
+        ],
       ),
-    ).result;
+    );
     if (picked != null) {
       setState(() => _filter = picked);
-      Pop.toast(ToastConfig.text('已筛选：$_filter'));
+      AppPop.info('已筛选：$_filter');
     }
   }
 
   Future<void> _openQuickActions() async {
-    await Pop.sheet<void>(
-      SheetConfig<void>(
-        direction: SheetDirection.right,
-        size: const SheetSizeConfig(
-          maxWidth: SheetDimension.fraction(0.72),
-        ),
-        drag: const SheetDragConfig(
-          mode: SheetDragDismissMode.fullBody,
-          showHandle: false,
-        ),
-        header: const SheetHeaderConfig(title: '快捷动作'),
-        builder: (context, handle) => ListView(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.timer_outlined),
-              title: const Text('休息计时器'),
-              onTap: () {
-                handle.complete();
-                Pop.toast(const ToastConfig.text('已启动 60s 休息计时'));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.music_note_outlined),
-              title: const Text('训练歌单'),
-              onTap: () {
-                handle.complete();
-                Pop.toast(const ToastConfig.text('已打开歌单'));
-              },
-            ),
-          ],
-        ),
+    await AppPop.sheet<void>(
+      title: '快捷动作',
+      direction: SheetDirection.right,
+      size: const SheetSizeConfig(
+        maxWidth: SheetDimension.fraction(0.72),
       ),
-    ).result;
+      drag: const SheetDragConfig(
+        mode: SheetDragDismissMode.fullBody,
+        showHandle: false,
+      ),
+      builder: (context, handle) => ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.timer_outlined),
+            title: const Text('休息计时器'),
+            onTap: () {
+              handle.complete();
+              AppPop.info('已启动 60s 休息计时');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.music_note_outlined),
+            title: const Text('训练歌单'),
+            onTap: () {
+              handle.complete();
+              AppPop.info('已打开歌单');
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _openNoteSheet() async {
-    await Pop.sheet<void>(
-      SheetConfig<void>(
-        header: const SheetHeaderConfig(title: '训练感受'),
-        keyboard: const SheetKeyboardConfig(adjustForKeyboard: true),
-        drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
-        size: const SheetSizeConfig(
-          maxHeight: SheetDimension.fraction(0.5),
-        ),
-        builder: (context, handle) => Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              const TextField(
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: '今天膝盖感觉如何？有没有力竭…',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () {
-                  handle.complete();
-                  Pop.toast(
-                    const ToastConfig.text('备注已保存', type: ToastType.success),
-                  );
-                },
-                child: const Text('保存'),
-              ),
-            ],
-          ),
-        ),
+    await AppPop.sheet<void>(
+      title: '训练感受',
+      keyboard: const SheetKeyboardConfig(adjustForKeyboard: true),
+      drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
+      size: const SheetSizeConfig(
+        maxHeight: SheetDimension.fraction(0.5),
       ),
-    ).result;
-  }
-
-  Future<void> _openCourseMenu(PopupAnchorController anchor) async {
-    final action = await Pop.menu<String>(
-      MenuConfig<String>(
-        anchor: anchor,
-        builder: (context, handle) => Column(
-          mainAxisSize: MainAxisSize.min,
+      builder: (context, handle) => Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
           children: [
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.star_outline),
-              title: const Text('收藏'),
-              onTap: () => handle.complete('fav'),
+            const TextField(
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: '今天膝盖感觉如何？有没有力竭…',
+                border: OutlineInputBorder(),
+              ),
             ),
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.share_outlined),
-              title: const Text('分享'),
-              onTap: () => handle.complete('share'),
-            ),
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text('删除计划', style: TextStyle(color: Colors.red)),
-              onTap: () => handle.complete('delete'),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () {
+                handle.complete();
+                AppPop.success('备注已保存');
+              },
+              child: const Text('保存'),
             ),
           ],
         ),
       ),
-    ).result;
+    );
+  }
+
+  Future<void> _openCourseMenu(PopupAnchorController anchor) async {
+    final action = await AppPop.menu<String>(
+      anchor: anchor,
+      builder: (context, handle) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.star_outline),
+            title: const Text('收藏'),
+            onTap: () => handle.complete('fav'),
+          ),
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.share_outlined),
+            title: const Text('分享'),
+            onTap: () => handle.complete('share'),
+          ),
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.delete_outline, color: Colors.red),
+            title: const Text('删除计划', style: TextStyle(color: Colors.red)),
+            onTap: () => handle.complete('delete'),
+          ),
+        ],
+      ),
+    );
     if (action == null) return;
     if (action == 'delete') {
-      final ok = await Pop.confirm(
-        const ConfirmConfig(
-          title: '删除训练计划',
-          content: '删除后不可恢复，确定继续？',
-          confirmText: '删除',
-          cancelText: '取消',
-          style: ConfirmStyle(
-            confirmStyle: TextStyle(color: Colors.red),
-          ),
-        ),
-      ).result;
-      if (ok == true) {
-        Pop.toast(
-          const ToastConfig.text('计划已删除', type: ToastType.success),
-        );
+      final ok = await AppPop.confirm(
+        title: '删除训练计划',
+        content: '删除后不可恢复，确定继续？',
+        confirmText: '删除',
+        destructive: true,
+      );
+      if (ok) {
+        AppPop.success('计划已删除');
       }
       return;
     }
-    Pop.toast(ToastConfig.text(action == 'fav' ? '已收藏' : '分享链接已复制'));
+    AppPop.info(action == 'fav' ? '已收藏' : '分享链接已复制');
   }
 
   void _toggleReminder() {
     setState(() => _vibrateReminder = !_vibrateReminder);
-    Pop.toast(
-      ToastConfig.text(_vibrateReminder ? '已开启震动提醒' : '已切换为静音提醒'),
-    );
+    AppPop.info(_vibrateReminder ? '已开启震动提醒' : '已切换为静音提醒');
   }
 
   @override
@@ -232,7 +193,13 @@ class _WorkoutsTabState extends State<WorkoutsTab> {
         SectionHeader(
           title: '训练课程',
           subtitle: '当前筛选：$_filter · 含 sheet / menu / FlowSheet',
-          trailing: TextButton(onPressed: _openFilter, child: const Text('筛选')),
+          trailing: PopupAnchor(
+            controller: _filterAnchor,
+            child: TextButton(
+              onPressed: _openFilter,
+              child: const Text('筛选'),
+            ),
+          ),
         ),
         Wrap(
           spacing: 8,

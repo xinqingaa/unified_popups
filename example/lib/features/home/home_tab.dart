@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:unified_popups/unified_popups.dart';
 
+import '../../app/app_pop.dart';
 import '../../widgets/metric_card.dart';
 import '../../widgets/section_header.dart';
 
@@ -9,49 +9,32 @@ class HomeTab extends StatelessWidget {
 
   Future<void> _syncHealth() async {
     final sync = Future<void>.delayed(const Duration(milliseconds: 1800));
-    Pop.loading(const LoadingConfig(message: '连接健康服务…'));
+    final loading = AppPop.showLoading('连接健康服务…');
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    Pop.loading(const LoadingConfig(message: '拉取步数与消耗…'));
+    loading.update('拉取步数与消耗…');
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    Pop.loading(LoadingConfig(
-      message: '写入本地…',
-      lifetime: PopupLifetime.until(sync),
-    ));
+    loading.update('写入本地…', until: sync);
     await sync;
-    Pop.toast(const ToastConfig.text('同步完成', type: ToastType.success));
+    AppPop.success('同步完成');
   }
 
   Future<void> _checkIn() async {
-    final ok = await Pop.confirm(
-      const ConfirmConfig(
-        title: '完成今日打卡',
-        content: '确认将今日训练标记为已完成？打卡后会计入连续天数。',
-        confirmText: '打卡',
-        cancelText: '取消',
-      ),
-    ).result;
-    if (ok == true) {
-      Pop.toast(const ToastConfig.text(
-        '打卡成功，继续保持！',
-        type: ToastType.success,
-        position: PopupPosition.bottom,
-      ));
+    final ok = await AppPop.confirm(
+      title: '完成今日打卡',
+      content: '确认将今日训练标记为已完成？打卡后会计入连续天数。',
+      confirmText: '打卡',
+    );
+    if (ok) {
+      AppPop.success('打卡成功，继续保持！');
     }
   }
 
   void _skipRestDay() {
-    Pop.toast(const ToastConfig.text(
-      '今日目标尚未达成，建议完成至少 20 分钟活动',
-      type: ToastType.warn,
-    ));
+    AppPop.warning('今日目标尚未达成，建议完成至少 20 分钟活动');
   }
 
   void _syncFailedDemo() {
-    Pop.toast(const ToastConfig.text(
-      '网络异常，健康数据同步失败',
-      type: ToastType.error,
-      position: PopupPosition.top,
-    ));
+    AppPop.error('网络异常，健康数据同步失败');
   }
 
   @override

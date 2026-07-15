@@ -41,9 +41,7 @@ final class LoadingIndicatorConfig {
 }
 
 final class LoadingConfig implements PopupVisualConfig {
-  const LoadingConfig({
-    this.message,
-    this.content,
+  const LoadingConfig.indicator({
     this.style = const LoadingStyle(),
     this.indicator = const LoadingIndicatorConfig(),
     this.behavior = const PopupBehaviorConfig(
@@ -62,7 +60,52 @@ final class LoadingConfig implements PopupVisualConfig {
     this.lifetime = const PopupLifetime.manual(),
     this.lifecycle = const PopupLifecycleCallbacks<void>(),
     this.position = PopupPosition.center,
-  });
+  })  : message = null,
+        content = null;
+
+  const LoadingConfig.text(
+    String this.message, {
+    this.style = const LoadingStyle(),
+    this.indicator = const LoadingIndicatorConfig(),
+    this.behavior = const PopupBehaviorConfig(
+      key: PopupKeys.globalLoading,
+      conflictPolicy: PopupConflictPolicy.updateExisting,
+      backPolicy: PopupBackPolicy.block,
+    ),
+    this.ownership = const PopupOwnership(),
+    this.barrier = const PopupBarrierConfig(
+      visible: true,
+      dismissible: false,
+    ),
+    this.animation = const PopupAnimationConfig(
+      duration: Duration(milliseconds: 150),
+    ),
+    this.lifetime = const PopupLifetime.manual(),
+    this.lifecycle = const PopupLifecycleCallbacks<void>(),
+    this.position = PopupPosition.center,
+  }) : content = null;
+
+  const LoadingConfig.content(
+    Widget this.content, {
+    this.style = const LoadingStyle(),
+    this.indicator = const LoadingIndicatorConfig(),
+    this.behavior = const PopupBehaviorConfig(
+      key: PopupKeys.globalLoading,
+      conflictPolicy: PopupConflictPolicy.updateExisting,
+      backPolicy: PopupBackPolicy.block,
+    ),
+    this.ownership = const PopupOwnership(),
+    this.barrier = const PopupBarrierConfig(
+      visible: true,
+      dismissible: false,
+    ),
+    this.animation = const PopupAnimationConfig(
+      duration: Duration(milliseconds: 150),
+    ),
+    this.lifetime = const PopupLifetime.manual(),
+    this.lifecycle = const PopupLifecycleCallbacks<void>(),
+    this.position = PopupPosition.center,
+  }) : message = null;
 
   final String? message;
   final Widget? content;

@@ -106,16 +106,16 @@ class ConfirmRenderer extends StatelessWidget {
   }
 
   Widget _buttons(BuildContext context) {
-    final hasCancel = config.cancelText != null || config.cancelButton != null;
+    final hasCancel = config.cancelAction != null;
     final cancel = _button(
       context,
-      child: config.cancelButton ?? Text(config.cancelText ?? ''),
+      child: _actionChild(config.cancelAction),
       confirm: false,
       hasCancel: hasCancel,
     );
     final confirm = _button(
       context,
-      child: config.confirmButton ?? Text(config.confirmText),
+      child: _actionChild(config.confirmAction),
       confirm: true,
       hasCancel: hasCancel,
     );
@@ -137,6 +137,11 @@ class ConfirmRenderer extends StatelessWidget {
         confirm,
       ],
     );
+  }
+
+  Widget _actionChild(ConfirmAction? action) {
+    if (action == null) return const SizedBox.shrink();
+    return action.child ?? Text(action.text!);
   }
 
   Widget _button(

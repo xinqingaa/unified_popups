@@ -13,7 +13,7 @@ import 'config_lab.dart';
 import 'sheet_lab.dart';
 import 'toast_lab.dart';
 
-/// API 展柜外壳：AppBar 右上角常驻 Entry 计数，子页滚动时仍可见。
+/// API 展柜外壳：AppBar 标记原始 SDK 区域，子页按能力分组。
 class LabShell extends StatelessWidget {
   const LabShell({super.key});
 

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
+import '../app/app_pop.dart';
+
 /// 健康档案向导：资料(replace) → 风险问卷(lifecycle) → 确认提交。
 class HealthProfileFlow {
   HealthProfileFlow._();
@@ -10,23 +12,18 @@ class HealthProfileFlow {
   static Future<void> open() async {
     final controller = FlowSheetController<_HealthResult>();
     final draft = _HealthDraft();
-    final result = await Pop.flowSheet<_HealthResult>(
-      FlowSheetConfig<_HealthResult>(
-        controller: controller,
-        size: const SheetSizeConfig(
-          maxHeight: SheetDimension.fraction(0.9),
-        ),
-        drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
-        initialPage: _BasicsStepPage(controller: controller, draft: draft),
+    final result = await AppPop.flowSheet<_HealthResult>(
+      controller: controller,
+      size: const SheetSizeConfig(
+        maxHeight: SheetDimension.fraction(0.9),
       ),
-    ).result;
+      drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
+      initialPage: _BasicsStepPage(controller: controller, draft: draft),
+    );
     if (result != null) {
-      Pop.toast(ToastConfig.text(
-        '档案已保存：${result.name} · 风险等级 ${result.riskLevel}',
-        type: ToastType.success,
-      ));
+      AppPop.success('档案已保存：${result.name} · 风险等级 ${result.riskLevel}');
     } else {
-      Pop.toast(const ToastConfig.text('已退出健康档案'));
+      AppPop.info('已退出健康档案');
     }
   }
 }

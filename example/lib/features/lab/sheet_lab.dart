@@ -316,7 +316,7 @@ class _StackGroup extends StatelessWidget {
                           const ConfirmConfig(
                             title: '继续？',
                             content: 'Confirm 在 Sheet 之上',
-                            cancelText: '取消',
+                            cancelAction: ConfirmAction.text('取消'),
                           ),
                         ).result;
                         Pop.toast(

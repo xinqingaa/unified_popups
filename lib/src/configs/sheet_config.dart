@@ -41,7 +41,7 @@ final class SheetHeaderConfig {
     this.padding = const EdgeInsets.symmetric(vertical: 12),
     this.titleStyle,
     this.titleAlign = TextAlign.center,
-  });
+  }) : assert(title == null || titleWidget == null);
 
   final String? title;
   final Widget? titleWidget;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:unified_popups/unified_popups.dart';
+import '../../app/app_pop.dart';
 
 /// 课程详情二级页：打开弹框后返回 / 再 push，验证路由切换自动关闭。
 class CourseDetailPage extends StatelessWidget {
@@ -13,40 +13,33 @@ class CourseDetailPage extends StatelessWidget {
   final String meta;
 
   Future<void> _adjustDifficulty() async {
-    final level = await Pop.sheet<String>(
-      SheetConfig<String>(
-        header: const SheetHeaderConfig(title: '调整难度'),
-        builder: (context, handle) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final label in ['初级', '中级', '进阶'])
-              ListTile(
-                title: Text(label),
-                onTap: () => handle.complete(label),
-              ),
-          ],
-        ),
+    final level = await AppPop.sheet<String>(
+      title: '调整难度',
+      builder: (context, handle) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final label in ['初级', '中级', '进阶'])
+            ListTile(
+              title: Text(label),
+              onTap: () => handle.complete(label),
+            ),
+        ],
       ),
-    ).result;
+    );
     if (level != null) {
-      Pop.toast(ToastConfig.text('难度已设为 $level'));
+      AppPop.info('难度已设为 $level');
     }
   }
 
   Future<void> _deletePlan(BuildContext context) async {
-    final ok = await Pop.confirm(
-      ConfirmConfig(
-        title: '删除训练计划',
-        content: '确定删除「$title」？删除后不可恢复。',
-        confirmText: '删除',
-        cancelText: '取消',
-        style: const ConfirmStyle(
-          confirmStyle: TextStyle(color: Colors.red),
-        ),
-      ),
-    ).result;
-    if (ok == true && context.mounted) {
-      Pop.toast(const ToastConfig.text('计划已删除', type: ToastType.success));
+    final ok = await AppPop.confirm(
+      title: '删除训练计划',
+      content: '确定删除「$title」？删除后不可恢复。',
+      confirmText: '删除',
+      destructive: true,
+    );
+    if (ok && context.mounted) {
+      AppPop.success('计划已删除');
       Navigator.of(context).pop();
     }
   }

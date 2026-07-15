@@ -24,7 +24,7 @@ void main() {
     addTearDown(runtime.shutdown);
     final api = PopupTypeApi(runtime);
     final handle = api
-        .loading(const LoadingConfig(message: 'first'))
+        .loading(const LoadingConfig.text('first'))
         .requireHandle() as LoadingHandle;
 
     await tester.pumpWidget(_TestApp(runtime: runtime));
@@ -32,7 +32,7 @@ void main() {
     expect(find.text('first'), findsOneWidget);
     final stateBefore = tester.state(find.byType(LoadingRenderer));
 
-    handle.update(const LoadingConfig(message: 'second'));
+    handle.update(const LoadingConfig.text('second'));
     await tester.pump();
     expect(find.text('first'), findsNothing);
     expect(find.text('second'), findsOneWidget);

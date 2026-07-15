@@ -23,8 +23,10 @@ abstract interface class PopupHandleBase {
 
 /// A stable reference to one logical popup entry.
 abstract interface class PopupHandle<T> implements PopupHandleBase {
+  /// Completes when the first closing decision commits its reason and value.
   Future<PopupOutcome<T>> get outcome;
 
+  /// A lossy projection of [outcome] that returns only its nullable value.
   Future<T?> get result;
 
   /// Completes the business result immediately and the returned future after

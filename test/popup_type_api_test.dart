@@ -68,8 +68,8 @@ void main() {
 
     final handle = api
         .loading(
-          LoadingConfig(
-            message: 'uploading',
+          LoadingConfig.text(
+            'uploading',
             lifetime: PopupLifetime.until(stale.future),
           ),
         )
@@ -77,8 +77,8 @@ void main() {
     runtime.controller.markPresented(handle.id);
     final updated = api
         .loading(
-          LoadingConfig(
-            message: 'processing',
+          LoadingConfig.text(
+            'processing',
             lifetime: PopupLifetime.until(current.future),
           ),
         )
@@ -109,8 +109,8 @@ void main() {
     final current = Completer<void>();
     final handle = api
         .loading(
-          LoadingConfig(
-            message: 'first',
+          LoadingConfig.text(
+            'first',
             lifetime: PopupLifetime.until(stale.future),
           ),
         )
@@ -118,8 +118,8 @@ void main() {
     runtime.controller.markPresented(handle.id);
 
     handle.update(
-      LoadingConfig(
-        message: 'second',
+      LoadingConfig.text(
+        'second',
         lifetime: PopupLifetime.until(current.future),
       ),
     );
@@ -143,7 +143,7 @@ void main() {
 
     final loading = api
         .loading(
-          LoadingConfig(
+          LoadingConfig.indicator(
             lifetime: PopupLifetime.until(loadingDone.future),
           ),
         )

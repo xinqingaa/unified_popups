@@ -19,6 +19,7 @@ MaterialApp(
 | `Pop.ready` | 首个 Host 挂载后完成 |
 | `Pop.isReady` | Host 当前是否可用 |
 | `Pop.captureRoute()` | 捕获当前根路由 token，供异步 Ownership 使用 |
+| `Pop.resetForTest()` | 关闭并替换全局 Runtime，仅用于测试隔离 |
 
 ## 2. 创建 API 总览
 
@@ -34,25 +35,103 @@ MaterialApp(
 | DropMenu | `Pop.dropMenu<T>(DropMenuConfig<T>)` | `T` |
 | Custom | `Pop.custom<T>(CustomPopupConfig<T>)` | `T` |
 
-返回值可以直接忽略：
+## 3. PopupOpenResult、result、requireHandle 与 Handle
+
+### 3.1 唯一的起点
+
+每个 `Pop.xxx(config)` 都是同步方法，调用后立即应用冲突策略并返回
+`PopupOpenResult<T>`：
 
 ```dart
-Pop.toast(const ToastConfig.text('保存成功'));
+final opened = Pop.confirm(config); // PopupOpenResult<bool>
 ```
 
-也可以等待业务结果：
+此时没有等待用户操作，也没有直接得到 Handle。`await` 不是返回模型的分界线；调用方
+选择的成员才决定下一步拿到什么：
+
+```text
+Pop.confirm(config)
+        │
+        ▼
+PopupOpenResult<bool>
+   ├─ .result ──────────> Future<bool?>
+   ├─ .requireHandle() ─> PopupHandle<bool>
+   ├─ .handleOrNull ────> PopupHandle<bool>?
+   └─ switch ───────────> opened / updated / rejected / toggled
+```
+
+| 使用场景 | 写法 | 返回类型 |
+| --- | --- | --- |
+| Fire-and-forget | `Pop.toast(config)` | 忽略 `PopupOpenResult<void>` |
+| 普通业务结果 | `await Pop.confirm(config).result` | `bool?` |
+| 确定会产生 Entry，且要外部控制 | `Pop.loading(config).requireHandle()` | `PopupHandle<void>` |
+| 冲突拒绝/toggle 属于合法分支 | `Pop.menu(config).handleOrNull` | `PopupHandle<T>?` |
+| 必须区分打开决策 | `switch (Pop.xxx(config))` | 四种 sealed subtype |
+
+### 3.2 `.result`：普通业务值
+
+`.result` 是 `PopupOpenResult<T>` 上的 getter，类型为 `Future<T?>`：
 
 ```dart
-final value = await Pop.confirm(config).result;
+final confirmed = await Pop.confirm(config).result;
 ```
 
-或获取 Handle：
+等价于：
+
+```dart
+final opened = Pop.confirm(config);
+final resultFuture = opened.result;
+final confirmed = await resultFuture;
+```
+
+它只是业务值的便利投影，不包含打开决策和关闭原因：
+
+- opened/updated：等待对应 Entry 的 `handle.result`。
+- rejected/toggled：立即完成并返回 `null`。
+- 用户点遮罩、返回键、路由切换或外部 dismiss：也通常返回 `null`。
+
+因此 `.result == null` 不能判断究竟是“用户取消”还是“请求未打开”。普通业务只关心
+选择值时适合使用 `.result`；需要准确原因时使用 `PopupOutcome`。
+
+### 3.3 `requireHandle()`：外部命令式控制
 
 ```dart
 final handle = Pop.loading(config).requireHandle();
 ```
 
-## 3. PopupOpenResult 与 PopupHandle
+`requireHandle()` 同步提取 opened/updated 的 Handle。若结果是 rejected 或
+toggledClosed，它会抛出 `StateError`。它适合默认全局 Loading 等调用方确定必然会
+创建或更新 Entry 的场景。
+
+冲突是正常业务分支时不要使用它：
+
+```dart
+final opened = Pop.menu(config);
+final handle = opened.handleOrNull;
+if (handle == null) {
+  // rejected 或 toggle 已关闭旧 Entry
+  return;
+}
+```
+
+需要区分两种无 Handle 情况时对 sealed class 做模式匹配。
+
+### 3.4 Builder Handle 与外部 Handle
+
+Sheet、Menu 和 Custom Builder 的 Handle 由 SDK 自动传入：
+
+```dart
+SheetConfig<String>(
+  builder: (context, handle) => ListTile(
+    onTap: () => handle.complete('done'),
+  ),
+)
+```
+
+Builder 内不需要 `requireHandle()`。只有 Builder 外部还要更新或关闭 Entry 时，才从
+`PopupOpenResult` 提取 Handle。两处拿到的是同一个稳定逻辑 Entry 引用。
+
+### 3.5 四种打开决策
 
 `PopupOpenResult<T>` 有四种结果：
 
@@ -67,17 +146,35 @@ final handle = Pop.loading(config).requireHandle();
 
 - `handleOrNull`：opened/updated 的 Handle。
 - `hasHandle`：是否产生 Handle。
-- `requireHandle()`：没有 Handle 时抛出 `StateError`。
-- `result`：统一的 `Future<T?>` 业务结果。
+- `requireHandle()`：提取 Handle；没有 Handle 时抛出 `StateError`。
+- `result`：有损的 `Future<T?>` 业务值投影。
 
-`PopupHandle<T>`：
+### 3.6 PopupHandle 的异步成员与时间点
+
+Handle 是控制引用，不等于 Future，但它提供多个 Future：
 
 - `id/key/channel/state/isActive/isMounted`：逻辑 Entry 状态。
-- `complete([T? value])`：业务正常完成并退出。
-- `dismiss()`：无业务结果地关闭。
-- `result`：`Future<T?>`。
-- `outcome`：`Future<PopupOutcome<T>>`，包含 value 和 reason。
-- `dismissed`：视觉节点彻底移除后完成。
+- `complete([T? value])`：提交 completed Outcome，并等待退出动画与移除。
+- `dismiss()`：提交 manual Outcome，并等待退出动画与移除。
+- `result`：首个关闭决策确定时完成，只返回 nullable value。
+- `outcome`：首个关闭决策确定时完成，包含 value 和 reason。
+- `dismissed`：退出动画完成、视觉节点彻底移除后完成。
+
+```dart
+final handle = Pop.loading(config).requireHandle();
+final outcomeFuture = handle.outcome;
+final removedFuture = handle.dismissed;
+
+await handle.dismiss(); // 等待视觉移除
+final outcome = await outcomeFuture; // reason == manual
+await removedFuture;
+```
+
+### 3.7 App 级二次封装
+
+完整 Config 是 SDK 契约，不代表每个业务页面都应该重复构造。真实 App 建议用
+`AppPop` 统一品牌样式、国际化、默认冲突策略和 null 到业务值的映射。Example 的
+FitPulse 产品区使用 `AppPop`，API Lab 使用原始 `Pop`。
 
 ## 4. 通用配置
 
@@ -94,6 +191,14 @@ const PopupBehaviorConfig(
 ```
 
 字段：`key`、`tags`、`conflictPolicy`、`routePolicy`、`backPolicy`。
+
+`copyWith()` 默认保留已有 key；需要显式清空时使用：
+
+```dart
+final unkeyed = behavior.copyWith(clearKey: true);
+```
+
+`key` 与 `clearKey: true` 不能同时提供，否则抛出 `ArgumentError`。
 
 Behavior 不包含 channel。Channel 由 Toast、Sheet 等能力本身固定。
 
@@ -180,16 +285,22 @@ Pop.toast(const ToastConfig.content(MyToastContent()));
 
 ```dart
 Pop.loading(
-  const LoadingConfig(
-    message: '上传中',
+  const LoadingConfig.text(
+    '上传中',
     lifetime: PopupLifetime.manual(),
   ),
 );
 ```
 
+载荷使用三个互斥构造器：
+
+- `LoadingConfig.indicator()`：只有默认指示器。
+- `LoadingConfig.text(message)`：指示器与文本。
+- `LoadingConfig.content(widget)`：指示器与自定义内容。
+
 `LoadingConfig`：
 
-- `message/content`：文本或 Widget 内容，也允许都为空。
+- `message/content`：由命名构造器保证互斥。
 - `style`：`LoadingStyle`。
 - `indicator`：`LoadingIndicatorConfig`。
 - `position`：显示位置。
@@ -210,8 +321,8 @@ final confirmed = await Pop.confirm(
   const ConfirmConfig(
     title: '删除记录',
     content: '删除后无法恢复。',
-    confirmText: '删除',
-    cancelText: '取消',
+    confirmAction: ConfirmAction.text('删除'),
+    cancelAction: ConfirmAction.text('取消'),
   ),
 ).result;
 ```
@@ -221,8 +332,9 @@ final confirmed = await Pop.confirm(
 - `title/titleWidget`：标题。
 - `content/contentWidget`：正文，至少提供一个。
 - `bodyExtension`：正文下方扩展 Widget。
-- `confirmText/confirmButton`：确认按钮。
-- `cancelText/cancelButton`：取消按钮；不提供则不显示。
+- `confirmAction`：确认操作，使用 `ConfirmAction.text` 或
+  `ConfirmAction.content`，两种载荷结构互斥。
+- `cancelAction`：可选取消操作；不提供则不显示取消按钮。
 - `showCloseButton`：右上角关闭按钮。
 - `imagePath/imageWidth/imageHeight`：顶部图片。
 - `buttonLayout`：row/column。
@@ -233,6 +345,9 @@ final confirmed = await Pop.confirm(
 `ConfirmStyle`：`buttonStyle`、四类 TextStyle、`padding`、`margin`、
 `decoration`、`textAlign`、`buttonBorderRadius`、确认/取消背景与边框、
 `dividerColor`、`dividerWidth`、`buttonSpacing`。
+
+`title/titleWidget` 与 `content/contentWidget` 各自互斥；同时提供会触发断言。
+`ConfirmAction.text` 与 `ConfirmAction.content` 则从构造层保证按钮载荷互斥。
 
 ## 8. Date
 
@@ -404,7 +519,22 @@ Pop.custom<String>(
 主要 reason：`completed`、`manual`、`barrier`、`back`、`timeout`、
 `externalEvent`、`routeChanged`、`parentDismissed`、`replaced`、`toggled`、
 `anchorDetached`、`hostDetached`、`hostUnavailable`、`runtimeDisposed`、
-`queueOverflow`、`missingRenderer`。
+`queueOverflow`、`rendererUnavailable`。
+
+## 16. 稳定公开边界
+
+package 入口公开业务 Config、结果/Handle、FlowSheet 页面契约、Anchor、样式和必要
+策略。以下实现类型不从 `unified_popups.dart` 导出：
+
+- `PopupRuntime`
+- `PopupController`
+- `PopupHost`
+- `PopupScene`
+- Renderer 使用的 Config Base 类型
+- `FlowSheetHost`
+
+业务与 App 级封装不应从 `package:unified_popups/src/...` 导入任何类型。包内测试可以
+直接测试内部模块，但这些路径不保证跨版本兼容。
 
 具体实现原理见 [架构设计](ARCHITECTURE.md)，从 v1 升级见
 [迁移指南](MIGRATION_V1_TO_V2.md)。

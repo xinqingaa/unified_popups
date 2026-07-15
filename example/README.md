@@ -3,7 +3,7 @@
 启动后进入**双入口首页**：
 
 1. **FitPulse 真实 App** — 四个业务 Tab，用产品动机触发弹窗。
-2. **API 展柜** — 按类型分页验收整库能力；AppBar 右上角常驻 Entry 计数。
+2. **API 展柜** — 按类型分页验收原始 SDK 能力。
 
 ```bash
 cd example
@@ -13,12 +13,16 @@ flutter run
 
 ## FitPulse（真实用法）
 
+FitPulse 产品区统一通过 `lib/app/app_pop.dart` 二次封装调用 SDK。业务页面不重复
+处理 `.result`、`requireHandle()`、中文文案和公共视觉；API 展柜则保留原始
+`Pop.xxx(Config)`，用于解释完整契约。
+
 | 区域 | 覆盖能力 |
 | --- | --- |
-| 今日 | Loading 分阶段更新、Confirm、各类 Toast |
-| 训练 | Sheet（含 dock）、Menu Anchor、训练 FlowSheet |
-| 数据 | Date、Loading `until`、指标 Sheet |
-| 我的 | 资料 Sheet、健康档案 FlowSheet、设置 Confirm |
+| 今日 | AppLoading 分阶段更新、Confirm、成功/警告/错误 Toast |
+| 训练 | DropMenu 筛选、Sheet、Menu Anchor、训练 FlowSheet |
+| 数据 | Date、Loading 任务绑定、指标 Sheet |
+| 我的 | 资料 Sheet、健康档案 FlowSheet、Confirm、Custom 会员卡 |
 
 AppBar ⋯ 也可跳到 API 展柜。
 
@@ -37,5 +41,5 @@ AppBar ⋯ 也可跳到 API 展柜。
 | 策略 | 返回顺序、persist/owner 路由、captureRoute、Ownership |
 | 异步边界 | Future/Stream/Timer/build 阶段调用 |
 
-包文档见 [架构](../docs/ARCHITECTURE.md)、[API 参考](../docs/API_REFERENCE.md) 和
-[迁移指南](../docs/MIGRATION_V1_TO_V2.md)。
+包文档见 [架构](../doc/ARCHITECTURE.md)、[API 参考](../doc/API_REFERENCE.md) 和
+[迁移指南](../doc/MIGRATION_V1_TO_V2.md)。
