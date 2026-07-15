@@ -1,4 +1,4 @@
-# unified_popups 2.0 API 参数参考
+# unified_popups v2 API 与参数参考
 
 本文档以当前 `2.0.0` 代码为准，完整说明初始化、便捷 API、高级 Config、
 `PopupHandle`、全局关闭、路由策略和 FlowSheet。代码中的类名、枚举值属于
@@ -73,14 +73,18 @@ final value = await Pop.sheet<String>(childBuilder: ...);
 | 类型 | 高级入口 | 返回值 |
 | --- | --- | --- |
 | Toast | `Pop.openToast(ToastConfig)` | `PopupOpenResult<void>` |
-| Loading | `Pop.openLoading(LoadingConfig)` | `LoadingHandle` |
-| Confirm | `Pop.openConfirm(ConfirmConfig)` | `PopupHandle<bool>` |
-| Sheet | `Pop.openSheet<T>(SheetConfig<T>)` | `PopupHandle<T>` |
-| FlowSheet | `Pop.openFlowSheet<R>(FlowSheetConfig<R>)` | `PopupHandle<R>` |
-| Date | `Pop.openDate(DateConfig)` | `PopupHandle<DateTime>` |
-| Menu | `Pop.openMenu<T>(MenuConfig<T>)` | `PopupHandle<T>` |
-| DropMenu | `Pop.openDropMenu<T>(DropMenuConfig<T>)` | `PopupHandle<T>` |
-| Custom | `Pop.custom<T>(CustomPopupConfig<T>)` | `PopupHandle<T>` |
+| Loading | `Pop.openLoading(LoadingConfig)` | `PopupOpenResult<void>` |
+| Confirm | `Pop.openConfirm(ConfirmConfig)` | `PopupOpenResult<bool>` |
+| Sheet | `Pop.openSheet<T>(SheetConfig<T>)` | `PopupOpenResult<T>` |
+| FlowSheet | `Pop.openFlowSheet<R>(FlowSheetConfig<R>)` | `PopupOpenResult<R>` |
+| Date | `Pop.openDate(DateConfig)` | `PopupOpenResult<DateTime>` |
+| Menu | `Pop.openMenu<T>(MenuConfig<T>)` | `PopupOpenResult<T>` |
+| DropMenu | `Pop.openDropMenu<T>(DropMenuConfig<T>)` | `PopupOpenResult<T>` |
+| Custom | `Pop.custom<T>(CustomPopupConfig<T>)` | `PopupOpenResult<T>` |
+
+所有高级入口统一返回 `PopupOpenResult<T>`，明确表达 opened、updated、
+toggledClosed 或 rejected。只有 opened/updated 带 Handle；可以模式匹配，也可以读取
+`handleOrNull`。当配置的策略确定一定会产生 Handle 时，可使用 `requireHandle()`。
 
 便捷 API 的扁平参数会在内部组装到类型 Config，二者不会同时生效或互相覆盖。
 常见映射：
@@ -130,7 +134,7 @@ void Pop.toast(
 | `position` | `center` | `top`、`center`、`bottom`、`left`、`right`。不同位置使用独立 Toast 队列。 |
 | `toastType` | `none` | `success`、`warn`、`error`、`none`，前三种显示包内默认图标。 |
 | `duration` | 未显式设置 | 自动关闭时间。`duration` 和 `until` 都不传时使用 1200ms。 |
-| `until` | `null` | Future 完成时以 `externalEvent` 原因关闭。只传它时不再使用默认 1200ms。 |
+| `until` | `null` | Future 成功或失败结束时均以 `externalEvent` 关闭。只传它时不再使用默认 1200ms。 |
 | `showBarrier` | `false` | 是否显示全屏遮罩。普通 Toast 建议保持关闭。 |
 | `barrierDismissible` | `false` | 遮罩是否允许点击关闭，仅在 `showBarrier=true` 时生效。 |
 | `barrierColor` | `Colors.black54` | 遮罩颜色。 |
@@ -151,7 +155,7 @@ void Pop.toast(
 | --- | --- | --- |
 | 不传 | 不传 | 1200ms 后关闭 |
 | 传 | 不传 | 指定时间后关闭 |
-| 不传 | 传 | 完全由外部 Future 关闭 |
+| 不传 | 传 | 外部 Future 成功或失败结束时关闭 |
 | 传 | 传 | 任一条件先完成即关闭 |
 
 无 Barrier Toast 使用共享 lane，每个位置同时最多显示 3 个；更多 Toast 按
@@ -212,7 +216,7 @@ LoadingHandle Pop.loading({
 | `messageWidget` | `null` | 自定义内容，优先于 `message`。 |
 | `customIndicator` | `null` | 自定义指示器；提供后会按配置持续旋转。 |
 | `duration` | `null` | 自动关闭时间。不传且无 `until` 时为手动关闭。 |
-| `until` | `null` | 外部 Future 完成时关闭。与 duration 同传时取先完成者。 |
+| `until` | `null` | 外部 Future 成功或失败结束时关闭。与 duration 同传时取先完成者。 |
 
 ```dart
 final handle = Pop.loading(message: '第一阶段…');
@@ -301,7 +305,8 @@ Future<bool?> Pop.confirm({
 | `style` | `ConfirmStyle()` | 细调标题/正文/分割线/圆角/内边距等；`buttonStyle` / `*BgColor` 会覆盖其中对应字段。 |
 
 结果语义：确认按钮返回 `true`；取消按钮返回 `false`；关闭按钮、遮罩、返回键、
-路由切换等返回 `null`。需要知道具体原因时使用 `openConfirm` 的 `outcome`。
+路由切换等返回 `null`。需要知道具体原因时，从 `openConfirm` 返回的
+`PopupOpenResult` 取得 Handle 后读取 `outcome`。
 
 ### `ConfirmConfig` 与 `ConfirmStyle`
 
@@ -422,7 +427,7 @@ final handle = Pop.openSheet<String>(
       onTap: () => handle.complete('done'),
     ),
   ),
-);
+).requireHandle();
 ```
 
 拆分配置：
@@ -668,9 +673,10 @@ await Pop.dropMenu<String>(
 Section，不关闭外层菜单。此时外层 Future 会在菜单最终关闭时结束，通常返回 null。
 direct 项仍由 `closeOnSelect` 决定关闭整个菜单还是仅更新选中态。
 
-高级入口 `Pop.openDropMenu<T>(DropMenuConfig<T>)` 返回 `PopupHandle<T>`，并支持
-behavior、ownership、barrier、animationConfig 和 lifecycle。默认 conflict policy
-为 `replaceExisting`，确保同时只有一个标准 DropMenu。
+高级入口 `Pop.openDropMenu<T>(DropMenuConfig<T>)` 返回 `PopupOpenResult<T>`，并支持
+behavior、ownership、barrier、animationConfig 和 lifecycle。默认使用
+`PopupKeys.globalDropMenu + replaceExisting`，确保同时只有一个标准 DropMenu；不同
+结果泛型的标准 DropMenu 也可以互相替换。
 
 ### Liquid Glass
 
@@ -805,7 +811,7 @@ final handle = Pop.custom<String>(
       onClose: handle.dismiss,
     ),
   ),
-);
+).requireHandle();
 ```
 
 | 字段 | 默认值 | 说明 |
@@ -824,7 +830,7 @@ Custom 只自定义内容，不绕开 Runtime；因此仍然拥有统一堆叠�
 ## PopupHandle
 
 ```dart
-final handle = Pop.openSheet<String>(config);
+final handle = Pop.openSheet<String>(config).requireHandle();
 
 final value = await handle.result;
 final outcome = await handle.outcome;
@@ -863,7 +869,7 @@ await handle.dismissed;
 | `completed` | 调用了 `complete`，产生业务结果。 |
 | `manual` | Handle 或关闭按钮手动关闭。 |
 | `timeout` | Duration 到期。 |
-| `externalEvent` | 外部 Future 完成。 |
+| `externalEvent` | 外部 Future 成功或失败结束。 |
 | `barrier` | 点击遮罩。 |
 | `drag` | 拖拽关闭。 |
 | `back` | 系统返回。 |
@@ -875,7 +881,6 @@ await handle.dismissed;
 | `hostDetached` / `hostUnavailable` | Host 卸载或不可用。 |
 | `rendererUnavailable` | 没有匹配 Renderer。 |
 | `queueOverflow` | Host 前队列容量溢出。 |
-| `conflictRejected` | 冲突策略拒绝。 |
 | `runtimeDisposed` | Runtime 关闭。 |
 
 ## 通用配置
@@ -911,6 +916,19 @@ const PopupBehaviorConfig(
 | `replaceExisting` | 旧条目以 replaced 关闭，然后创建新条目。 |
 | `toggle` | 已存在则关闭，不存在则打开。 |
 | `updateExisting` | 保留原 Entry/Handle，更新 Config 并重启 lifetime。 |
+
+打开结果：
+
+| 类型 | 含义 |
+| --- | --- |
+| `PopupOpened<T>` | 创建了新 Entry，`handle` 指向新 Entry。 |
+| `PopupUpdated<T>` | 原 Entry 已更新，`handle` 是原稳定 Handle。 |
+| `PopupToggledClosed<T>` | toggle 关闭旧 Entry，没有新 Handle。 |
+| `PopupRejected<T>` | 新请求被拒绝，没有创建 Entry。 |
+
+`PopupRejected` 是打开决策，不是 Entry 的关闭原因。replace/toggle 不复用旧 Handle，
+因此同 channel、同 key 的不同结果泛型可以互相替换；只有 `updateExisting` 要求 Config
+与结果泛型完全一致。同 key 跨 channel 始终拒绝。
 
 `PopupRoutePolicy`：
 
@@ -962,7 +980,8 @@ PopupLifetime.anyOf([timeout, externalEvent]);
 ```
 
 Lifetime 在进入动画完成后启动。更新 Entry 时旧 Timer/Future 通过 generation
-失效，新 lifetime 从更新时重新开始。
+失效，新 lifetime 从更新时重新开始。`until` 观察 Future 是否 settled，不判断业务
+成功或失败；Popup 不重复上报业务异常，原 Future 的错误仍由业务调用方处理。
 
 ### `PopupOwnership`
 
@@ -1008,7 +1027,7 @@ final toastCount = Pop.countChannel(PopupChannel.toast);
 | `dismissTags(tags)` | `Future<int>` | 关闭命中任意指定 tag 的条目。 |
 | `dismissAll()` | `Future<void>` | 关闭 Runtime 中全部条目。 |
 | `handleBack()` | `Future<bool>` | 执行一次与系统返回相同的顶层分发。 |
-| `isVisibleKey(key)` | `bool` | key 对应条目是否处于 visible。 |
+| `isVisibleKey(key)` | `bool` | key 对应条目是否处于 entering、visible 或退出动画阶段。 |
 | `isActiveKey(key)` | `bool` | key 对应条目业务上是否仍活跃。 |
 | `hasChannel(channel)` | `bool` | channel 是否存在活跃条目。 |
 | `countChannel(channel)` | `int` | channel 活跃条目数量。 |
@@ -1028,5 +1047,5 @@ final toastCount = Pop.countChannel(PopupChannel.toast);
 - 自定义 AppBar 返回若要复用相同语义，可先调用 `Pop.handleBack()`；返回 false
   时再执行自己的 Navigator pop。
 
-完整迁移说明见 [v1 → v2 迁移指南](MIGRATION_V1_TO_V2.md)，架构原理见
-[v2 架构说明](ARCHITECTURE_V2.md)。
+完整迁移说明见 [v1 与 v2 对比及迁移指南](MIGRATION_V1_TO_V2.md)，架构原理见
+[架构设计与实现原理](ARCHITECTURE.md)。

@@ -62,6 +62,75 @@ class ConfigLabPage extends StatelessWidget {
             ],
           ),
           LabGroup(
+            title: '统一 PopupOpenResult',
+            subtitle: '所有高级 openXxx 都返回 opened / updated / toggled / rejected。',
+            children: [
+              LabAction(
+                label: '演示 opened → toggledClosed',
+                subtitle: '同 key Confirm 在 800ms 后再次 toggle',
+                onPressed: () async {
+                  const behavior = PopupBehaviorConfig(
+                    channel: PopupChannel.confirm,
+                    key: 'lab.config.toggle-confirm',
+                    conflictPolicy: PopupConflictPolicy.toggle,
+                  );
+                  final first = Pop.openConfirm(
+                    const ConfirmConfig(
+                      content: '第一次返回 PopupOpened，随后自动 toggle 关闭',
+                      behavior: behavior,
+                    ),
+                  );
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 800),
+                  );
+                  final second = Pop.openConfirm(
+                    const ConfirmConfig(
+                      content: '不会创建第二个 Confirm',
+                      behavior: behavior,
+                    ),
+                  );
+                  if (!context.mounted) return;
+                  labShowResult(
+                    context,
+                    '${first.runtimeType} → ${second.runtimeType}',
+                  );
+                },
+              ),
+              LabAction(
+                label: '演示 opened → updated',
+                subtitle: '同 key Toast 更新并返回原 Handle',
+                outlined: true,
+                onPressed: () {
+                  const behavior = PopupBehaviorConfig(
+                    channel: PopupChannel.toast,
+                    key: 'lab.config.result-toast',
+                    conflictPolicy: PopupConflictPolicy.updateExisting,
+                    backPolicy: PopupBackPolicy.ignore,
+                  );
+                  final first = Pop.openToast(
+                    const ToastConfig(
+                      message: 'PopupOpened',
+                      behavior: behavior,
+                      lifetime: PopupLifetime.after(Duration(seconds: 3)),
+                    ),
+                  );
+                  final second = Pop.openToast(
+                    const ToastConfig(
+                      message: 'PopupUpdated · 同一个 Handle',
+                      behavior: behavior,
+                      lifetime: PopupLifetime.after(Duration(seconds: 3)),
+                    ),
+                  );
+                  labShowResult(
+                    context,
+                    '${first.runtimeType} → ${second.runtimeType} · '
+                    'sameHandle=${identical(first.handleOrNull, second.handleOrNull)}',
+                  );
+                },
+              ),
+            ],
+          ),
+          LabGroup(
             title: 'PopupBarrierConfig',
             children: [
               LabAction(

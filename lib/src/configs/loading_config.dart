@@ -10,11 +10,8 @@ import 'popup_behavior_config.dart';
 import 'popup_channel.dart';
 import 'popup_conflict_policy.dart';
 import 'popup_position.dart';
+import 'popup_keys.dart';
 import 'popup_visual_config.dart';
-
-abstract final class PopupKeys {
-  static const globalLoading = 'unified_popups.global_loading';
-}
 
 final class LoadingStyle {
   const LoadingStyle({

@@ -67,6 +67,14 @@ class FlowSheetController<R> extends ChangeNotifier
     _sessionClaimed = true;
   }
 
+  /// Releases a reservation when the outer popup request was rejected or
+  /// toggled before a handle was attached.
+  void releasePopupSessionClaim() {
+    if (_popupHandle == null && !_closed && !_disposed) {
+      _sessionClaimed = false;
+    }
+  }
+
   /// Transfers this one-shot session to the unified outer popup handle.
   void attachPopupHandle(PopupHandle<R> handle) {
     if (_disposed || _closed) {

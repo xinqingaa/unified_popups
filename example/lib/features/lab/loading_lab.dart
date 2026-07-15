@@ -119,6 +119,28 @@ class _LoadingLabPageState extends State<LoadingLabPage> {
                 },
               ),
               LabAction(
+                label: 'until：Future 失败也关闭',
+                subtitle: '1 秒后模拟失败；Loading 应正常退场',
+                outlined: true,
+                onPressed: () async {
+                  final failed = Future<void>.delayed(
+                    const Duration(seconds: 1),
+                    () => throw StateError('Loading Lab simulated failure'),
+                  );
+                  final handle = Pop.loading(
+                    message: '等待失败 Future…',
+                    until: failed,
+                  );
+                  final outcome = await handle.outcome;
+                  if (mounted) {
+                    setState(
+                      () => _note =
+                          '失败 Future 已关闭 Loading：${outcome.reason.name}',
+                    );
+                  }
+                },
+              ),
+              LabAction(
                 label: '仅 duration 2s',
                 outlined: true,
                 onPressed: () {

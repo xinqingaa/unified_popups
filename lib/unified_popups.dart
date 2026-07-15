@@ -17,6 +17,7 @@ export 'src/configs/popup_behavior_config.dart';
 export 'src/configs/popup_channel.dart';
 export 'src/configs/popup_conflict_policy.dart';
 export 'src/configs/popup_owner_policy.dart';
+export 'src/configs/popup_keys.dart';
 export 'src/configs/popup_position.dart';
 export 'src/configs/popup_route_policy.dart';
 export 'src/configs/sheet_config.dart';

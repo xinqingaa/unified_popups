@@ -16,6 +16,5 @@ enum PopupDismissReason {
   hostUnavailable,
   rendererUnavailable,
   queueOverflow,
-  conflictRejected,
   runtimeDisposed,
 }

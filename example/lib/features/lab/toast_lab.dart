@@ -116,6 +116,30 @@ class ToastLabPage extends StatelessWidget {
                 },
               ),
               LabAction(
+                label: 'until：Future 失败也关闭',
+                subtitle: '1 秒后抛错；Toast 应正常退场，reason=externalEvent',
+                outlined: true,
+                onPressed: () async {
+                  final failed = Future<void>.delayed(
+                    const Duration(seconds: 1),
+                    () => throw StateError('Toast Lab simulated failure'),
+                  );
+                  final handle = Pop.openToast(
+                    ToastConfig(
+                      message: '等待失败 Future…',
+                      lifetime: PopupLifetime.until(failed),
+                    ),
+                  ).requireHandle();
+                  final outcome = await handle.outcome;
+                  if (context.mounted) {
+                    labShowResult(
+                      context,
+                      'Toast 已关闭：${outcome.reason.name}',
+                    );
+                  }
+                },
+              ),
+              LabAction(
                 label: 'duration + until（anyOf）',
                 subtitle: '3s 倒计时 vs 1s Future，先到先关',
                 outlined: true,

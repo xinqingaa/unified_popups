@@ -161,6 +161,39 @@ void main() {
     await first.dismissed;
   });
 
+  test('replaceExisting may replace a differently typed result in one channel',
+      () async {
+    final controller = PopupController();
+    addTearDown(controller.dispose);
+    controller.attachHost();
+    final first = controller
+        .open<String, String>(
+          const PopupEntryRequest<String, String>(
+            channel: PopupChannel.menu,
+            config: 'first',
+            key: 'global-menu',
+          ),
+        )
+        .requireHandle();
+    controller.markPresented(first.id);
+
+    final second = controller.open<int, int>(
+      const PopupEntryRequest<int, int>(
+        channel: PopupChannel.menu,
+        config: 2,
+        key: 'global-menu',
+        conflictPolicy: PopupConflictPolicy.replaceExisting,
+      ),
+    );
+
+    expect(second, isA<PopupOpened<int>>());
+    expect((await first.outcome).reason, PopupDismissReason.replaced);
+    controller.markDisposed(first.id);
+    await first.dismissed;
+    await Future<void>.delayed(Duration.zero);
+    expect(second.requireHandle().state, PopupEntryState.entering);
+  });
+
   test('parent dismissal first closes dismissWithParent children', () async {
     controller.attachHost();
     final order = <String>[];

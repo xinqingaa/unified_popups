@@ -23,7 +23,9 @@ void main() {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final api = PopupTypeApi(runtime);
-    final handle = api.loading(const LoadingConfig(message: 'first'));
+    final handle = api
+        .loading(const LoadingConfig(message: 'first'))
+        .requireHandle() as LoadingHandle;
 
     await tester.pumpWidget(_TestApp(runtime: runtime));
     await tester.pump(const Duration(milliseconds: 200));

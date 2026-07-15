@@ -12,6 +12,23 @@ sealed class PopupOpenResult<T> {
   const factory PopupOpenResult.toggledClosed() = PopupToggledClosed<T>;
 
   const factory PopupOpenResult.rejected() = PopupRejected<T>;
+
+  PopupHandle<T>? get handleOrNull => switch (this) {
+        PopupOpened<T>(:final handle) ||
+        PopupUpdated<T>(:final handle) =>
+          handle,
+        PopupToggledClosed<T>() || PopupRejected<T>() => null,
+      };
+
+  bool get hasHandle => handleOrNull != null;
+
+  /// Returns the opened or updated handle when the caller knows that its
+  /// conflict policy cannot reject or toggle the request.
+  PopupHandle<T> requireHandle() {
+    final handle = handleOrNull;
+    if (handle != null) return handle;
+    throw StateError('The popup request did not produce a handle.');
+  }
 }
 
 final class PopupOpened<T> extends PopupOpenResult<T> {

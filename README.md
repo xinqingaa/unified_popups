@@ -59,12 +59,12 @@ Pop.toast(
 final requestDone = fetchData();
 Pop.toast(
   '正在同步',
-  until: requestDone.then((_) {}),
+  until: requestDone,
 );
 ```
 
-`until` 允许外部 Future 决定关闭；同时传入 `duration` 和 `until` 时，任一条件
-先完成即关闭。
+`until` 允许外部 Future 决定关闭；Future 成功或失败结束都会关闭 Popup，业务错误
+仍由原 Future 的调用方处理。同时传入 `duration` 和 `until` 时，任一条件先到即关闭。
 
 ```dart
 final loading = Pop.loading(message: '第一阶段…');
@@ -230,7 +230,7 @@ final handle = Pop.openSheet<String>(
       onTap: () => handle.complete('selected'),
     ),
   ),
-);
+).requireHandle();
 
 final result = await handle.result;
 final outcome = await handle.outcome;
@@ -243,7 +243,9 @@ await handle.dismissed;
 - `outcome`：包含 value 与准确的 `PopupDismissReason`。
 - `dismissed`：视觉节点彻底移除后完成。
 
-完全自定义弹层使用 `Pop.custom(CustomPopupConfig)`，不再暴露巨型通用配置。
+所有高级 `openXxx` 和 `Pop.custom` 统一返回 `PopupOpenResult<T>`，用
+`PopupOpened/PopupUpdated/PopupToggledClosed/PopupRejected` 明确表达冲突决策。
+确定策略一定产生 Handle 时可以使用 `requireHandle()`。
 
 ## 全局与外部关闭
 
@@ -273,5 +275,10 @@ final count = Pop.countChannel(PopupChannel.toast);
 
 不要创建多个全局 Host。测试需要隔离状态时可直接构造独立的 `PopupRuntime`。
 
-更多内容见 [API 参数参考](docs/API_REFERENCE.md)、
-[最佳实践](docs/BEST_PRACTICES.md) 和可运行的 [示例](example/lib/main.dart)。
+详细文档：
+
+- [架构设计与实现原理](doc/ARCHITECTURE.md)
+- [完整 API 与参数参考](doc/API_REFERENCE.md)
+- [v1 与 v2 对比及迁移指南](doc/MIGRATION_V1_TO_V2.md)
+
+可运行验收入口见 [Example](example/lib/main.dart)。

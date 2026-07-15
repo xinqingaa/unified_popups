@@ -21,6 +21,8 @@ class _MenuLabPageState extends State<MenuLabPage> {
   final _detachAnchor = PopupAnchorController();
   final _filterAnchor = PopupAnchorController();
   final _settingsAnchor = PopupAnchorController();
+  final _replaceAnchorA = PopupAnchorController();
+  final _replaceAnchorB = PopupAnchorController();
   bool _showDetachTarget = true;
   String _filterValue = 'all';
   String _displayMode = 'standard';
@@ -37,6 +39,8 @@ class _MenuLabPageState extends State<MenuLabPage> {
     _detachAnchor,
     _filterAnchor,
     _settingsAnchor,
+    _replaceAnchorA,
+    _replaceAnchorB,
   ];
 
   @override
@@ -270,6 +274,59 @@ class _MenuLabPageState extends State<MenuLabPage> {
                     label: const Text('更多设置'),
                   ),
                 ),
+              ),
+            ],
+          ),
+          LabGroup(
+            title: 'DropMenu · 默认全局 replaceExisting',
+            subtitle: '先打开 String 菜单，800ms 后由 int 菜单替换；同一时间只保留一个标准 DropMenu。',
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PopupAnchor(
+                    controller: _replaceAnchorA,
+                    child: const Chip(label: Text('Anchor A · String')),
+                  ),
+                  PopupAnchor(
+                    controller: _replaceAnchorB,
+                    child: const Chip(label: Text('Anchor B · int')),
+                  ),
+                ],
+              ),
+              LabAction(
+                label: '运行 DropMenu 替换演示',
+                onPressed: () async {
+                  final first = Pop.openDropMenu<String>(
+                    DropMenuConfig<String>(
+                      anchor: _replaceAnchorA,
+                      menu: const DropMenu<String>.single(
+                        items: [
+                          DropMenuItem<String>(value: 'a', label: 'String A'),
+                        ],
+                      ),
+                    ),
+                  ).requireHandle();
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 800),
+                  );
+                  final second = Pop.openDropMenu<int>(
+                    DropMenuConfig<int>(
+                      anchor: _replaceAnchorB,
+                      menu: const DropMenu<int>.single(
+                        items: [
+                          DropMenuItem<int>(value: 2, label: 'int 2'),
+                        ],
+                      ),
+                    ),
+                  );
+                  final firstOutcome = await first.outcome;
+                  if (!context.mounted) return;
+                  labShowResult(
+                    context,
+                    'first=${firstOutcome.reason.name} · second=${second.runtimeType}',
+                  );
+                },
               ),
             ],
           ),

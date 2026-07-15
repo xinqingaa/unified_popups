@@ -67,19 +67,23 @@ void main() {
     final stale = Completer<void>();
     final current = Completer<void>();
 
-    final handle = api.loading(
-      LoadingConfig(
-        message: 'uploading',
-        lifetime: PopupLifetime.until(stale.future),
-      ),
-    );
+    final handle = api
+        .loading(
+          LoadingConfig(
+            message: 'uploading',
+            lifetime: PopupLifetime.until(stale.future),
+          ),
+        )
+        .requireHandle() as LoadingHandle;
     runtime.controller.markPresented(handle.id);
-    final updated = api.loading(
-      LoadingConfig(
-        message: 'processing',
-        lifetime: PopupLifetime.until(current.future),
-      ),
-    );
+    final updated = api
+        .loading(
+          LoadingConfig(
+            message: 'processing',
+            lifetime: PopupLifetime.until(current.future),
+          ),
+        )
+        .requireHandle() as LoadingHandle;
 
     expect(identical(handle, updated), isTrue);
     expect(
@@ -104,12 +108,14 @@ void main() {
     final api = PopupTypeApi(runtime);
     final stale = Completer<void>();
     final current = Completer<void>();
-    final handle = api.loading(
-      LoadingConfig(
-        message: 'first',
-        lifetime: PopupLifetime.until(stale.future),
-      ),
-    );
+    final handle = api
+        .loading(
+          LoadingConfig(
+            message: 'first',
+            lifetime: PopupLifetime.until(stale.future),
+          ),
+        )
+        .requireHandle() as LoadingHandle;
     runtime.controller.markPresented(handle.id);
 
     handle.update(
@@ -125,6 +131,50 @@ void main() {
     current.complete();
     expect((await handle.outcome).reason, PopupDismissReason.externalEvent);
     runtime.controller.markDisposed(handle.id);
+  });
+
+  test('until closes loading and toast when the observed future fails',
+      () async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    runtime.attachHost(Object());
+    final api = PopupTypeApi(runtime);
+    final loadingDone = Completer<void>();
+    final toastDone = Completer<void>();
+
+    final loading = api
+        .loading(
+          LoadingConfig(
+            lifetime: PopupLifetime.until(loadingDone.future),
+          ),
+        )
+        .requireHandle();
+    final toast = api
+        .openToast(
+          ToastConfig(
+            message: 'waiting',
+            lifetime: PopupLifetime.until(toastDone.future),
+          ),
+        )
+        .requireHandle();
+    runtime.controller
+      ..markPresented(loading.id)
+      ..markPresented(toast.id);
+
+    loadingDone.completeError(StateError('loading failed'));
+    toastDone.completeError(StateError('toast failed'));
+
+    expect(
+      (await loading.outcome).reason,
+      PopupDismissReason.externalEvent,
+    );
+    expect(
+      (await toast.outcome).reason,
+      PopupDismissReason.externalEvent,
+    );
+    runtime.controller
+      ..markDisposed(loading.id)
+      ..markDisposed(toast.id);
   });
 
   test('toast update rejects immutable position and barrier topology',

@@ -8,6 +8,25 @@ void main() {
   setUp(Pop.resetForTest);
   tearDown(Pop.resetForTest);
 
+  test('drop menu defaults to one global replace-existing key', () {
+    final anchor = PopupAnchorController();
+    final config = DropMenuConfig<int>(
+      anchor: anchor,
+      menu: const DropMenu<int>.single(
+        items: <DropMenuItem<int>>[
+          DropMenuItem<int>(value: 1, label: 'one'),
+        ],
+      ),
+    );
+
+    expect(config.behavior.channel, PopupChannel.menu);
+    expect(config.behavior.key, PopupKeys.globalDropMenu);
+    expect(
+      config.behavior.conflictPolicy,
+      PopupConflictPolicy.replaceExisting,
+    );
+  });
+
   testWidgets('single drop menu returns the selected typed value',
       (tester) async {
     await tester.pumpWidget(const _TestApp(child: _SingleMenuHarness()));

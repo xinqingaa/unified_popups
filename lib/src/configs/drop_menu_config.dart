@@ -13,6 +13,7 @@ import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
 import 'popup_channel.dart';
 import 'popup_conflict_policy.dart';
+import 'popup_keys.dart';
 import 'popup_position.dart';
 import 'popup_route_policy.dart';
 
@@ -211,6 +212,7 @@ final class DropMenuConfig<T> extends MenuConfigBase {
     this.onOpenSectionChanged,
     this.behavior = const PopupBehaviorConfig(
       channel: PopupChannel.menu,
+      key: PopupKeys.globalDropMenu,
       conflictPolicy: PopupConflictPolicy.replaceExisting,
       routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,
       backPolicy: PopupBackPolicy.dismiss,

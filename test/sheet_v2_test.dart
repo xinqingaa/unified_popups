@@ -28,20 +28,22 @@ void main() {
       (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
-    final handle = PopupTypeApi(runtime).sheet<String>(
-      SheetConfig<String>(
-        header: const SheetHeaderConfig(title: 'picker'),
-        animation: const PopupAnimationConfig(
-          type: PopupAnimationType.slideUp,
-          duration: Duration.zero,
-          slideOffset: 1,
-        ),
-        builder: (context, handle) => ListTile(
-          title: const Text('select'),
-          onTap: () => handle.complete('selected'),
-        ),
-      ),
-    );
+    final handle = PopupTypeApi(runtime)
+        .sheet<String>(
+          SheetConfig<String>(
+            header: const SheetHeaderConfig(title: 'picker'),
+            animation: const PopupAnimationConfig(
+              type: PopupAnimationType.slideUp,
+              duration: Duration.zero,
+              slideOffset: 1,
+            ),
+            builder: (context, handle) => ListTile(
+              title: const Text('select'),
+              onTap: () => handle.complete('selected'),
+            ),
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_SheetApp(runtime: runtime));
     await tester.pump();
 
@@ -58,20 +60,22 @@ void main() {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     var childBuilds = 0;
-    final handle = PopupTypeApi(runtime).sheet<void>(
-      SheetConfig<void>(
-        size: const SheetSizeConfig(height: SheetDimension.pixel(300)),
-        animation: const PopupAnimationConfig(
-          type: PopupAnimationType.slideUp,
-          duration: Duration.zero,
-          slideOffset: 1,
-        ),
-        builder: (context, handle) {
-          childBuilds++;
-          return const SizedBox(height: 200, child: Text('heavy child'));
-        },
-      ),
-    );
+    final handle = PopupTypeApi(runtime)
+        .sheet<void>(
+          SheetConfig<void>(
+            size: const SheetSizeConfig(height: SheetDimension.pixel(300)),
+            animation: const PopupAnimationConfig(
+              type: PopupAnimationType.slideUp,
+              duration: Duration.zero,
+              slideOffset: 1,
+            ),
+            builder: (context, handle) {
+              childBuilds++;
+              return const SizedBox(height: 200, child: Text('heavy child'));
+            },
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_SheetApp(runtime: runtime));
     await tester.pump();
     expect(childBuilds, 1);
@@ -99,19 +103,21 @@ void main() {
       (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
-    final handle = PopupTypeApi(runtime).sheet<void>(
-      SheetConfig<void>(
-        direction: SheetDirection.left,
-        header: const SheetHeaderConfig(title: 'panel'),
-        drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
-        animation: const PopupAnimationConfig(
-          type: PopupAnimationType.slideLeft,
-          duration: Duration.zero,
-          slideOffset: 1,
-        ),
-        builder: (context, handle) => const Center(child: Text('body')),
-      ),
-    );
+    final handle = PopupTypeApi(runtime)
+        .sheet<void>(
+          SheetConfig<void>(
+            direction: SheetDirection.left,
+            header: const SheetHeaderConfig(title: 'panel'),
+            drag: const SheetDragConfig(mode: SheetDragDismissMode.handleOnly),
+            animation: const PopupAnimationConfig(
+              type: PopupAnimationType.slideLeft,
+              duration: Duration.zero,
+              slideOffset: 1,
+            ),
+            builder: (context, handle) => const Center(child: Text('body')),
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_SheetApp(runtime: runtime));
     await tester.pump();
 
@@ -133,20 +139,24 @@ void main() {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final api = PopupTypeApi(runtime);
-    final sheet = api.sheet<void>(
-      SheetConfig<void>(
-        animation: const PopupAnimationConfig(duration: Duration.zero),
-        builder: (context, handle) => const Text('sheet remains'),
-      ),
-    );
+    final sheet = api
+        .sheet<void>(
+          SheetConfig<void>(
+            animation: const PopupAnimationConfig(duration: Duration.zero),
+            builder: (context, handle) => const Text('sheet remains'),
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_SheetApp(runtime: runtime));
     await tester.pump();
-    final confirm = api.confirm(
-      const ConfirmConfig(
-        content: 'confirm above',
-        animationConfig: PopupAnimationConfig(duration: Duration.zero),
-      ),
-    );
+    final confirm = api
+        .confirm(
+          const ConfirmConfig(
+            content: 'confirm above',
+            animationConfig: PopupAnimationConfig(duration: Duration.zero),
+          ),
+        )
+        .requireHandle();
     await tester.pump();
 
     expect(find.text('sheet remains'), findsOneWidget);
@@ -163,13 +173,15 @@ void main() {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     var consumeBack = true;
-    final handle = PopupTypeApi(runtime).sheet<void>(
-      SheetConfig<void>(
-        animation: const PopupAnimationConfig(duration: Duration.zero),
-        onBack: () async => consumeBack,
-        builder: (context, handle) => const Text('back-aware sheet'),
-      ),
-    );
+    final handle = PopupTypeApi(runtime)
+        .sheet<void>(
+          SheetConfig<void>(
+            animation: const PopupAnimationConfig(duration: Duration.zero),
+            onBack: () async => consumeBack,
+            builder: (context, handle) => const Text('back-aware sheet'),
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_SheetApp(runtime: runtime));
     await tester.pump();
 

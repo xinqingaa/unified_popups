@@ -32,17 +32,20 @@ void main() {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final initial = DateTime(2024, 6, 15);
-    final handle = PopupTypeApi(runtime).date(
-      DateConfig(
-        range: DateRangeConfig(
-          initialDate: initial,
-          minDate: DateTime(2020),
-          maxDate: DateTime(2030, 12, 31),
-        ),
-        labels: const DateLabels(confirm: 'choose', cancel: 'cancel'),
-        animationConfig: const PopupAnimationConfig(duration: Duration.zero),
-      ),
-    );
+    final handle = PopupTypeApi(runtime)
+        .date(
+          DateConfig(
+            range: DateRangeConfig(
+              initialDate: initial,
+              minDate: DateTime(2020),
+              maxDate: DateTime(2030, 12, 31),
+            ),
+            labels: const DateLabels(confirm: 'choose', cancel: 'cancel'),
+            animationConfig:
+                const PopupAnimationConfig(duration: Duration.zero),
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_DateApp(runtime: runtime));
     await tester.pump();
 
@@ -58,16 +61,19 @@ void main() {
       (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
-    final handle = PopupTypeApi(runtime).date(
-      DateConfig(
-        range: DateRangeConfig(
-          initialDate: DateTime(2024),
-          minDate: DateTime(2020),
-          maxDate: DateTime(2030),
-        ),
-        animationConfig: const PopupAnimationConfig(duration: Duration.zero),
-      ),
-    );
+    final handle = PopupTypeApi(runtime)
+        .date(
+          DateConfig(
+            range: DateRangeConfig(
+              initialDate: DateTime(2024),
+              minDate: DateTime(2020),
+              maxDate: DateTime(2030),
+            ),
+            animationConfig:
+                const PopupAnimationConfig(duration: Duration.zero),
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_DateApp(runtime: runtime));
     await tester.pump();
 

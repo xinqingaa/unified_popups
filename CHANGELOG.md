@@ -17,6 +17,12 @@
 
 ### 生命周期和管理
 
+- 所有高级 `openXxx` 与 `Pop.custom` 统一返回 `PopupOpenResult<T>`，完整表达
+  opened、updated、toggledClosed 与 rejected；打开决策不再伪装成 Entry 关闭原因。
+- `PopupLifetime.until` 改为观察 Future settled：成功或失败都会以
+  `externalEvent` 关闭，业务异常继续由原 Future 调用方处理。
+- PopupController 将 Entry Record、Handle 实现和 lifetime 资源拆入独立内部模块，
+  Controller 继续作为唯一状态与迁移权威。
 - 新增 key、channel、tags 以及冲突、路由、返回键、父子归属、遮罩、自动关闭和
   生命周期策略。
 - 新增 `PopupOutcome` 和完整 `PopupDismissReason`。
@@ -26,6 +32,8 @@
 
 ### 类型能力
 
+- 标准 DropMenu 使用默认全局 key + `replaceExisting`，不同结果泛型之间也能安全
+  替换，保证同时只有一个标准 DropMenu。
 - 新增主题化液态玻璃组件，以及一级/二级数据驱动的 `Pop.dropMenu` 和
   `Pop.openDropMenu`；支持系统/自定义勾选图标、禁用项、保持打开的设置项和完整
   颜色覆盖。
@@ -59,6 +67,9 @@
 
 ### 示例和文档
 
+- Example 增加 Toast/Loading `until` 失败关闭、统一 `PopupOpenResult` 和 DropMenu
+  全局替换验收入口。
+- 详细文档收敛为架构原理、完整 API 参考、v1/v2 对比迁移三篇核心文档。
 - Menu Lab 新增通用一级筛选和二级设置展开示例。
 - FitPulse Example 全量迁移到 v2。
 - Example 启动页双入口：FitPulse 真实 App / API 展柜；展柜 AppBar 常驻 Entry

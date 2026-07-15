@@ -1,0 +1,9 @@
+.dart_tool/
+.github/
+.gitignore
+.metadata
+AGENTS.md
+CLAUDE.md
+build/
+example/build/
+coverage/

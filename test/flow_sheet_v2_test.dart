@@ -17,9 +17,11 @@ void main() {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final controller = FlowSheetController<String>();
-    final handle = PopupTypeApi(runtime).flowSheet<String>(
-      _config(controller),
-    );
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(
+          _config(controller),
+        )
+        .requireHandle();
     await tester.pumpWidget(_FlowApp(runtime: runtime));
     await tester.pumpAndSettle();
     expect(find.text('page-initial'), findsOneWidget);
@@ -46,7 +48,9 @@ void main() {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final controller = FlowSheetController<void>();
-    final handle = PopupTypeApi(runtime).flowSheet<void>(_config(controller));
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<void>(_config(controller))
+        .requireHandle();
     await tester.pumpWidget(_FlowApp(runtime: runtime));
     await tester.pumpAndSettle();
     controller.push<void>(const _Page<void>('second'));
@@ -69,7 +73,9 @@ void main() {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final controller = FlowSheetController<void>();
-    final handle = PopupTypeApi(runtime).flowSheet<void>(_config(controller));
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<void>(_config(controller))
+        .requireHandle();
     await tester.pumpWidget(_FlowApp(runtime: runtime));
     await tester.pumpAndSettle();
     final pending = controller.push<int>(const _Page<int>('pending'));
@@ -90,18 +96,20 @@ void main() {
     addTearDown(runtime.shutdown);
     final events = <String>[];
     final controller = FlowSheetController<void>();
-    final handle = PopupTypeApi(runtime).flowSheet<void>(
-      FlowSheetConfig<void>(
-        controller: controller,
-        initialPage: _LifecyclePage('initial', events),
-        size: const SheetSizeConfig(height: SheetDimension.pixel(420)),
-        animation: const PopupAnimationConfig(
-          type: PopupAnimationType.slideUp,
-          duration: Duration.zero,
-          slideOffset: 1,
-        ),
-      ),
-    );
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<void>(
+          FlowSheetConfig<void>(
+            controller: controller,
+            initialPage: _LifecyclePage('initial', events),
+            size: const SheetSizeConfig(height: SheetDimension.pixel(420)),
+            animation: const PopupAnimationConfig(
+              type: PopupAnimationType.slideUp,
+              duration: Duration.zero,
+              slideOffset: 1,
+            ),
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_FlowApp(runtime: runtime));
     await tester.pumpAndSettle();
     expect(events, <String>['initial:load', 'initial:show']);

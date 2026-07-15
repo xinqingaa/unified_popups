@@ -7,16 +7,18 @@ import '../configs/popup_channel.dart';
 import '../configs/popup_conflict_policy.dart';
 import '../configs/popup_owner_policy.dart';
 import '../configs/popup_route_policy.dart';
+import 'popup_controller_handle.dart';
 import 'popup_dismiss_reason.dart';
+import 'popup_entry_record.dart';
 import 'popup_entry_request.dart';
 import 'popup_entry_snapshot.dart';
 import 'popup_entry_state.dart';
 import 'popup_handle.dart';
 import 'popup_lifecycle_callbacks.dart';
-import 'popup_lifetime.dart';
 import 'popup_open_result.dart';
 import 'popup_outcome.dart';
-import 'popup_ownership.dart';
+
+typedef _PopupRecord<T, C> = PopupEntryRecord<T, C>;
 
 /// Owns popup lifecycle state without depending on an Overlay or BuildContext.
 class PopupController extends ChangeNotifier {
@@ -54,15 +56,16 @@ class PopupController extends ChangeNotifier {
     final key = request.key;
     final existing = key == null ? null : _keyed[key];
     if (existing != null && !existing.state.isTerminal) {
-      final compatible = existing.channel == request.channel &&
-          existing.resultType == T &&
-          existing.configType == C;
-      assert(
-        compatible,
-        'Popup key "$key" is already used by ${existing.channel} with '
-        'different result/config types.',
-      );
-      if (!compatible) return PopupOpenResult<T>.rejected();
+      // Keys are global to a channel. Replacing or toggling does not require
+      // matching generic types because the old and new handles remain
+      // independent. Updating in place does require an exact typed contract.
+      if (existing.channel != request.channel) {
+        assert(
+          false,
+          'Popup key "$key" is already used by ${existing.channel}.',
+        );
+        return PopupOpenResult<T>.rejected();
+      }
 
       switch (request.conflictPolicy) {
         case PopupConflictPolicy.rejectNew:
@@ -72,7 +75,12 @@ class PopupController extends ChangeNotifier {
           _requestClose(existing, PopupDismissReason.toggled);
           return PopupOpenResult<T>.toggledClosed();
         case PopupConflictPolicy.updateExisting:
-          if (!existing.isActive || !existing.updatable || !request.updatable) {
+          final compatible =
+              existing.resultType == T && existing.configType == C;
+          if (!compatible ||
+              !existing.isActive ||
+              !existing.updatable ||
+              !request.updatable) {
             return PopupOpenResult<T>.rejected();
           }
           final typed = existing as _PopupRecord<T, C>;
@@ -101,9 +109,15 @@ class PopupController extends ChangeNotifier {
     bool forceQueued = false,
   }) {
     final record = _PopupRecord<T, C>(
-      controller: this,
       id: '$_runtimeEpoch-${++_nextId}',
       request: request,
+      invokeCallback: _invoke,
+    );
+    record.handle = ControllerPopupHandle<T, C>(
+      record: record,
+      complete: (value) => _complete(record, value),
+      dismiss: () => _dismiss(record),
+      update: (config) => _updateConfig(record, config),
     );
     _entries.add(record);
 
@@ -336,41 +350,11 @@ class PopupController extends ChangeNotifier {
   }
 
   void _startLifetime(_PopupRecord<dynamic, dynamic> entry) {
-    final generation = entry.generation;
-    void arm(PopupLifetime lifetime) {
-      switch (lifetime) {
-        case PopupManualLifetime():
-          return;
-        case PopupAfterLifetime(:final duration):
-          assert(!duration.isNegative, 'Popup lifetime cannot be negative.');
-          entry.timers.add(Timer(duration, () {
-            if (_acceptLifetimeEvent(entry, generation)) {
-              _requestClose(entry, PopupDismissReason.timeout);
-            }
-          }));
-        case PopupUntilLifetime(:final event):
-          event.then((_) {
-            if (_acceptLifetimeEvent(entry, generation)) {
-              _requestClose(entry, PopupDismissReason.externalEvent);
-            }
-          }, onError: (Object error, StackTrace stackTrace) {
-            FlutterError.reportError(
-              FlutterErrorDetails(
-                exception: error,
-                stack: stackTrace,
-                library: 'unified_popups',
-                context: ErrorDescription('while waiting for popup lifetime'),
-              ),
-            );
-          });
-        case PopupAnyOfLifetime(:final conditions):
-          for (final condition in conditions) {
-            arm(condition);
-          }
+    entry.lifetimeBinding.start(entry.lifetime, (generation, reason) {
+      if (_acceptLifetimeEvent(entry, generation)) {
+        _requestClose(entry, reason);
       }
-    }
-
-    arm(entry.lifetime);
+    });
   }
 
   bool _acceptLifetimeEvent(
@@ -652,151 +636,4 @@ class PopupController extends ChangeNotifier {
     _changeNotifierDisposed = true;
     super.dispose();
   }
-}
-
-final class _PopupRecord<T, C> {
-  _PopupRecord({
-    required this.controller,
-    required this.id,
-    required PopupEntryRequest<T, C> request,
-  })  : key = request.key,
-        channel = request.channel,
-        config = request.config,
-        tags = Set<String>.unmodifiable(request.tags),
-        backPolicy = request.backPolicy,
-        routePolicy = request.routePolicy,
-        ownership = request.ownership,
-        lifetime = request.lifetime,
-        lifecycle = request.lifecycle ?? PopupLifecycleCallbacks<T>(),
-        updatable = request.updatable,
-        initiallyQueued = request.initiallyQueued,
-        onBack = request.onBack,
-        resolveUpdate = request.resolveUpdate,
-        resultType = T,
-        configType = C {
-    handle = _ControllerPopupHandle<T, C>(controller, this);
-  }
-
-  final PopupController controller;
-  final String id;
-  final String? key;
-  final PopupChannel channel;
-  final bool updatable;
-  final bool initiallyQueued;
-  final Future<bool> Function()? onBack;
-  final Type resultType;
-  final Type configType;
-  final Completer<PopupOutcome<T>> outcomeCompleter =
-      Completer<PopupOutcome<T>>();
-  final Completer<void> dismissedCompleter = Completer<void>();
-  final List<Timer> timers = <Timer>[];
-
-  late final _ControllerPopupHandle<T, C> handle;
-  C config;
-  Set<String> tags;
-  PopupBackPolicy backPolicy;
-  PopupRoutePolicy routePolicy;
-  PopupOwnership ownership;
-  PopupLifetime lifetime;
-  PopupLifecycleCallbacks<T> lifecycle;
-  PopupEntryUpdate<T>? Function(C previous, C next)? resolveUpdate;
-  PopupEntryState state = PopupEntryState.created;
-  PopupOutcome<T>? finalOutcome;
-  int generation = 0;
-  bool wasMounted = false;
-
-  bool get isActive => state.isActive;
-  bool get hasOutcome => outcomeCompleter.isCompleted;
-  Future<void> get dismissed => dismissedCompleter.future;
-
-  PopupEntrySnapshot get snapshot => PopupEntrySnapshot(
-        id: id,
-        key: key,
-        channel: channel,
-        state: state,
-        config: config,
-        generation: generation,
-        backPolicy: backPolicy,
-        routePolicy: routePolicy,
-        ownership: ownership,
-      );
-
-  void commitOutcome(PopupOutcome<T> outcome) {
-    if (outcomeCompleter.isCompleted) return;
-    finalOutcome = outcome;
-    outcomeCompleter.complete(outcome);
-    controller._invoke(
-      () => lifecycle.onOutcome?.call(outcome),
-      'while reporting popup outcome',
-    );
-  }
-
-  void commitReason(PopupDismissReason reason, [Object? value]) {
-    commitOutcome(PopupOutcome<T>(reason: reason, value: value as T?));
-  }
-
-  void commitUntypedOutcome(PopupOutcome<dynamic> outcome) {
-    commitOutcome(PopupOutcome<T>(reason: outcome.reason));
-  }
-
-  void commitDismissed() {
-    if (dismissedCompleter.isCompleted) return;
-    final outcome = finalOutcome!;
-    controller._invoke(
-      () => lifecycle.onDismissed?.call(outcome),
-      'while reporting popup dismissal',
-    );
-    dismissedCompleter.complete();
-  }
-
-  void cancelLifetime({bool invalidateGeneration = true}) {
-    for (final timer in timers) {
-      timer.cancel();
-    }
-    timers.clear();
-    if (invalidateGeneration) generation++;
-  }
-}
-
-final class _ControllerPopupHandle<T, C> implements UpdatablePopupHandle<T, C> {
-  const _ControllerPopupHandle(this._controller, this._record);
-
-  final PopupController _controller;
-  final _PopupRecord<T, C> _record;
-
-  @override
-  String get id => _record.id;
-
-  @override
-  String? get key => _record.key;
-
-  @override
-  PopupChannel get channel => _record.channel;
-
-  @override
-  bool get isActive => _record.isActive;
-
-  @override
-  bool get isMounted => _record.state.isMounted;
-
-  @override
-  PopupEntryState get state => _record.state;
-
-  @override
-  Future<PopupOutcome<T>> get outcome => _record.outcomeCompleter.future;
-
-  @override
-  Future<T?> get result => outcome.then((outcome) => outcome.value);
-
-  @override
-  Future<void> get dismissed => _record.dismissed;
-
-  @override
-  Future<void> complete([T? result]) => _controller._complete(_record, result);
-
-  @override
-  Future<void> dismiss() => _controller._dismiss(_record);
-
-  @override
-  bool update(C config) => _controller._updateConfig(_record, config);
 }

@@ -129,22 +129,24 @@ abstract final class Pop {
     Future<void>? until,
   }) {
     final lifetime = _lifetime(duration: duration, until: until);
-    return _api.loading(
-      LoadingConfig(
-        message: message,
-        content: messageWidget,
-        indicator: LoadingIndicatorConfig(child: customIndicator),
-        lifetime: lifetime,
-      ),
-    );
+    return _api
+        .loading(
+          LoadingConfig(
+            message: message,
+            content: messageWidget,
+            indicator: LoadingIndicatorConfig(child: customIndicator),
+            lifetime: lifetime,
+          ),
+        )
+        .requireHandle() as LoadingHandle;
   }
 
-  static LoadingHandle openLoading(LoadingConfig config) =>
+  static PopupOpenResult<void> openLoading(LoadingConfig config) =>
       _api.loading(config);
 
   static Future<void> hideLoading() => _api.hideLoading();
 
-  static PopupHandle<bool> openConfirm(ConfirmConfig config) =>
+  static PopupOpenResult<bool> openConfirm(ConfirmConfig config) =>
       _api.confirm(config);
 
   static Future<bool?> confirm({
@@ -206,10 +208,11 @@ abstract final class Pop {
             ),
           ),
         )
+        .requireHandle()
         .result;
   }
 
-  static PopupHandle<T> openSheet<T>(SheetConfig<T> config) =>
+  static PopupOpenResult<T> openSheet<T>(SheetConfig<T> config) =>
       _api.sheet(config);
 
   static Future<T?> sheet<T>({
@@ -240,51 +243,53 @@ abstract final class Pop {
     bool Function()? onBackPressed,
   }) {
     late PopupHandle<T> handle;
-    handle = _api.sheet<T>(
-      SheetConfig<T>(
-        direction: direction,
-        header: SheetHeaderConfig(
-          title: title,
-          titleWidget: titleWidget,
-          showCloseButton: showCloseButton,
-        ),
-        size: SheetSizeConfig(
-          width: width,
-          height: height,
-          maxWidth: maxWidth,
-          maxHeight: maxHeight,
-        ),
-        style: SheetStyle(
-          backgroundColor: backgroundColor,
-          borderRadius: borderRadius,
-          boxShadow: boxShadow,
-          padding: padding ?? const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        ),
-        dock: SheetDockConfig(enabled: dockToEdge, edgeGap: edgeGap),
-        drag: SheetDragConfig(
-          mode: dragDismissMode,
-          modeListenable: dragDismissModeListenable,
-          showHandle: showDragHandle,
-          handleColor: dragHandleColor,
-        ),
-        keyboard: SheetKeyboardConfig(adjustForKeyboard: adjustForKeyboard),
-        useSafeArea: useSafeArea,
-        barrier: showBarrier
-            ? PopupBarrierConfig(
-                dismissible: barrierDismissible,
-                color: barrierColor ?? Colors.black54,
-              )
-            : const PopupBarrierConfig.hidden(),
-        onBack: onBackPressed == null ? null : () async => onBackPressed(),
-        builder: (context, popupHandle) {
-          return childBuilder(([result]) => popupHandle.complete(result));
-        },
-      ),
-    );
+    handle = _api
+        .sheet<T>(
+          SheetConfig<T>(
+            direction: direction,
+            header: SheetHeaderConfig(
+              title: title,
+              titleWidget: titleWidget,
+              showCloseButton: showCloseButton,
+            ),
+            size: SheetSizeConfig(
+              width: width,
+              height: height,
+              maxWidth: maxWidth,
+              maxHeight: maxHeight,
+            ),
+            style: SheetStyle(
+              backgroundColor: backgroundColor,
+              borderRadius: borderRadius,
+              boxShadow: boxShadow,
+              padding: padding ?? const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            ),
+            dock: SheetDockConfig(enabled: dockToEdge, edgeGap: edgeGap),
+            drag: SheetDragConfig(
+              mode: dragDismissMode,
+              modeListenable: dragDismissModeListenable,
+              showHandle: showDragHandle,
+              handleColor: dragHandleColor,
+            ),
+            keyboard: SheetKeyboardConfig(adjustForKeyboard: adjustForKeyboard),
+            useSafeArea: useSafeArea,
+            barrier: showBarrier
+                ? PopupBarrierConfig(
+                    dismissible: barrierDismissible,
+                    color: barrierColor ?? Colors.black54,
+                  )
+                : const PopupBarrierConfig.hidden(),
+            onBack: onBackPressed == null ? null : () async => onBackPressed(),
+            builder: (context, popupHandle) {
+              return childBuilder(([result]) => popupHandle.complete(result));
+            },
+          ),
+        )
+        .requireHandle();
     return handle.result;
   }
 
-  static PopupHandle<R> openFlowSheet<R>(FlowSheetConfig<R> config) =>
+  static PopupOpenResult<R> openFlowSheet<R>(FlowSheetConfig<R> config) =>
       _api.flowSheet(config);
 
   static Future<R?> flowSheet<R>({
@@ -335,10 +340,12 @@ abstract final class Pop {
             routeBuilder: routeBuilder,
           ),
         )
+        .requireHandle()
         .result;
   }
 
-  static PopupHandle<DateTime> openDate(DateConfig config) => _api.date(config);
+  static PopupOpenResult<DateTime> openDate(DateConfig config) =>
+      _api.date(config);
 
   static Future<DateTime?> date({
     DateTime? initialDate,
@@ -379,12 +386,14 @@ abstract final class Pop {
             ),
           ),
         )
+        .requireHandle()
         .result;
   }
 
-  static PopupHandle<T> openMenu<T>(MenuConfig<T> config) => _api.menu(config);
+  static PopupOpenResult<T> openMenu<T>(MenuConfig<T> config) =>
+      _api.menu(config);
 
-  static PopupHandle<T> openDropMenu<T>(DropMenuConfig<T> config) =>
+  static PopupOpenResult<T> openDropMenu<T>(DropMenuConfig<T> config) =>
       _api.dropMenu(config);
 
   /// Opens a theme-aware, data-driven one-level or two-level menu.
@@ -418,6 +427,7 @@ abstract final class Pop {
                 : const PopupBarrierConfig.hidden(),
           ),
         )
+        .requireHandle()
         .result;
   }
 
@@ -456,10 +466,11 @@ abstract final class Pop {
             },
           ),
         )
+        .requireHandle()
         .result;
   }
 
-  static PopupHandle<T> custom<T>(CustomPopupConfig<T> config) =>
+  static PopupOpenResult<T> custom<T>(CustomPopupConfig<T> config) =>
       _api.custom(config);
 
   static Future<int> dismissChannel(PopupChannel channel) =>

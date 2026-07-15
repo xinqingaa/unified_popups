@@ -91,7 +91,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                         },
                       ),
                     ),
-                  );
+                  ).requireHandle();
                   final outcome = await handle.outcome;
                   if (!mounted) return;
                   _setLast(
@@ -201,7 +201,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                       content: '1 秒后 dismiss',
                       cancelText: '取消',
                     ),
-                  );
+                  ).requireHandle();
                   await Future<void>.delayed(const Duration(seconds: 1));
                   await handle.dismiss();
                   final outcome = await handle.outcome;
@@ -253,7 +253,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                         radius: 20,
                       ),
                     ),
-                  ).result;
+                  ).requireHandle().result;
                   _setLast(date == null ? 'Date 取消' : 'Date=$date');
                 },
               ),

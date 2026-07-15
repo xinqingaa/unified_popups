@@ -60,7 +60,7 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                       ),
                       builder: (context, h) => _PhaseCard(handle: h),
                     ),
-                  );
+                  ).requireHandle();
                   setState(() => _note = '等待 outcome…');
                   final outcome = await handle.outcome;
                   if (!mounted) return;
@@ -231,7 +231,7 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
           ),
         ),
       ),
-    );
+    ).requireHandle();
     setState(() {
       _external = handle;
       _note = 'Handle 已保存 isActive=${handle.isActive}';

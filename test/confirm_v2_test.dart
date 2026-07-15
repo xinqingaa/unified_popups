@@ -75,20 +75,23 @@ void main() {
     addTearDown(runtime.shutdown);
     final api = PopupTypeApi(runtime);
     final events = <String>[];
-    final handle = api.confirm(
-      ConfirmConfig(
-        content: 'continue?',
-        bodyExtension: const Text('extra'),
-        confirmText: 'yes',
-        cancelText: 'no',
-        animationConfig: const PopupAnimationConfig(duration: Duration.zero),
-        lifecycle: PopupLifecycleCallbacks<bool>(
-          onOutcome: (_) => events.add('outcome'),
-        ),
-        onConfirm: () => events.add('confirm'),
-        onCancel: () => events.add('cancel'),
-      ),
-    );
+    final handle = api
+        .confirm(
+          ConfirmConfig(
+            content: 'continue?',
+            bodyExtension: const Text('extra'),
+            confirmText: 'yes',
+            cancelText: 'no',
+            animationConfig:
+                const PopupAnimationConfig(duration: Duration.zero),
+            lifecycle: PopupLifecycleCallbacks<bool>(
+              onOutcome: (_) => events.add('outcome'),
+            ),
+            onConfirm: () => events.add('confirm'),
+            onCancel: () => events.add('cancel'),
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_ConfirmApp(runtime: runtime));
     await tester.pump();
     expect(find.text('extra'), findsOneWidget);
@@ -107,16 +110,19 @@ void main() {
     final api = PopupTypeApi(runtime);
     var confirms = 0;
     var cancels = 0;
-    final handle = api.confirm(
-      ConfirmConfig(
-        content: 'close me',
-        confirmText: 'yes',
-        cancelText: 'no',
-        animationConfig: const PopupAnimationConfig(duration: Duration.zero),
-        onConfirm: () => confirms++,
-        onCancel: () => cancels++,
-      ),
-    );
+    final handle = api
+        .confirm(
+          ConfirmConfig(
+            content: 'close me',
+            confirmText: 'yes',
+            cancelText: 'no',
+            animationConfig:
+                const PopupAnimationConfig(duration: Duration.zero),
+            onConfirm: () => confirms++,
+            onCancel: () => cancels++,
+          ),
+        )
+        .requireHandle();
     await tester.pumpWidget(_ConfirmApp(runtime: runtime));
     await tester.pump();
 
@@ -143,9 +149,11 @@ void main() {
     ) as PopupOpened<void>)
         .handle;
     runtime.controller.markPresented(parent.id);
-    final confirm = PopupTypeApi(runtime).confirm(
-      const ConfirmConfig(content: 'child'),
-    );
+    final confirm = PopupTypeApi(runtime)
+        .confirm(
+          const ConfirmConfig(content: 'child'),
+        )
+        .requireHandle();
 
     final childEntry = runtime.controller.entries.last;
     expect(childEntry.ownership.parentEntryId, parent.id);
@@ -182,12 +190,14 @@ void main() {
     await tester.pump();
     expect(fieldFocus.hasFocus, isTrue);
 
-    final handle = PopupTypeApi(runtime).confirm(
-      const ConfirmConfig(
-        content: 'focus',
-        animationConfig: PopupAnimationConfig(duration: Duration.zero),
-      ),
-    );
+    final handle = PopupTypeApi(runtime)
+        .confirm(
+          const ConfirmConfig(
+            content: 'focus',
+            animationConfig: PopupAnimationConfig(duration: Duration.zero),
+          ),
+        )
+        .requireHandle();
     await tester.pump();
     await tester.pump();
     expect(fieldFocus.hasFocus, isFalse);
@@ -211,9 +221,11 @@ void main() {
     }) async {
       final runtime = PopupRuntime();
       runtime.attachHost(Object());
-      final handle = PopupTypeApi(runtime).confirm(
-        ConfirmConfig(content: 'reason', behavior: behavior),
-      );
+      final handle = PopupTypeApi(runtime)
+          .confirm(
+            ConfirmConfig(content: 'reason', behavior: behavior),
+          )
+          .requireHandle();
       runtime.controller.markPresented(handle.id);
 
       await close(runtime, handle.id);

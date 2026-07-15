@@ -11,6 +11,7 @@ import '../configs/popup_channel.dart';
 import '../configs/popup_position.dart';
 import '../configs/sheet_config.dart';
 import '../configs/popup_owner_policy.dart';
+import '../configs/popup_keys.dart';
 import '../configs/toast_config.dart';
 import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_entry_request.dart';
@@ -68,13 +69,13 @@ final class PopupTypeApi {
     );
   }
 
-  LoadingHandle loading(LoadingConfig config) {
+  PopupOpenResult<void> loading(LoadingConfig config) {
     final behavior = config.behavior;
     assert(
       behavior.channel == PopupChannel.loading,
       'LoadingConfig must use PopupChannel.loading.',
     );
-    final result = runtime.controller.open<void, LoadingConfig>(
+    return runtime.controller.open<void, LoadingConfig>(
       PopupEntryRequest<void, LoadingConfig>(
         channel: PopupChannel.loading,
         config: config,
@@ -90,23 +91,15 @@ final class PopupTypeApi {
         resolveUpdate: (previous, next) => _loadingUpdate(next),
       ),
     );
-    final handle = switch (result) {
-      PopupOpened<void>(:final handle) => handle,
-      PopupUpdated<void>(:final handle) => handle,
-      PopupToggledClosed<void>() || PopupRejected<void>() => throw StateError(
-          'LoadingConfig must use an open/update conflict policy.',
-        ),
-    };
-    return handle as LoadingHandle;
   }
 
-  PopupHandle<bool> confirm(ConfirmConfig config) {
+  PopupOpenResult<bool> confirm(ConfirmConfig config) {
     final behavior = config.behavior;
     assert(
       behavior.channel == PopupChannel.confirm,
       'ConfirmConfig must use PopupChannel.confirm.',
     );
-    final result = runtime.controller.open<bool, ConfirmConfig>(
+    return runtime.controller.open<bool, ConfirmConfig>(
       PopupEntryRequest<bool, ConfirmConfig>(
         channel: PopupChannel.confirm,
         config: config,
@@ -119,22 +112,15 @@ final class PopupTypeApi {
         lifecycle: config.lifecycle,
       ),
     );
-    return switch (result) {
-      PopupOpened<bool>(:final handle) => handle,
-      PopupUpdated<bool>(:final handle) => handle,
-      PopupToggledClosed<bool>() || PopupRejected<bool>() => throw StateError(
-          'ConfirmConfig was not opened by its conflict policy.',
-        ),
-    };
   }
 
-  PopupHandle<DateTime> date(DateConfig config) {
+  PopupOpenResult<DateTime> date(DateConfig config) {
     final behavior = config.behavior;
     assert(
       behavior.channel == PopupChannel.date,
       'DateConfig must use PopupChannel.date.',
     );
-    final result = runtime.controller.open<DateTime, DateConfig>(
+    return runtime.controller.open<DateTime, DateConfig>(
       PopupEntryRequest<DateTime, DateConfig>(
         channel: PopupChannel.date,
         config: config,
@@ -147,18 +133,9 @@ final class PopupTypeApi {
         lifecycle: config.lifecycle,
       ),
     );
-    return switch (result) {
-      PopupOpened<DateTime>(:final handle) => handle,
-      PopupUpdated<DateTime>(:final handle) => handle,
-      PopupToggledClosed<DateTime>() ||
-      PopupRejected<DateTime>() =>
-        throw StateError(
-          'DateConfig was not opened by its conflict policy.',
-        ),
-    };
   }
 
-  PopupHandle<T> sheet<T>(SheetConfig<T> config) {
+  PopupOpenResult<T> sheet<T>(SheetConfig<T> config) {
     final behavior = config.behavior;
     assert(
       behavior.channel == PopupChannel.sheet,
@@ -190,64 +167,64 @@ final class PopupTypeApi {
               },
       ),
     );
-    handle = switch (result) {
-      PopupOpened<T>(:final handle) => handle,
-      PopupUpdated<T>(:final handle) => handle,
-      PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
-          'SheetConfig was not opened by its conflict policy.',
-        ),
-    };
-    return handle;
+    final openedHandle = result.handleOrNull;
+    if (openedHandle != null) handle = openedHandle;
+    return result;
   }
 
-  PopupHandle<R> flowSheet<R>(FlowSheetConfig<R> config) {
-    config.controller.claimPopupSession();
+  PopupOpenResult<R> flowSheet<R>(FlowSheetConfig<R> config) {
     final behavior = config.behavior;
     assert(
       behavior.channel == PopupChannel.flowSheet,
       'FlowSheetConfig must use PopupChannel.flowSheet.',
     );
+    config.controller.claimPopupSession();
     late PopupHandle<R> handle;
-    final result = runtime.controller.open<R, FlowSheetConfig<R>>(
-      PopupEntryRequest<R, FlowSheetConfig<R>>(
-        channel: PopupChannel.flowSheet,
-        config: config,
-        key: behavior.key,
-        tags: behavior.tags,
-        conflictPolicy: behavior.conflictPolicy,
-        routePolicy: behavior.routePolicy,
-        backPolicy: behavior.backPolicy,
-        ownership: _captureOwnership(config.ownership),
-        lifecycle: config.lifecycle,
-        onBack: () async {
-          if (config.controller.canPop) {
-            return config.controller.handleBack();
-          }
-          runtime.controller.dismissEntry(
-            handle.id,
-            reason: PopupDismissReason.back,
-          );
-          return true;
-        },
-      ),
-    );
-    handle = switch (result) {
-      PopupOpened<R>(:final handle) => handle,
-      PopupUpdated<R>(:final handle) => handle,
-      PopupToggledClosed<R>() || PopupRejected<R>() => throw StateError(
-          'FlowSheetConfig was not opened by its conflict policy.',
+    late PopupOpenResult<R> result;
+    try {
+      result = runtime.controller.open<R, FlowSheetConfig<R>>(
+        PopupEntryRequest<R, FlowSheetConfig<R>>(
+          channel: PopupChannel.flowSheet,
+          config: config,
+          key: behavior.key,
+          tags: behavior.tags,
+          conflictPolicy: behavior.conflictPolicy,
+          routePolicy: behavior.routePolicy,
+          backPolicy: behavior.backPolicy,
+          ownership: _captureOwnership(config.ownership),
+          lifecycle: config.lifecycle,
+          onBack: () async {
+            if (config.controller.canPop) {
+              return config.controller.handleBack();
+            }
+            runtime.controller.dismissEntry(
+              handle.id,
+              reason: PopupDismissReason.back,
+            );
+            return true;
+          },
         ),
-    };
-    config.controller.attachPopupHandle(handle);
-    return handle;
+      );
+    } catch (_) {
+      config.controller.releasePopupSessionClaim();
+      rethrow;
+    }
+    final openedHandle = result.handleOrNull;
+    if (openedHandle != null) {
+      handle = openedHandle;
+      config.controller.attachPopupHandle(handle);
+    } else {
+      config.controller.releasePopupSessionClaim();
+    }
+    return result;
   }
 
-  PopupHandle<T> menu<T>(MenuConfig<T> config) {
+  PopupOpenResult<T> menu<T>(MenuConfig<T> config) {
     final behavior = config.behavior;
     if (!config.anchor.attached.value) {
       throw StateError('PopupAnchor must be mounted before opening a menu.');
     }
-    final result = runtime.controller.open<T, MenuConfig<T>>(
+    return runtime.controller.open<T, MenuConfig<T>>(
       PopupEntryRequest<T, MenuConfig<T>>(
         channel: PopupChannel.menu,
         config: config,
@@ -260,16 +237,9 @@ final class PopupTypeApi {
         lifecycle: config.lifecycle,
       ),
     );
-    return switch (result) {
-      PopupOpened<T>(:final handle) => handle,
-      PopupUpdated<T>(:final handle) => handle,
-      PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
-          'MenuConfig was not opened by its conflict policy.',
-        ),
-    };
   }
 
-  PopupHandle<T> dropMenu<T>(DropMenuConfig<T> config) {
+  PopupOpenResult<T> dropMenu<T>(DropMenuConfig<T> config) {
     final behavior = config.behavior;
     assert(
       behavior.channel == PopupChannel.menu,
@@ -279,7 +249,7 @@ final class PopupTypeApi {
       throw StateError(
           'PopupAnchor must be mounted before opening a drop menu.');
     }
-    final result = runtime.controller.open<T, DropMenuConfig<T>>(
+    return runtime.controller.open<T, DropMenuConfig<T>>(
       PopupEntryRequest<T, DropMenuConfig<T>>(
         channel: PopupChannel.menu,
         config: config,
@@ -292,18 +262,11 @@ final class PopupTypeApi {
         lifecycle: config.lifecycle,
       ),
     );
-    return switch (result) {
-      PopupOpened<T>(:final handle) => handle,
-      PopupUpdated<T>(:final handle) => handle,
-      PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
-          'DropMenuConfig was not opened by its conflict policy.',
-        ),
-    };
   }
 
-  PopupHandle<T> custom<T>(CustomPopupConfig<T> config) {
+  PopupOpenResult<T> custom<T>(CustomPopupConfig<T> config) {
     final behavior = config.behavior;
-    final result = runtime.controller.open<T, CustomPopupConfig<T>>(
+    return runtime.controller.open<T, CustomPopupConfig<T>>(
       PopupEntryRequest<T, CustomPopupConfig<T>>(
         channel: PopupChannel.custom,
         config: config,
@@ -316,13 +279,6 @@ final class PopupTypeApi {
         lifecycle: config.lifecycle,
       ),
     );
-    return switch (result) {
-      PopupOpened<T>(:final handle) => handle,
-      PopupUpdated<T>(:final handle) => handle,
-      PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
-          'CustomPopupConfig was not opened by its conflict policy.',
-        ),
-    };
   }
 
   Future<void> hideLoading({String key = PopupKeys.globalLoading}) {
