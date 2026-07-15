@@ -203,6 +203,10 @@ final status = await Pop.dropMenu<String>(
 `closeOnSelect: false`，执行后保持菜单打开。完整的一级、二级通用示例见
 Example 的 `Menu / DropMenu` Lab。
 
+二级分组使用尺寸 + 淡入动画展开。选择二级选项后只收起当前分组，外层菜单继续
+显示；通过 `onSelected` 或 Item 的 `onTap` 接收选择。一级菜单选项仍会返回结果并
+关闭整个菜单。
+
 ## PopupHandle 与高级配置
 
 便捷 API 面向日常调用；需要区分关闭原因、外部精确控制或定制策略时，使用

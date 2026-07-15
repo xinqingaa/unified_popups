@@ -622,8 +622,9 @@ final status = await Pop.dropMenu<String>(
 二级模式：
 
 ```dart
-final action = await Pop.dropMenu<String>(
+await Pop.dropMenu<String>(
   anchor: menuAnchor,
+  onSelected: handleSelection,
   menu: DropMenu<String>.nested(
     sections: [
       DropMenuSection(
@@ -661,8 +662,10 @@ final action = await Pop.dropMenu<String>(
   文字样式和图标 Builder。默认宽度范围为 140–240。
 
 `Pop.dropMenu` 默认使用透明且可关闭的 Barrier，因此点击菜单外关闭但不会绘制
-暗色遮罩。需要底层继续滚动时可传 `showBarrier: false`。普通选项返回 `T` 并关闭；
-`closeOnSelect: false` 的设置项调用回调并在菜单内更新选中态。
+暗色遮罩。需要底层继续滚动时可传 `showBarrier: false`。一级选项返回 `T` 并关闭；
+二级选项通过 `onSelected` / Item `onTap` 通知业务，只以尺寸 + 淡入动画收起当前
+Section，不关闭外层菜单。此时外层 Future 会在菜单最终关闭时结束，通常返回 null。
+direct 项仍由 `closeOnSelect` 决定关闭整个菜单还是仅更新选中态。
 
 高级入口 `Pop.openDropMenu<T>(DropMenuConfig<T>)` 返回 `PopupHandle<T>`，并支持
 behavior、ownership、barrier、animationConfig 和 lifecycle。默认 conflict policy
@@ -690,6 +693,33 @@ const style = DropMenuStyle(
 默认玻璃背景 Alpha 为浅色主题 `0xB3`、深色主题 `0x8C`。调用方传入带 Alpha 的
 `backgroundColor` 即可进一步控制透明度。一级菜单、二级选项以及一级 Section 的
 最后一项均自动省略底部分隔线。
+
+### 定位与偏移
+
+`MenuPlacement.auto` 按以下规则决定方向：
+
+- Anchor 下方剩余高度小于菜单最大高度阈值（限制在 120–320）时向上弹出，否则
+  向下弹出。
+- Anchor 中心位于屏幕右半侧时按 end 对齐，否则按 start 对齐。
+
+需要固定方向时传 `belowStart`、`belowEnd`、`aboveStart` 或 `aboveEnd`。`offset`
+在完成 Anchor 对齐后应用，坐标始终是正 X 向右、正 Y 向下：
+
+```dart
+await Pop.dropMenu<String>(
+  anchor: menuAnchor,
+  placement: MenuPlacement.belowEnd,
+  offset: const Offset(8, 12), // 向右 8、向下留 12 间距
+  menu: menu,
+);
+
+await Pop.dropMenu<String>(
+  anchor: menuAnchor,
+  placement: MenuPlacement.aboveEnd,
+  offset: const Offset(8, -12), // 向上弹出时，负 Y 才是远离 Anchor
+  menu: menu,
+);
+```
 
 `LiquidGlass`、`LiquidGlassButton` 和 `LiquidGlassActionButton` 也作为独立公共组件
 导出，可在菜单之外复用。

@@ -43,6 +43,22 @@ void main() {
     expect(primaryDividers, findsOneWidget);
 
     await tester.tap(find.text('显示模式'));
+    await tester.pump();
+    final submenuTransitions = find.descendant(
+      of: menu,
+      matching: find.byType(SizeTransition),
+    );
+    expect(submenuTransitions, findsWidgets);
+    await tester.pump(const Duration(milliseconds: 100));
+    final fades = tester.widgetList<FadeTransition>(
+      find.descendant(of: menu, matching: find.byType(FadeTransition)),
+    );
+    expect(
+      fades.any(
+        (fade) => fade.opacity.value > 0 && fade.opacity.value < 1,
+      ),
+      isTrue,
+    );
     await tester.pumpAndSettle();
     expect(find.text('标准显示'), findsOneWidget);
 
@@ -53,8 +69,18 @@ void main() {
     expect(find.byKey(const ValueKey<String>('custom-check')), findsOneWidget);
 
     await tester.tap(find.text('标准显示'));
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(
+      find.descendant(of: menu, matching: find.byType(SizeTransition)),
+      findsWidgets,
+    );
     await tester.pumpAndSettle();
     expect(find.text('结果：standard'), findsOneWidget);
+    expect(find.text('标准显示'), findsNothing);
+    expect(Pop.countChannel(PopupChannel.menu), 1);
+
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
     expect(Pop.countChannel(PopupChannel.menu), 0);
   });
 
@@ -212,7 +238,7 @@ class _SingleMenuHarnessState extends State<_SingleMenuHarness> {
         ],
       ),
     );
-    if (mounted) setState(() => _result = value);
+    if (mounted && value != null) setState(() => _result = value);
   }
 
   @override
@@ -254,6 +280,9 @@ class _NestedMenuHarnessState extends State<_NestedMenuHarness> {
   Future<void> _open() async {
     final value = await Pop.dropMenu<String>(
       anchor: _anchor,
+      onSelected: (selection) {
+        if (mounted) setState(() => _result = selection);
+      },
       menu: DropMenu<String>.nested(
         sections: <DropMenuSection<String>>[
           const DropMenuSection<String>(
@@ -281,7 +310,7 @@ class _NestedMenuHarnessState extends State<_NestedMenuHarness> {
         ],
       ),
     );
-    if (mounted) setState(() => _result = value);
+    if (mounted && value != null) setState(() => _result = value);
   }
 
   @override

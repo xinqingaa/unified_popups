@@ -73,6 +73,8 @@ class _MenuLabPageState extends State<MenuLabPage> {
     final colors = Theme.of(context).colorScheme;
     await Pop.dropMenu<String>(
       anchor: _settingsAnchor,
+      offset: const Offset(0, 8),
+      placement: MenuPlacement.belowEnd,
       onSelected: _handleSettingsSelection,
       style: DropMenuStyle(
         constraints: const BoxConstraints(
@@ -256,7 +258,7 @@ class _MenuLabPageState extends State<MenuLabPage> {
           ),
           LabGroup(
             title: 'DropMenu · 二级设置',
-            subtitle: '紧凑宽度、外部玻璃颜色、单组展开、保持打开与自定义勾选 Widget。',
+            subtitle: '紧凑宽度、外部玻璃颜色、动画展开；选择子项只收起分组，菜单保持打开。',
             children: [
               Align(
                 alignment: Alignment.centerRight,

@@ -31,6 +31,8 @@
   颜色覆盖。
 - DropMenu 默认宽度收窄为 140–240，末项自动移除底部分隔线；液态玻璃降低默认
   背景不透明度，并新增独立于普通边框的 `topHighlightColor`。
+- 二级 Section 新增尺寸 + 淡入展开/收起动画；选择二级选项只收起当前 Section，
+  外层菜单保持显示，并通过 `onSelected` / Item `onTap` 通知业务。
 - 修正 Menu 在透明可见 Barrier 下的 Follower 命中范围，菜单内容可正常接收点击，
   点击外部仍由 Barrier 关闭。
 - Loading 重复调用更新原逻辑 Entry，保留稳定 Handle，并从新配置重新开始计时。

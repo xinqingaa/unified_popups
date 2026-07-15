@@ -296,7 +296,7 @@ class _AnimatedSubmenu extends StatelessWidget {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return AnimatedSwitcher(
       duration:
-          reduceMotion ? Duration.zero : const Duration(milliseconds: 200),
+          reduceMotion ? Duration.zero : const Duration(milliseconds: 160),
       reverseDuration:
           reduceMotion ? Duration.zero : const Duration(milliseconds: 160),
       switchInCurve: Curves.easeOutCubic,

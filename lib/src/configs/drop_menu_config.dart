@@ -233,6 +233,9 @@ final class DropMenuConfig<T> extends MenuConfigBase {
   final MenuPlacement placement;
   @override
   final Offset offset;
+
+  /// Receives every selection. This is the primary result channel for nested
+  /// options because selecting them keeps the outer menu open.
   final ValueChanged<T>? onSelected;
   final ValueChanged<String?>? onOpenSectionChanged;
   final PopupBehaviorConfig behavior;
