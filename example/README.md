@@ -37,5 +37,5 @@ AppBar ⋯ 也可跳到 API 展柜。
 | 策略 | 返回顺序、persist/owner 路由、captureRoute、Ownership |
 | 异步边界 | Future/Stream/Timer/build 阶段调用 |
 
-包文档见 [架构](../doc/ARCHITECTURE.md)、[API 参考](../doc/API_REFERENCE.md) 和
-[迁移指南](../doc/MIGRATION_V1_TO_V2.md)。
+包文档见 [架构](../docs/ARCHITECTURE.md)、[API 参考](../docs/API_REFERENCE.md) 和
+[迁移指南](../docs/MIGRATION_V1_TO_V2.md)。
