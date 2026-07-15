@@ -1,5 +1,6 @@
 import '../configs/confirm_config.dart';
 import '../configs/date_config.dart';
+import '../configs/drop_menu_config.dart';
 import '../configs/custom_popup_config.dart';
 import '../configs/flow_sheet_config.dart';
 import '../configs/loading_config.dart';
@@ -264,6 +265,38 @@ final class PopupTypeApi {
       PopupUpdated<T>(:final handle) => handle,
       PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
           'MenuConfig was not opened by its conflict policy.',
+        ),
+    };
+  }
+
+  PopupHandle<T> dropMenu<T>(DropMenuConfig<T> config) {
+    final behavior = config.behavior;
+    assert(
+      behavior.channel == PopupChannel.menu,
+      'DropMenuConfig must use PopupChannel.menu.',
+    );
+    if (!config.anchor.attached.value) {
+      throw StateError(
+          'PopupAnchor must be mounted before opening a drop menu.');
+    }
+    final result = runtime.controller.open<T, DropMenuConfig<T>>(
+      PopupEntryRequest<T, DropMenuConfig<T>>(
+        channel: PopupChannel.menu,
+        config: config,
+        key: behavior.key,
+        tags: behavior.tags,
+        conflictPolicy: behavior.conflictPolicy,
+        routePolicy: behavior.routePolicy,
+        backPolicy: behavior.backPolicy,
+        ownership: _captureOwnership(config.ownership),
+        lifecycle: config.lifecycle,
+      ),
+    );
+    return switch (result) {
+      PopupOpened<T>(:final handle) => handle,
+      PopupUpdated<T>(:final handle) => handle,
+      PopupToggledClosed<T>() || PopupRejected<T>() => throw StateError(
+          'DropMenuConfig was not opened by its conflict policy.',
         ),
     };
   }

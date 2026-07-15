@@ -103,11 +103,11 @@ class _PolicyLabPageState extends State<PolicyLabPage> {
                 outlined: true,
                 onPressed: () {
                   Pop.openConfirm(
-                    ConfirmConfig(
+                    const ConfirmConfig(
                       title: '所属路由 Confirm',
                       content: 'push 后应自动关闭',
                       cancelText: '取消',
-                      behavior: const PopupBehaviorConfig(
+                      behavior: PopupBehaviorConfig(
                         channel: PopupChannel.confirm,
                         routePolicy:
                             PopupRoutePolicy.dismissWhenOwnerRouteChanges,

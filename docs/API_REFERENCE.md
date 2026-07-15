@@ -79,6 +79,7 @@ final value = await Pop.sheet<String>(childBuilder: ...);
 | FlowSheet | `Pop.openFlowSheet<R>(FlowSheetConfig<R>)` | `PopupHandle<R>` |
 | Date | `Pop.openDate(DateConfig)` | `PopupHandle<DateTime>` |
 | Menu | `Pop.openMenu<T>(MenuConfig<T>)` | `PopupHandle<T>` |
+| DropMenu | `Pop.openDropMenu<T>(DropMenuConfig<T>)` | `PopupHandle<T>` |
 | Custom | `Pop.custom<T>(CustomPopupConfig<T>)` | `PopupHandle<T>` |
 
 便捷 API 的扁平参数会在内部组装到类型 Config，二者不会同时生效或互相覆盖。
@@ -598,6 +599,84 @@ PopupAnchor(
   ),
 );
 ```
+
+### `Pop.dropMenu<T>`
+
+`dropMenu` 是建立在 Menu Runtime 上的数据驱动快捷 API，适合标准一级选择和
+二级展开菜单。定位仍使用同一个 `PopupAnchorController`：
+
+```dart
+final status = await Pop.dropMenu<String>(
+  anchor: menuAnchor,
+  menu: const DropMenu<String>.single(
+    selectedValue: 'all',
+    items: [
+      DropMenuItem(value: 'all', label: '全部订单'),
+      DropMenuItem(value: 'pending', label: '待成交'),
+      DropMenuItem(value: 'filled', label: '已成交'),
+    ],
+  ),
+);
+```
+
+二级模式：
+
+```dart
+final action = await Pop.dropMenu<String>(
+  anchor: menuAnchor,
+  menu: DropMenu<String>.nested(
+    sections: [
+      DropMenuSection(
+        id: 'orderType',
+        label: '限价单',
+        items: const [
+          DropMenuItem(value: 'limit', label: '限价单', selected: true),
+          DropMenuItem(value: 'market', label: '市价单'),
+        ],
+      ),
+      DropMenuSection.direct(
+        id: 'confirm',
+        item: DropMenuItem(
+          value: 'confirm',
+          label: '下单二次确认',
+          selected: true,
+          showUnselectedIndicator: true,
+          closeOnSelect: false,
+          onTap: toggleConfirm,
+        ),
+      ),
+    ],
+  ),
+);
+```
+
+主要模型：
+
+- `DropMenu.single`：一级列表，`selectedValue` 标记当前值。
+- `DropMenu.nested`：二级菜单，同一时间只展开一个 Section。
+- `DropMenuItem<T>`：支持文字或 Widget、leading、禁用、选中、保持打开和自定义
+  `selectedIcon`。
+- `DropMenuSection<T>`：可展开分组；`DropMenuSection.direct` 表示一级直接操作。
+- `DropMenuStyle`：约束、圆角、玻璃样式、文本/分隔线/选中/箭头/二级面板颜色、
+  文字样式和图标 Builder。
+
+`Pop.dropMenu` 默认使用透明且可关闭的 Barrier，因此点击菜单外关闭但不会绘制
+暗色遮罩。需要底层继续滚动时可传 `showBarrier: false`。普通选项返回 `T` 并关闭；
+`closeOnSelect: false` 的设置项调用回调并在菜单内更新选中态。
+
+高级入口 `Pop.openDropMenu<T>(DropMenuConfig<T>)` 返回 `PopupHandle<T>`，并支持
+behavior、ownership、barrier、animationConfig 和 lifecycle。默认 conflict policy
+为 `replaceExisting`，确保同时只有一个标准 DropMenu。
+
+### Liquid Glass
+
+DropMenu 默认使用从 `ThemeData.colorScheme` 解析的液态玻璃样式，自动适配明暗
+主题。`LiquidGlassStyle` 对外暴露背景、边框、按压高亮、阴影、模糊和描边配置；
+`DropMenuStyle` 进一步暴露文字、禁用态、分隔线、选中色、二级背景和箭头颜色。
+颜色为 null 时采用主题默认值。
+
+`LiquidGlass`、`LiquidGlassButton` 和 `LiquidGlassActionButton` 也作为独立公共组件
+导出，可在菜单之外复用。
 
 ### `Pop.menu<T>`
 

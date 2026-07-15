@@ -17,12 +17,12 @@ class ConfigLabPage extends StatelessWidget {
         children: [
           const LabBanner(
             text: '两层 API 不会打架：便捷 API 内部就是组装 Config。'
-                '日常用 Pop.toast/sheet/menu；需要 key/tags/策略/精确遮罩时用 openXxx(Config)。',
+                '日常用 Pop.toast/sheet/menu/dropMenu；需要 key/tags/策略/精确遮罩时用 openXxx(Config)。',
           ),
           const SizedBox(height: 8),
-          LabGroup(
+          const LabGroup(
             title: '怎么选',
-            children: const [
+            children: [
               LabNote(
                 '便捷层：少参数、等 Future 结果。\n'
                 '高级层：PopupHandle、PopupBarrierConfig、PopupBehaviorConfig、'

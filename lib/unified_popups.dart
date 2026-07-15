@@ -6,6 +6,7 @@ export 'src/api/popup_type_api.dart'
 export 'src/configs/confirm_config.dart';
 export 'src/configs/custom_popup_config.dart';
 export 'src/configs/date_config.dart';
+export 'src/configs/drop_menu_config.dart';
 export 'src/configs/flow_sheet_config.dart';
 export 'src/configs/loading_config.dart';
 export 'src/configs/menu_config.dart';
@@ -37,3 +38,7 @@ export 'src/renderers/popup_scene.dart' show PopupScene;
 export 'src/runtime/popup_runtime.dart';
 export 'src/utils/sheet_dimension.dart';
 export 'src/widgets/popup_anchor.dart';
+export 'src/widgets/liquid_glass/liquid_glass.dart';
+export 'src/widgets/liquid_glass/liquid_glass_action_button.dart';
+export 'src/widgets/liquid_glass/liquid_glass_button.dart';
+export 'src/widgets/liquid_glass/liquid_glass_style.dart';

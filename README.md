@@ -183,6 +183,26 @@ PopupAnchor(
 
 Anchor 卸载时 Menu 会以 `PopupDismissReason.anchorDetached` 自动关闭。
 
+标准一级/二级选择菜单使用 `Pop.dropMenu`。它默认启用透明 Barrier，点击菜单外
+即可关闭，并提供主题化液态玻璃、系统勾选图标、禁用态和二级分组展开：
+
+```dart
+final status = await Pop.dropMenu<String>(
+  anchor: menuAnchor,
+  menu: const DropMenu<String>.single(
+    selectedValue: 'all',
+    items: [
+      DropMenuItem(value: 'all', label: '全部订单'),
+      DropMenuItem(value: 'pending', label: '待成交'),
+    ],
+  ),
+);
+```
+
+二级菜单使用 `DropMenu.nested` 和 `DropMenuSection`。设置类操作可传
+`closeOnSelect: false`，执行后保持菜单打开。完整的一级、二级订单风格示例见
+Example 的 `Menu / DropMenu` Lab。
+
 ## PopupHandle 与高级配置
 
 便捷 API 面向日常调用；需要区分关闭原因、外部精确控制或定制策略时，使用

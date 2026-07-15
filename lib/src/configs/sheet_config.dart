@@ -55,7 +55,7 @@ final class SheetHeaderConfig {
 final class SheetStyle {
   const SheetStyle({
     this.backgroundColor,
-    this.borderRadius,  
+    this.borderRadius,
     this.boxShadow,
     this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 8),
     this.imagePath,

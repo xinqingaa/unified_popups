@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../configs/confirm_config.dart';
 import '../configs/custom_popup_config.dart';
 import '../configs/date_config.dart';
+import '../configs/drop_menu_config.dart';
 import '../configs/flow_sheet_config.dart';
 import '../configs/loading_config.dart';
 import '../configs/menu_config.dart';
@@ -382,6 +383,43 @@ abstract final class Pop {
   }
 
   static PopupHandle<T> openMenu<T>(MenuConfig<T> config) => _api.menu(config);
+
+  static PopupHandle<T> openDropMenu<T>(DropMenuConfig<T> config) =>
+      _api.dropMenu(config);
+
+  /// Opens a theme-aware, data-driven one-level or two-level menu.
+  static Future<T?> dropMenu<T>({
+    required PopupAnchorController anchor,
+    required DropMenu<T> menu,
+    DropMenuStyle style = const DropMenuStyle(),
+    MenuPlacement placement = MenuPlacement.auto,
+    Offset offset = Offset.zero,
+    ValueChanged<T>? onSelected,
+    ValueChanged<String?>? onOpenSectionChanged,
+    bool showBarrier = true,
+    bool barrierDismissible = true,
+    Color barrierColor = Colors.transparent,
+  }) {
+    return _api
+        .dropMenu<T>(
+          DropMenuConfig<T>(
+            anchor: anchor,
+            menu: menu,
+            menuStyle: style,
+            placement: placement,
+            offset: offset,
+            onSelected: onSelected,
+            onOpenSectionChanged: onOpenSectionChanged,
+            barrier: showBarrier
+                ? PopupBarrierConfig(
+                    dismissible: barrierDismissible,
+                    color: barrierColor,
+                  )
+                : const PopupBarrierConfig.hidden(),
+          ),
+        )
+        .result;
+  }
 
   static Future<T?> menu<T>({
     required PopupAnchorController anchor,

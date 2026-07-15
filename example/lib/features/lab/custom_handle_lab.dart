@@ -129,8 +129,9 @@ class _CustomHandleLabPageState extends State<CustomHandleLabPage> {
                       duration: const Duration(seconds: 8));
                   await Future<void>.delayed(const Duration(milliseconds: 300));
                   final n = await Pop.dismissChannel(PopupChannel.toast);
-                  if (mounted)
+                  if (mounted) {
                     setState(() => _note = 'dismissChannel(toast)=$n');
+                  }
                 },
               ),
               LabAction(

@@ -126,8 +126,8 @@ final labEntries = <LabNavEntry>[
   ),
   LabNavEntry(
     icon: Icons.more_vert,
-    title: 'Menu Anchor',
-    subtitle: '默认无遮罩跟随 · showBarrier 对比',
+    title: 'Menu / DropMenu',
+    subtitle: '一级/二级玻璃菜单 · Anchor 跟随 · Barrier',
     builder: (_) => const MenuLabPage(),
   ),
   LabNavEntry(

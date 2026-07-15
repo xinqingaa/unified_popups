@@ -65,21 +65,33 @@ class _MenuRendererState extends State<MenuRenderer> {
                 color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
           ],
         );
-    return CompositedTransformFollower(
-      link: config.anchor.layerLink,
-      showWhenUnlinked: false,
-      targetAnchor: anchors.$1,
-      followerAnchor: anchors.$2,
-      offset: config.offset,
-      child: Material(
-        color: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: config.style.constraints,
-          child: DecoratedBox(
-            decoration: decoration,
-            child: Padding(padding: config.style.padding, child: _content!),
+    // Keep the follower's hit-test parent full-screen. A transformed child can
+    // otherwise paint outside a shrink-wrapped Align while taps fall through
+    // to the modal barrier behind it.
+    return SizedBox.expand(
+      child: Stack(
+        children: <Widget>[
+          CompositedTransformFollower(
+            link: config.anchor.layerLink,
+            showWhenUnlinked: false,
+            targetAnchor: anchors.$1,
+            followerAnchor: anchors.$2,
+            offset: config.offset,
+            child: Material(
+              color: Colors.transparent,
+              child: ConstrainedBox(
+                constraints: config.style.constraints,
+                child: DecoratedBox(
+                  decoration: decoration,
+                  child: Padding(
+                    padding: config.style.padding,
+                    child: _content!,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
