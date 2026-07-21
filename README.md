@@ -11,6 +11,8 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 不需要 `BuildContext`、Popup 专用 `navigatorKey` 或页面间传递 Controller。
 
+![Use unified_popups](doc/images/unified-popups-usage.png)
+
 ## 初始化
 
 ```dart
@@ -22,6 +24,25 @@ MaterialApp(
 ```
 
 首次 Host 挂载前发起的 Popup 会暂存，Host 就绪后显示。
+
+## 架构
+
+业务、Service、网络回调等均可经 `Pop.xxx(Config)` 进入同一 Runtime；弹层渲染在
+私有 Overlay 上，不污染页面路由栈。
+
+![Unified Popups Architecture](doc/images/unified-popups-architecture.png)
+
+分层职责与返回桥细节见 [架构设计](doc/ARCHITECTURE.md)；与官方 Dialog / Sheet
+的取舍见 [为何使用 Overlay](doc/WHY_OVERLAY.md)。
+
+## 生命周期
+
+Entry 从 `created` 到 `disposed` 共用一套状态机。冲突策略决定叠放、拒绝、替换或
+原地更新；关闭可由 complete / manual / back / barrier / route / lifetime 触发。
+首个关闭请求决定 `result` / `outcome`，退出动画结束后 `dismissed` 才完成，后续
+关闭幂等。
+
+![Popup Entry Lifecycle](doc/images/unified-popups-lifecycle.png)
 
 ## 先理解返回模型
 
@@ -216,6 +237,7 @@ await Pop.dismissAll();
 
 ## 文档
 
+- [为何使用 Overlay，而不是官方 Dialog / Sheet](doc/WHY_OVERLAY.md)
 - [架构设计与实现原理](doc/ARCHITECTURE.md)
 - [完整 API、返回模型与参数参考](doc/API_REFERENCE.md)
 - [v1 与 v2 对比及迁移](doc/MIGRATION_V1_TO_V2.md)

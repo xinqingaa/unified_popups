@@ -536,5 +536,6 @@ package 入口公开业务 Config、结果/Handle、FlowSheet 页面契约、Anc
 业务与 App 级封装不应从 `package:unified_popups/src/...` 导入任何类型。包内测试可以
 直接测试内部模块，但这些路径不保证跨版本兼容。
 
-具体实现原理见 [架构设计](ARCHITECTURE.md)，从 v1 升级见
+具体实现原理见 [架构设计](ARCHITECTURE.md)，与官方 Dialog / Sheet 的对比见
+[为何使用 Overlay](WHY_OVERLAY.md)，从 v1 升级见
 [迁移指南](MIGRATION_V1_TO_V2.md)。

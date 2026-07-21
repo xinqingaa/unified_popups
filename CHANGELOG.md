@@ -104,6 +104,11 @@ Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https
   `PopupOpenResult`, and DropMenu global-replace checks.
 - Detailed docs converge on architecture, full API reference, and v1/v2
   migration.
+- Added [WHY_OVERLAY.md](doc/WHY_OVERLAY.md): Overlay unified popups vs official
+  `showDialog` / `showModalBottomSheet` (call site, route stack, multi-type
+  governance, back/route policies, and when native dialogs are enough).
+- README embeds architecture, lifecycle, and usage diagrams from
+  `doc/images/`.
 - Menu Lab adds single-level filter and nested settings examples.
 - FitPulse example fully migrated to v2.
 - Example launch screen offers dual entry: FitPulse app / API gallery, plus a

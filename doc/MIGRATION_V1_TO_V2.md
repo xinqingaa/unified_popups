@@ -308,4 +308,5 @@ const PopupBehaviorConfig(
 9. 接入 route observer，验证系统返回、路由切换和父子关闭。
 
 完整参数见 [API 参考](API_REFERENCE.md)，实现原理见
-[架构设计](ARCHITECTURE.md)。
+[架构设计](ARCHITECTURE.md)，与官方 Dialog / Sheet 的对比见
+[为何使用 Overlay](WHY_OVERLAY.md)。

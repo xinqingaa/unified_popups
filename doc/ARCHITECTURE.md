@@ -1,10 +1,10 @@
 # unified_popups v2 架构设计与实现原理
 
-本文解释 v2 为什么这样设计，以及 Runtime、生命周期、冲突、路由和各类弹窗如何协作。API 签名与参数请查阅 [API 与参数参考](API_REFERENCE.md)，从 v1 升级请查阅 [v1 与 v2 对比及迁移指南](MIGRATION_V1_TO_V2.md)。
+本文解释 v2 为什么这样设计，以及 Runtime、生命周期、冲突、路由和各类弹窗如何协作。API 签名与参数请查阅 [API 与参数参考](API_REFERENCE.md)，从 v1 升级请查阅 [v1 与 v2 对比及迁移指南](MIGRATION_V1_TO_V2.md)。与官方 `showDialog` / `showModalBottomSheet` 的产品取舍见 [为何使用 Overlay](WHY_OVERLAY.md)。
 
 ## 1. 目标与边界
 
-v2 保留业务最需要的调用体验：页面、Service、Flow、Timer 和网络回调都可以直接调用 `Pop.*`，不要求 `BuildContext`，也不需要在业务模块注入 Controller。
+v2 保留业务最需要的调用体验：页面、Service、Flow、Timer 和网络回调都可以直接调用 `Pop.*`，不要求 `BuildContext`，也不需要在业务模块注入 Controller。官方 Dialog / Sheet 把弹层做成 Navigator Route；本包把弹层做成应用级 Overlay 系统，以便统一冲突、返回、路由归属与多类型叠放。
 
 ```text
 业务代码
