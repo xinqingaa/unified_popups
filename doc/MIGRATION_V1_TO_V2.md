@@ -142,6 +142,9 @@ final date = await Pop.date(
 Date 主构造器直接接受 initial/min/max；复用已有范围时使用
 `DateConfig.range(range: range)`。
 
+Confirm 默认是强交互：`backPolicy: block`、`barrier.dismissible: false`、
+`showCloseButton: false`。需要点遮罩或系统返回关闭时，显式打开对应参数。
+
 ### Sheet
 
 v1：

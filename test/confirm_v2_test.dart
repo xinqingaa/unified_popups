@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_popups/src/api/popup_type_api.dart';
 import 'package:unified_popups/src/configs/confirm_config.dart';
 import 'package:unified_popups/src/configs/popup_animation_config.dart';
+import 'package:unified_popups/src/configs/popup_back_policy.dart';
 import 'package:unified_popups/src/configs/popup_behavior_config.dart';
 import 'package:unified_popups/src/configs/popup_channel.dart';
 import 'package:unified_popups/src/configs/popup_route_policy.dart';
@@ -116,6 +117,7 @@ void main() {
             content: 'close me',
             confirmAction: const ConfirmAction.text('yes'),
             cancelAction: const ConfirmAction.text('no'),
+            showCloseButton: true,
             animationConfig:
                 const PopupAnimationConfig(duration: Duration.zero),
             onConfirm: () => confirms++,
@@ -135,6 +137,23 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
     expect(handle.state, PopupEntryState.disposed);
     await handle.dismissed;
+  });
+
+  test('confirm defaults block system back without dismissing', () async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    runtime.attachHost(Object());
+    final handle = PopupTypeApi(runtime)
+        .confirm(
+          const ConfirmConfig(content: 'blocked'),
+        )
+        .requireHandle();
+    runtime.controller.markPresented(handle.id);
+
+    expect(await runtime.controller.handleBack(), isTrue);
+    expect(handle.state, PopupEntryState.visible);
+
+    runtime.controller.markDisposed(handle.id);
   });
 
   test('confirm automatically belongs to the current top modal', () async {
@@ -248,6 +267,9 @@ void main() {
       (runtime, id) async {
         expect(await runtime.controller.handleBack(), isTrue);
       },
+      behavior: const PopupBehaviorConfig(
+        backPolicy: PopupBackPolicy.dismiss,
+      ),
     );
     await verify(
       PopupDismissReason.manual,

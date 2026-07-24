@@ -76,6 +76,9 @@ Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https
 - Confirm defaults to edge-to-edge divider buttons
   (`ConfirmButtonStyle.divider`); use `ConfirmButtonStyle.filled` for rounded /
   capsule buttons, with `dividerColor`, `dividerWidth`, and `buttonSpacing`.
+- Confirm defaults to strong modal interaction: `backPolicy: block`,
+  `barrier.dismissible: false`, and `showCloseButton: false`. Only confirm /
+  cancel buttons close it unless those options are opened explicitly.
 - Sheet and FlowSheet share a four-direction renderer, drag progress, and exit
   animation; heavy child trees are not rebuilt on every drag pointer update.
   Drag handles render only for the bottom direction.

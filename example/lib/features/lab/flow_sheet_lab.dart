@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:unified_popups/unified_popups.dart';
 
 import '../../flows/health_profile_flow.dart';
+import '../../flows/lab_async_submit_flow.dart';
 import '../../flows/start_workout_flow.dart';
 import 'lab_section.dart';
 import 'lab_shell.dart';
@@ -32,6 +33,17 @@ class FlowSheetLabPage extends StatelessWidget {
                 '2. 在末页完成流程，验证 completeCurrent / closeAll 结果 Toast。\n'
                 '3. 中途拖关或点遮罩，结果应为取消。\n'
                 '4. 各页可有不同 dragDismissMode（见训练 Flow）。',
+              ),
+            ],
+          ),
+          LabGroup(
+            title: '真实场景',
+            subtitle: '关层 → 提交中 Toast → 接口返回后改文案 → 自动消失',
+            children: [
+              LabAction(
+                label: '三页提交（Confirm + 键盘 + 异步 Toast）',
+                subtitle: '按钮触发 Confirm · 末页键盘 · 同 key 更新 Toast',
+                onPressed: LabAsyncSubmitFlow.open,
               ),
             ],
           ),

@@ -83,11 +83,20 @@ final class ConfirmStyle {
 }
 
 /// [Pop.confirm] 的配置：带确认/取消操作的模态对话框。
+///
+/// 默认是强交互：系统返回 / 侧滑与点遮罩都不会关闭；右上角关闭按钮默认隐藏。
+/// 需要可取消关闭时，显式设置 [showCloseButton]、[barrier.dismissible] 与
+/// [behavior.backPolicy]。
 final class ConfirmConfig implements PopupVisualConfig {
   /// 创建一个确认弹窗。
   ///
   /// [content] 与 [contentWidget] 至少需要提供一个；[title] 与 [titleWidget]
   /// 互斥，[content] 与 [contentWidget] 同样互斥。
+  ///
+  /// 默认只能通过确认 / 取消按钮关闭。若需点遮罩或系统返回关闭，请显式传入：
+  /// `barrier: PopupBarrierConfig(dismissible: true)`、
+  /// `behavior: PopupBehaviorConfig(backPolicy: PopupBackPolicy.dismiss)`，
+  /// 以及可选的 `showCloseButton: true`。
   const ConfirmConfig({
     this.title,
     this.titleWidget,
@@ -96,7 +105,7 @@ final class ConfirmConfig implements PopupVisualConfig {
     this.bodyExtension,
     this.confirmAction = const ConfirmAction.text('confirm'),
     this.cancelAction,
-    this.showCloseButton = true,
+    this.showCloseButton = false,
     this.imagePath,
     this.imageWidth,
     this.imageHeight = 80,
@@ -106,12 +115,12 @@ final class ConfirmConfig implements PopupVisualConfig {
     this.onCancel,
     this.behavior = const PopupBehaviorConfig(
       routePolicy: PopupRoutePolicy.dismissWhenOwnerRouteChanges,
-      backPolicy: PopupBackPolicy.dismiss,
+      backPolicy: PopupBackPolicy.block,
     ),
     this.ownership = const PopupOwnership(
       policy: PopupOwnerPolicy.dismissWithParent,
     ),
-    this.barrier = const PopupBarrierConfig(),
+    this.barrier = const PopupBarrierConfig(dismissible: false),
     this.position = PopupPosition.center,
     this.animationConfig = const PopupAnimationConfig(
       type: PopupAnimationType.scale,

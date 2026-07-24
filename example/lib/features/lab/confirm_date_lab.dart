@@ -25,9 +25,10 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
         padding: const EdgeInsets.all(16),
         children: [
           const LabBanner(
-            text: 'Confirm：确认→true+onConfirm，取消→false+onCancel；'
-                '遮罩/关闭按钮/返回/路由→null 且不调 onCancel。'
-                'Date：范围与样式。',
+            text: 'Confirm 默认强交互：只能点确认/取消关闭；'
+                '遮罩与系统返回默认不关。需要可取消时显式打开 barrier / backPolicy /'
+                ' showCloseButton。确认→true+onConfirm，取消→false+onCancel；'
+                '非按钮关闭→null 且不调 onCancel。Date：范围与样式。',
           ),
           const SizedBox(height: 8),
           LabStatusBar(extra: _last.isEmpty ? null : '最近：$_last'),
@@ -36,13 +37,13 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
             title: 'Confirm 结果语义',
             children: [
               LabAction(
-                label: '标准确认框（默认线条）',
-                subtitle: '试确认 / 取消 / 遮罩 / 返回',
+                label: '标准确认框（默认强交互）',
+                subtitle: '遮罩 / 侧滑不会关闭，只能点按钮',
                 onPressed: () async {
                   final result = await Pop.confirm(
                     ConfirmConfig(
                       title: '删除记录',
-                      content: '删除后无法恢复。请分别试按钮与遮罩。',
+                      content: '删除后无法恢复。点遮罩或侧滑无效。',
                       confirmAction: const ConfirmAction.text('删除'),
                       cancelAction: const ConfirmAction.text('取消'),
                       onConfirm: () => _setLast('onConfirm 已执行'),
@@ -50,6 +51,38 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
                     ),
                   ).result;
                   _setLast('result=$result（另看上方 onConfirm/onCancel）');
+                },
+              ),
+              LabAction(
+                label: '可取消 Confirm（显式打开）',
+                subtitle: 'dismissible + back dismiss + 关闭按钮',
+                outlined: true,
+                onPressed: () async {
+                  final handle = Pop.confirm(
+                    ConfirmConfig(
+                      title: '可取消确认',
+                      content: '可试遮罩 / 返回 / 关闭按钮 / 确认取消',
+                      confirmAction: const ConfirmAction.text('确定'),
+                      cancelAction: const ConfirmAction.text('取消'),
+                      showCloseButton: true,
+                      barrier: const PopupBarrierConfig(dismissible: true),
+                      behavior: const PopupBehaviorConfig(
+                        backPolicy: PopupBackPolicy.dismiss,
+                      ),
+                      lifecycle: PopupLifecycleCallbacks<bool>(
+                        onOutcome: (outcome) {
+                          _setLast(
+                            'outcome value=${outcome.value} reason=${outcome.reason.name}',
+                          );
+                        },
+                      ),
+                    ),
+                  ).requireHandle();
+                  final outcome = await handle.outcome;
+                  if (!mounted) return;
+                  _setLast(
+                    'await outcome → ${outcome.value} / ${outcome.reason.name}',
+                  );
                 },
               ),
               LabAction(
@@ -77,7 +110,7 @@ class _ConfirmDateLabPageState extends State<ConfirmDateLabPage> {
               ),
               LabAction(
                 label: 'confirm + outcome',
-                subtitle: '区分 barrier / back / completed',
+                subtitle: '默认强交互下读 completed 结果',
                 outlined: true,
                 onPressed: () async {
                   final handle = Pop.confirm(

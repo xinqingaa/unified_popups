@@ -91,7 +91,7 @@ MaterialApp(
 |------|-----------------|------------------------------|-------------|
 | Toast | Yes | No | Ignored by `hideLastNonToast` |
 | Loading | No (singleton) | No | Closed via `hideLastNonToast()` |
-| Confirm | Yes | Yes (default) | Close (or `onBackPressed`) |
+| Confirm | Yes | Yes (default) | Blocked by default (`PopupBackPolicy.block`) |
 | Sheet | Yes | Yes (default) | `onBackPressed` if set, else close |
 | FlowSheet | Yes (via sheet) | Yes (sheet default) | Default `controller.handleBack` |
 | Date | Yes | No | Close via `hideLastNonToast()` |

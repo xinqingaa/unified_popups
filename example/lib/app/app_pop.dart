@@ -93,7 +93,6 @@ abstract final class AppPop {
         bodyExtension: bodyExtension,
         confirmAction: ConfirmAction.text(confirmText),
         cancelAction: ConfirmAction.text(cancelText),
-        showCloseButton: false,
         style: ConfirmStyle(
           confirmStyle: destructive ? const TextStyle(color: Colors.red) : null,
         ),

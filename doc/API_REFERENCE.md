@@ -316,6 +316,9 @@ Pop.loading(
 
 ## 7. Confirm
 
+默认是强交互：只能通过确认 / 取消按钮关闭。点遮罩与系统返回 / 侧滑默认不会关闭；
+右上角关闭按钮默认隐藏。
+
 ```dart
 final confirmed = await Pop.confirm(
   const ConfirmConfig(
@@ -327,6 +330,23 @@ final confirmed = await Pop.confirm(
 ).result;
 ```
 
+若需要点遮罩、系统返回或关闭按钮关闭，显式打开对应能力：
+
+```dart
+Pop.confirm(
+  const ConfirmConfig(
+    content: '可取消的确认',
+    confirmAction: ConfirmAction.text('确定'),
+    cancelAction: ConfirmAction.text('取消'),
+    showCloseButton: true,
+    barrier: PopupBarrierConfig(dismissible: true),
+    behavior: PopupBehaviorConfig(
+      backPolicy: PopupBackPolicy.dismiss,
+    ),
+  ),
+);
+```
+
 `ConfirmConfig`：
 
 - `title/titleWidget`：标题。
@@ -335,12 +355,14 @@ final confirmed = await Pop.confirm(
 - `confirmAction`：确认操作，使用 `ConfirmAction.text` 或
   `ConfirmAction.content`，两种载荷结构互斥。
 - `cancelAction`：可选取消操作；不提供则不显示取消按钮。
-- `showCloseButton`：右上角关闭按钮。
+- `showCloseButton`：右上角关闭按钮，默认 `false`。
 - `imagePath/imageWidth/imageHeight`：顶部图片。
 - `buttonLayout`：row/column。
 - `style`：`ConfirmStyle`。
 - `onConfirm/onCancel`：只由对应按钮触发。
-- `behavior/ownership/barrier/position/animationConfig/lifecycle`。
+- `behavior`：默认 `backPolicy: block`。
+- `barrier`：默认 `dismissible: false`。
+- `ownership/position/animationConfig/lifecycle`。
 
 `ConfirmStyle`：`buttonStyle`、四类 TextStyle、`padding`、`margin`、
 `decoration`、`textAlign`、`buttonBorderRadius`、确认/取消背景与边框、

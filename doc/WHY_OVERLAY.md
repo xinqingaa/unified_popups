@@ -119,24 +119,24 @@ Menu / DropMenu（锚点菜单）
 
 | 需求 | 官方做法 | Overlay 统一方案 |
 | --- | --- | --- |
+| Confirm：只能点确定 / 取消 | 自关 barrier + 自拦返回 | **默认** `backPolicy: block` + `barrier.dismissible: false` |
 | Sheet / Menu：侧滑关弹层，不退页面 | 每个 Route 自写 `PopScope` | 默认 `PopupBackPolicy.dismiss` |
-| Confirm：只能点确定 / 取消 | 自关 barrier + 自拦返回 | `backPolicy: block` + `barrier.dismissible: false` |
 | Loading 与 Confirm 同时出现 | 各写各的顺序与返回 | 同一 Controller，从视觉顶向下扫描返回 |
 | 网络层直接弹提示 / 确认 | 很难干净做到 | 全局 `Pop.*` 天然支持 |
 | 全局只保留一个 Loading | 自己用 flag / key 拼 | 全局 key + `updateExisting` |
 
-强交互 Confirm 示例：
+Confirm 默认为强交互。若需要点遮罩或系统返回关闭，显式打开：
 
 ```dart
 Pop.confirm(
-  ConfirmConfig(
-    content: '确认删除？',
-    confirmAction: const ConfirmAction.text('确定'),
-    cancelAction: const ConfirmAction.text('取消'),
-    showCloseButton: false,
-    barrier: const PopupBarrierConfig(dismissible: false),
-    behavior: const PopupBehaviorConfig(
-      backPolicy: PopupBackPolicy.block,
+  const ConfirmConfig(
+    content: '可取消的确认',
+    confirmAction: ConfirmAction.text('确定'),
+    cancelAction: ConfirmAction.text('取消'),
+    showCloseButton: true,
+    barrier: PopupBarrierConfig(dismissible: true),
+    behavior: PopupBehaviorConfig(
+      backPolicy: PopupBackPolicy.dismiss,
     ),
   ),
 );
