@@ -19,7 +19,7 @@ Example Lab 中的真实效果（FitPulse demo）：
 
 | Toast | Confirm | Sheet |
 | :---: | :---: | :---: |
-| ![Toast](doc/images/toast.jpg) | ![Confirm](doc/images/confrim.jpg) | ![Sheet](doc/images/sheet.jpg) |
+| ![Toast](doc/images/toast.jpg) | ![Confirm](doc/images/confirm.jpg) | ![Sheet](doc/images/sheet.jpg) |
 
 | Sheet 叠加 Confirm | FlowSheet |
 | :---: | :---: |
