@@ -13,6 +13,22 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 ![Use unified_popups](doc/images/unified-popups-usage.png)
 
+## 效果预览
+
+Example Lab 中的真实效果（FitPulse demo）：
+
+| Toast | Confirm | Sheet |
+| :---: | :---: | :---: |
+| ![Toast](doc/images/toast.jpg) | ![Confirm](doc/images/confrim.jpg) | ![Sheet](doc/images/sheet.jpg) |
+
+| Sheet 叠加 Confirm | FlowSheet |
+| :---: | :---: |
+| ![Sheet + Confirm](doc/images/sheet_叠加confrim.jpg) | ![FlowSheet](doc/images/flowSheet.jpg) |
+
+| DropMenu · 一级 | DropMenu · 二级 |
+| :---: | :---: |
+| ![DropMenu 一级](doc/images/dropMenu_一级菜单.jpg) | ![DropMenu 二级](doc/images/dropMenu_二级菜单.jpg) |
+
 ## 初始化
 
 ```dart
