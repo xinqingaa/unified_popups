@@ -1,15 +1,19 @@
 name: unified_popups
-description: A unified popups SDK for Flutter, providing a flexible way to show toasts, dialogs, and other custom popups.
-version: 2.0.0
+description: >-
+  Unified Overlay popup system for Flutter: toast, loading, confirm, date,
+  sheet, flow sheet, menu and drop menu. One Pop API, no BuildContext,
+  shared back and route policies.
+version: 2.0.1
 homepage: https://github.com/xinqingaa/unified_popups
 repository: https://github.com/xinqingaa/unified_popups
+issue_tracker: https://github.com/xinqingaa/unified_popups/issues
 
 topics:
-  - flutter
-  - overlay
   - dialog
   - toast
+  - overlay
   - popup
+  - bottomsheet
 
 environment:
   sdk: '>=3.5.0 <4.0.0'

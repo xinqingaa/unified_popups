@@ -322,11 +322,22 @@ class _AnimatedSubmenu extends StatelessWidget {
         );
       },
       transitionBuilder: (child, animation) {
+        // Avoid SizeTransition.alignment (Flutter 3.41+) and the deprecated
+        // axisAlignment: ClipRect + Align matches SizeTransition's internals
+        // and stays compatible with flutter >= 3.24.
         return FadeTransition(
           opacity: animation,
-          child: SizeTransition(
-            sizeFactor: animation,
-            alignment: Alignment.topCenter,
+          child: AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) {
+              return ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: animation.value.clamp(0.0, 1.0),
+                  child: child,
+                ),
+              );
+            },
             child: child,
           ),
         );

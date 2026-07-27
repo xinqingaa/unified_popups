@@ -2,6 +2,25 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.0.1
+
+### Fixes
+
+- Fixed FlowSheet system back: nested Navigator `NavigationNotification` no
+  longer reports `canHandlePop: false` (which made Android finish the app).
+  Back is owned by the route observer → popup controller → flowSheet
+  `delegate` path, so confirm-on-top blocks and multi-page stacks pop inward
+  first.
+- DropMenu nested section expand/collapse no longer uses
+  `SizeTransition.alignment` (Flutter 3.41+) or deprecated `axisAlignment`;
+  uses `ClipRect` + `Align` so `flutter >= 3.24` stays warning-free.
+
+### Docs
+
+- Expanded README capability / use-case gallery (including Loading preview).
+- Added [README_EN.md](README_EN.md) with cross-links between Chinese and
+  English.
+
 ## 2.0.0
 
 ### Architecture

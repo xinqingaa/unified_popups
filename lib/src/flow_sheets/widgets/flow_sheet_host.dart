@@ -56,7 +56,12 @@ class _FlowPage extends Page<dynamic> {
 
 /// FlowSheet 的展示宿主：用内嵌 [Navigator]（Pages API）承载页面栈，
 /// push/pop 默认由 [CupertinoPageRoute] 提供原生横向滑动转场（含 iOS 侧滑返回）；
-/// 保活页（maintainState）由路由 `maintainState` 控制，系统返回由 [PopScope] 桥接。
+/// 保活页（maintainState）由路由 `maintainState` 控制。
+///
+/// 系统返回不由本宿主直接处理：由外层 route observer → popup controller →
+/// flowSheet `backPolicy.delegate` 依次 pop 内页或关闭整张 sheet。
+/// 内嵌 Navigator 的 [NavigationNotification] 会被拦截，避免单页栈上报
+/// `canHandlePop: false` 导致 Android 直接退出应用。
 class FlowSheetHost extends StatefulWidget {
   const FlowSheetHost({
     super.key,
@@ -107,15 +112,26 @@ class _FlowSheetHostState extends State<FlowSheetHost> {
   @override
   Widget build(BuildContext context) {
     if (!_controllerUsable || widget.controller.isDisposed) {
-      return _wrapPopScope(const SizedBox.shrink());
+      return const SizedBox.shrink();
     }
     final entries = widget.controller.entries;
     if (entries.isEmpty) {
-      return _wrapPopScope(const SizedBox.shrink());
+      return const SizedBox.shrink();
     }
 
-    return _wrapPopScope(
-      ClipRect(
+    // Absorb nested-navigator NavigationNotifications so a single-page stack
+    // cannot set SystemNavigator.setFrameworkHandlesBack(false) and finish the
+    // Android activity. When the nested stack reports it cannot handle pops,
+    // re-dispatch canHandlePop: true so the outer popup back bridge remains
+    // authoritative.
+    return NotificationListener<NavigationNotification>(
+      onNotification: (notification) {
+        if (!notification.canHandlePop) {
+          const NavigationNotification(canHandlePop: true).dispatch(context);
+        }
+        return true;
+      },
+      child: ClipRect(
         child: HeroControllerScope.none(
           child: Navigator(
             key: widget.controller.navigatorKey,
@@ -137,17 +153,6 @@ class _FlowSheetHostState extends State<FlowSheetHost> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _wrapPopScope(Widget child) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        widget.controller.handleBack(result);
-      },
-      child: child,
     );
   }
 }

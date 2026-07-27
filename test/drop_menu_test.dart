@@ -94,11 +94,11 @@ void main() {
 
     await tester.tap(find.text('显示模式'));
     await tester.pump();
-    final submenuTransitions = find.descendant(
+    final submenuClips = find.descendant(
       of: menu,
-      matching: find.byType(SizeTransition),
+      matching: find.byType(ClipRect),
     );
-    expect(submenuTransitions, findsWidgets);
+    expect(submenuClips, findsWidgets);
     await tester.pump(const Duration(milliseconds: 100));
     final fades = tester.widgetList<FadeTransition>(
       find.descendant(of: menu, matching: find.byType(FadeTransition)),
@@ -121,7 +121,7 @@ void main() {
     await tester.tap(find.text('标准显示'));
     await tester.pump(const Duration(milliseconds: 80));
     expect(
-      find.descendant(of: menu, matching: find.byType(SizeTransition)),
+      find.descendant(of: menu, matching: find.byType(ClipRect)),
       findsWidgets,
     );
     await tester.pumpAndSettle();

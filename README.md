@@ -1,35 +1,105 @@
 # unified_popups
 
-Flutter 的统一全局弹窗系统。Toast、Loading、Confirm、Date、Sheet、FlowSheet、
-Menu、DropMenu 和 Custom 共用一个 Runtime、一套冲突规则和一套生命周期。
+[![pub package](https://img.shields.io/pub/v/unified_popups.svg)](https://pub.dev/packages/unified_popups)
+[![likes](https://img.shields.io/pub/likes/unified_popups?logo=flutter)](https://pub.dev/packages/unified_popups/score)
+[![points](https://img.shields.io/pub/points/unified_popups?logo=flutter)](https://pub.dev/packages/unified_popups/score)
+[![popularity](https://img.shields.io/pub/popularity/unified_popups?logo=flutter)](https://pub.dev/packages/unified_popups/score)
+[![license](https://img.shields.io/github/license/xinqingaa/unified_popups)](https://github.com/xinqingaa/unified_popups/blob/master/LICENSE)
 
-v2 的公开创建形式只有一种：
+**语言 / Languages:** [中文](README.md) · [English](README_EN.md)
+
+**Flutter Overlay 统一弹层系统**：Toast / Loading / Confirm / Date / Sheet /
+FlowSheet / Menu / DropMenu / Custom —— **同一 Runtime、同一套冲突与生命周期、
+同一套返回键与路由策略**。
+
+不需要 `BuildContext`，不污染页面路由栈，Service / 网络回调 / ViewModel 也能直接弹。
 
 ```dart
 Pop.xxx(Config) -> PopupOpenResult<T>
 ```
 
-不需要 `BuildContext`、Popup 专用 `navigatorKey` 或页面间传递 Controller。
-
 ![Use unified_popups](doc/images/unified-popups-usage.png)
+
+## 为什么选它
+
+官方 `showDialog` / `showModalBottomSheet` 解决的是「弹出一个 Material
+组件」；真实 App 还要解决：
+
+| 痛点 | unified_popups |
+| --- | --- |
+| Service / 异步回调里没有 Context | 全局 `Pop.*`，无需传 Context |
+| Toast、Loading、Confirm、Sheet 各写一套 | 一种打开模型，策略可配置 |
+| 弹层塞进 Navigator，返回栈混乱 | 私有 Overlay，页面路由不被污染 |
+| 返回键、侧滑、路由跳转行为不一致 | 统一 `backPolicy` / `routePolicy` |
+| Loading 重复弹、Flow 多页关不干净 | key 冲突策略 + FlowSheet 内页栈 |
+
+一句话：**官方能力是页面级路由弹层；本包是应用级弹层治理。** 详见
+[为何使用 Overlay](doc/WHY_OVERLAY.md)。
+
+## 能力一览 · 什么时候用哪种
+
+| 能力 | 典型场景 | 默认返回键 |
+| --- | --- | --- |
+| **Toast** | 成功 / 失败 / 轻提示，不打断操作 | 忽略（不拦截） |
+| **Loading** | 提交、上传、拉数等待 | 拦截（防误触退出） |
+| **Confirm** | 删除、放弃编辑、二次确认 | 拦截（必须点按钮） |
+| **Date** | 生日、预约日等日期选择 | 关闭弹层 |
+| **Sheet** | 选项列表、筛选、单页表单 | 关闭弹层 |
+| **FlowSheet** | 多步申请 / 向导（内嵌页面栈） | 先 pop 内页，再关 Sheet |
+| **Menu** | 锚点「更多」自定义菜单 | 关闭弹层 |
+| **DropMenu** | 筛选条、设置行、可嵌套分组菜单 | 关闭弹层 |
+| **Custom** | 任意内容接入同一套生命周期 | 可配置 |
 
 ## 效果预览
 
-Example Lab 中的真实效果（FitPulse demo）：
+截图来自 Example（FitPulse / API Lab）真实运行效果。
 
-| Toast | Confirm | Sheet |
-| :---: | :---: | :---: |
-| ![Toast](doc/images/toast.jpg) | ![Confirm](doc/images/confirm.jpg) | ![Sheet](doc/images/sheet.jpg) |
+### Toast · 轻反馈
 
-| Sheet 叠加 Confirm | FlowSheet |
+保存成功、网络错误、复制完成 —— 不打断当前页。
+
+![Toast](doc/images/toast.jpg)
+
+### Loading · 异步等待
+
+提交、上传、拉取支付；可用 `PopupLifetime.until` 在 Future settled 后自动关掉。
+
+![Loading](doc/images/loading.jpeg)
+
+### Confirm · 强确认
+
+删除、清空、离开未保存页 —— 默认点遮罩 / 返回键都关不掉。
+
+![Confirm](doc/images/confirm.jpg)
+
+### Sheet · 单页面板
+
+选项列表、筛选、简易表单；可与 Confirm 叠加以做「面板内二次确认」。
+
+| Sheet | Sheet + Confirm |
 | :---: | :---: |
-| ![Sheet + Confirm](doc/images/sheet_叠加confrim.jpg) | ![FlowSheet](doc/images/flowSheet.jpg) |
+| ![Sheet](doc/images/sheet.jpg) | ![Sheet + Confirm](doc/images/sheet_叠加confrim.jpg) |
 
-| DropMenu · 一级 | DropMenu · 二级 |
+### FlowSheet · 多步流程
+
+分步填写、申请向导：系统返回先退内页，再关整张 Sheet；Confirm 盖在上面时仍可拦截返回。
+
+![FlowSheet](doc/images/flowSheet.jpg)
+
+### DropMenu · 锚点菜单
+
+筛选条一级选项，或设置里可展开的二级分组（含 liquid glass 样式）。
+
+| 一级筛选 | 二级设置 |
 | :---: | :---: |
 | ![DropMenu 一级](doc/images/dropMenu_一级菜单.jpg) | ![DropMenu 二级](doc/images/dropMenu_二级菜单.jpg) |
 
-## 初始化
+## 30 秒上手
+
+```yaml
+dependencies:
+  unified_popups: ^2.0.1
+```
 
 ```dart
 MaterialApp(
@@ -40,6 +110,26 @@ MaterialApp(
 ```
 
 首次 Host 挂载前发起的 Popup 会暂存，Host 就绪后显示。
+
+```dart
+Pop.toast(const ToastConfig.text('已保存', type: ToastType.success));
+
+Pop.loading(const LoadingConfig.text('提交中'));
+try {
+  await submit();
+} finally {
+  Pop.dismissChannel(PopupChannel.loading);
+}
+
+final ok = await Pop.confirm(
+  const ConfirmConfig(
+    title: '删除记录',
+    content: '删除后无法恢复。',
+    confirmAction: ConfirmAction.text('删除'),
+    cancelAction: ConfirmAction.text('取消'),
+  ),
+).result;
+```
 
 ## 架构
 
@@ -253,6 +343,7 @@ await Pop.dismissAll();
 
 ## 文档
 
+- [English README](README_EN.md)
 - [为何使用 Overlay，而不是官方 Dialog / Sheet](doc/WHY_OVERLAY.md)
 - [架构设计与实现原理](doc/ARCHITECTURE.md)
 - [完整 API、返回模型与参数参考](doc/API_REFERENCE.md)

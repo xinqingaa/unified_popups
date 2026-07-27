@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_popups/src/api/popup_type_api.dart';
+import 'package:unified_popups/src/configs/confirm_config.dart';
 import 'package:unified_popups/src/configs/flow_sheet_config.dart';
 import 'package:unified_popups/src/configs/popup_animation_config.dart';
 import 'package:unified_popups/src/configs/sheet_config.dart';
 import 'package:unified_popups/src/controller/popup_dismiss_reason.dart';
+import 'package:unified_popups/src/controller/popup_entry_state.dart';
 import 'package:unified_popups/src/flow_sheets/flow_sheet.dart';
 import 'package:unified_popups/src/host/popup_host.dart';
 import 'package:unified_popups/src/renderers/popup_scene.dart';
@@ -66,6 +68,118 @@ void main() {
     expect((await handle.outcome).reason, PopupDismissReason.back);
     await tester.pumpAndSettle();
     await handle.dismissed;
+  });
+
+  testWidgets(
+      'platform back keeps canHandlePop and closes a single-page flowSheet',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final canHandlePopEvents = <bool>[];
+
+    late BuildContext pageContext;
+    final controller = FlowSheetController<void>();
+    await tester.pumpWidget(
+      _FlowApp(
+        runtime: runtime,
+        onNavigationNotification: (notification) {
+          canHandlePopEvents.add(notification.canHandlePop);
+          return true;
+        },
+        home: Builder(
+          builder: (context) {
+            pageContext = context;
+            return const Scaffold(body: Text('host-page'));
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<void>(_config(controller))
+        .requireHandle();
+    await tester.pumpAndSettle();
+    expect(find.text('page-initial'), findsOneWidget);
+    expect(canHandlePopEvents, isNotEmpty);
+    expect(canHandlePopEvents.last, isTrue);
+    expect(ModalRoute.of(pageContext)!.popGestureEnabled, isFalse);
+
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    expect((await handle.outcome).reason, PopupDismissReason.back);
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+    expect(find.text('page-initial'), findsNothing);
+    expect(find.text('host-page'), findsOneWidget);
+  });
+
+  testWidgets(
+      'platform back pops flowSheet pages before dismissing the outer sheet',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    late BuildContext pageContext;
+    final controller = FlowSheetController<void>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<void>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(
+      _FlowApp(
+        runtime: runtime,
+        home: Builder(
+          builder: (context) {
+            pageContext = context;
+            return const Scaffold(body: Text('host-page'));
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    controller.push<void>(const _Page<void>('second'));
+    await tester.pumpAndSettle();
+
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('page-initial'), findsOneWidget);
+    expect(handle.isActive, isTrue);
+    expect(find.text('host-page'), findsOneWidget);
+    expect(ModalRoute.of(pageContext)!.popGestureEnabled, isFalse);
+
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    expect((await handle.outcome).reason, PopupDismissReason.back);
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+    expect(find.text('host-page'), findsOneWidget);
+  });
+
+  testWidgets(
+      'confirm above flowSheet blocks platform back without closing either',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final api = PopupTypeApi(runtime);
+    final controller = FlowSheetController<void>();
+    final flowHandle = api.flowSheet<void>(_config(controller)).requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    final confirmHandle = api
+        .confirm(const ConfirmConfig(content: 'stay?'))
+        .requireHandle();
+    await tester.pumpAndSettle();
+    expect(find.text('stay?'), findsOneWidget);
+
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    await tester.pump();
+    expect(confirmHandle.state, PopupEntryState.visible);
+    expect(flowHandle.isActive, isTrue);
+    expect(find.text('page-initial'), findsOneWidget);
+    expect(find.text('stay?'), findsOneWidget);
+
+    confirmHandle.complete(false);
+    await tester.pumpAndSettle();
+    expect(find.text('stay?'), findsNothing);
+    expect(flowHandle.isActive, isTrue);
   });
 
   testWidgets('external close settles pending pages and disposes the session',
@@ -201,13 +315,22 @@ class _LifecyclePageState extends FlowSheetPageState<_LifecyclePage, void> {
 }
 
 class _FlowApp extends StatelessWidget {
-  const _FlowApp({required this.runtime});
+  const _FlowApp({
+    required this.runtime,
+    this.home = const Scaffold(body: Text('app')),
+    this.onNavigationNotification,
+  });
 
   final PopupRuntime runtime;
+  final Widget home;
+  final NotificationListenerCallback<NavigationNotification>?
+      onNavigationNotification;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorObservers: <NavigatorObserver>[runtime.routeObserver],
+      onNavigationNotification: onNavigationNotification,
       builder: (context, child) => PopupHost(
         runtime: runtime,
         sceneBuilder: (context, runtime, entries) => PopupScene(
@@ -216,7 +339,7 @@ class _FlowApp extends StatelessWidget {
         ),
         child: child!,
       ),
-      home: const Scaffold(body: Text('app')),
+      home: home,
     );
   }
 }
