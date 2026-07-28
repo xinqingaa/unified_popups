@@ -6,6 +6,7 @@ import 'package:unified_popups/src/configs/popup_back_policy.dart';
 import 'package:unified_popups/src/configs/popup_channel.dart';
 import 'package:unified_popups/src/configs/popup_conflict_policy.dart';
 import 'package:unified_popups/src/configs/popup_owner_policy.dart';
+import 'package:unified_popups/src/configs/popup_route_policy.dart';
 import 'package:unified_popups/src/controller/popup_controller.dart';
 import 'package:unified_popups/src/controller/popup_dismiss_reason.dart';
 import 'package:unified_popups/src/controller/popup_entry_request.dart';
@@ -407,5 +408,101 @@ void main() {
 
     expect(await controller.handleBack(), isTrue);
     expect(reported, isA<StateError>());
+  });
+
+  test('pause hides from back/route and resume restores', () async {
+    controller.attachHost();
+    final handle = open<String, String>(
+      const PopupEntryRequest<String, String>(
+        channel: PopupChannel.sheet,
+        config: 'sheet',
+        key: 'paused-sheet',
+        routePolicy: PopupRoutePolicy.dismissOnAnyRouteChange,
+        backPolicy: PopupBackPolicy.dismiss,
+        ownership: PopupOwnership(routeToken: Object()),
+      ),
+    );
+    controller.markPresented(handle.id);
+
+    expect(handle.pause(), isTrue);
+    expect(handle.isPaused, isTrue);
+    expect(handle.isActive, isTrue);
+    expect(controller.isVisibleKey('paused-sheet'), isFalse);
+    expect(controller.hasChannel(PopupChannel.sheet), isTrue);
+    expect(controller.interceptsSystemBack, isFalse);
+    expect(await controller.handleBack(), isFalse);
+
+    controller.handleRouteChanged(Object());
+    expect(handle.isActive, isTrue);
+    expect(handle.state, PopupEntryState.visible);
+
+    expect(handle.resume(), isTrue);
+    expect(handle.isPaused, isFalse);
+    expect(controller.isVisibleKey('paused-sheet'), isTrue);
+    expect(controller.interceptsSystemBack, isTrue);
+
+    expect(handle.pause(), isTrue);
+    expect(handle.resume(), isTrue);
+    expect(handle.pause(), isTrue);
+    expect(handle.pause(), isFalse);
+  });
+
+  test('pauseLatest targets topmost matching channel', () async {
+    controller.attachHost();
+    final bottom = open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.sheet,
+        config: 'bottom',
+      ),
+    );
+    controller.markPresented(bottom.id);
+    final top = open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.sheet,
+        config: 'top',
+      ),
+    );
+    controller.markPresented(top.id);
+    open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.confirm,
+        config: 'confirm',
+        backPolicy: PopupBackPolicy.block,
+      ),
+    );
+
+    final paused = controller.pauseLatest(PopupChannel.sheet);
+    expect(paused, isNotNull);
+    expect(paused!.id, top.id);
+    expect(top.isPaused, isTrue);
+    expect(bottom.isPaused, isFalse);
+
+    expect(controller.resumeEntry(top.id), isTrue);
+    expect(top.isPaused, isFalse);
+    expect(controller.pauseLatest(PopupChannel.loading), isNull);
+  });
+
+  test('pause suppresses lifetime; resume rearms timer', () async {
+    controller.attachHost();
+    final handle = open<void, String>(
+      const PopupEntryRequest<void, String>(
+        channel: PopupChannel.loading,
+        config: 'loading',
+        key: 'lifetime-pause',
+        lifetime: PopupLifetime.after(Duration(milliseconds: 40)),
+      ),
+    );
+    controller.markPresented(handle.id);
+
+    expect(handle.pause(), isTrue);
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    expect(handle.isActive, isTrue);
+    expect(handle.isPaused, isTrue);
+
+    expect(handle.resume(), isTrue);
+    expect(handle.isPaused, isFalse);
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    expect(handle.isActive, isFalse);
+    expect((await handle.outcome).reason, PopupDismissReason.timeout);
   });
 }

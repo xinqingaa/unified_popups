@@ -296,7 +296,24 @@ const PopupBehaviorConfig(
 | `hideByType(type)` | `Pop.dismissChannel(channel)` |
 | `getCountByType(type)` | `Pop.countChannel(channel)` |
 | `isVisible(id)` | Handle 状态 / `Pop.isVisibleKey(key)` |
+| `suspendLatestByType(type)` | `Pop.pauseLatest(channel)` / `handle.pause()` |
+| `resumeSuspended(id)` | `Pop.resume(id)` / `handle.resume()` |
 | `maybePop(context)` | 自动返回桥 / `Pop.handleBack()` |
+
+### pause / resume 语义
+
+```dart
+final paused = Pop.pauseLatest(PopupChannel.sheet);
+try {
+  await openDetailPage();
+} finally {
+  if (paused != null) Pop.resume(paused.id);
+}
+```
+
+- pause 后 Entry 仍 `isActive`，Host 以 Offstage 保活（FlowSheet / 表单状态不丢）。
+- pause 期间不参与系统返回，也不被 `routePolicy` 自动关闭。
+- `Pop.isVisibleKey` 在 pause 期间为 `false`；`hasChannel` 仍为 `true`。
 
 ## 8. 推荐迁移顺序
 

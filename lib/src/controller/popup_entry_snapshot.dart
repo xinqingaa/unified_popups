@@ -16,6 +16,7 @@ final class PopupEntrySnapshot {
     required this.backPolicy,
     required this.routePolicy,
     required this.ownership,
+    this.paused = false,
   });
 
   final String id;
@@ -27,4 +28,7 @@ final class PopupEntrySnapshot {
   final PopupBackPolicy backPolicy;
   final PopupRoutePolicy routePolicy;
   final PopupOwnership ownership;
+
+  /// When true, Host keeps the entry mounted but Offstage / non-interactive.
+  final bool paused;
 }

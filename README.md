@@ -336,6 +336,14 @@ await Pop.dismissTop();
 await Pop.dismissChannel(PopupChannel.sheet);
 await Pop.dismissTags({'network'});
 await Pop.dismissAll();
+
+// 临时挂起（跳转详情后恢复）
+final paused = Pop.pauseLatest(PopupChannel.sheet);
+try {
+  await openDetail();
+} finally {
+  if (paused != null) Pop.resume(paused.id);
+}
 ```
 
 `PopupBehaviorConfig` 的 channel 由具体能力固定。业务只配置 key、tags、冲突、路由

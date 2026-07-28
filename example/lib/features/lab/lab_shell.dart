@@ -8,6 +8,7 @@ import 'lab_page.dart';
 import 'lab_section.dart';
 import 'loading_lab.dart';
 import 'menu_lab.dart';
+import 'pause_resume_lab.dart';
 import 'policy_lab.dart';
 import 'config_lab.dart';
 import 'sheet_lab.dart';
@@ -135,6 +136,12 @@ final labEntries = <LabNavEntry>[
     title: 'Custom / Handle',
     subtitle: 'outcome/dismissed · tags/channel · 查询',
     builder: (_) => const CustomHandleLabPage(),
+  ),
+  LabNavEntry(
+    icon: Icons.pause_circle_outline,
+    title: 'Pause / Resume',
+    subtitle: '挂起 Sheet 跳转详情 · 状态保留 · 路由不关',
+    builder: (_) => const PauseResumeLabPage(),
   ),
   LabNavEntry(
     icon: Icons.rule_folder_outlined,

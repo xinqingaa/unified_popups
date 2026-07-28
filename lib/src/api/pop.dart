@@ -10,6 +10,7 @@ import '../configs/menu_config.dart';
 import '../configs/popup_channel.dart';
 import '../configs/sheet_config.dart';
 import '../configs/toast_config.dart';
+import '../controller/popup_handle.dart';
 import '../controller/popup_open_result.dart';
 import '../host/popup_host.dart';
 import '../navigation/popup_route_token.dart';
@@ -116,6 +117,15 @@ abstract final class Pop {
   /// 指定 channel 当前活跃弹窗数量。
   static int countChannel(PopupChannel channel) =>
       _runtime.controller.countChannel(channel);
+
+  /// 挂起指定 channel 最新的活跃弹窗。
+  ///
+  /// 成功返回该 Entry 的 [PopupHandleBase]；无可挂起项时返回 `null`。
+  static PopupHandleBase? pauseLatest(PopupChannel channel) =>
+      _runtime.controller.pauseLatest(channel);
+
+  /// 按 id 恢复此前 [pauseLatest] / [PopupHandleBase.pause] 挂起的弹窗。
+  static bool resume(String id) => _runtime.controller.resumeEntry(id);
 
   /// 关闭全部弹窗并关闭 Runtime（一般仅测试或热重载场景）。
   static Future<void> shutdown() => _runtime.shutdown();

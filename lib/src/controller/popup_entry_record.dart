@@ -72,6 +72,8 @@ final class PopupEntryRecord<T, C> {
   PopupEntryState state = PopupEntryState.created;
   PopupOutcome<T>? finalOutcome;
   bool wasMounted = false;
+  /// Orthogonal to [state]: keep entry mounted but hide interaction/paint.
+  bool paused = false;
 
   int get generation => lifetimeBinding.generation;
   set generation(int value) => lifetimeBinding.generation = value;
@@ -90,6 +92,7 @@ final class PopupEntryRecord<T, C> {
         backPolicy: backPolicy,
         routePolicy: routePolicy,
         ownership: ownership,
+        paused: paused,
       );
 
   void commitOutcome(PopupOutcome<T> outcome) {

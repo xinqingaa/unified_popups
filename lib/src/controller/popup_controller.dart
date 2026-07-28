@@ -118,6 +118,8 @@ class PopupController extends ChangeNotifier {
       complete: (value) => _complete(record, value),
       dismiss: () => _dismiss(record),
       update: (config) => _updateConfig(record, config),
+      pause: () => pauseEntry(record.id),
+      resume: () => resumeEntry(record.id),
     );
     _entries.add(record);
 
@@ -315,6 +317,7 @@ class PopupController extends ChangeNotifier {
     }
 
     entry.cancelLifetime();
+    entry.paused = false;
     final needsVisualExit = entry.state == PopupEntryState.entering ||
         entry.state == PopupEntryState.visible;
     _transition(entry, PopupEntryState.dismissRequested);
@@ -362,6 +365,7 @@ class PopupController extends ChangeNotifier {
     int generation,
   ) {
     return entry.isActive &&
+        !entry.paused &&
         entry.state == PopupEntryState.visible &&
         entry.generation == generation;
   }
@@ -398,6 +402,46 @@ class PopupController extends ChangeNotifier {
   }
 
   PopupHandleBase? handleForEntry(String id) => _find(id)?.handle;
+
+  /// Pauses the latest active, non-paused entry on [channel].
+  ///
+  /// Returns the handle, or `null` when nothing matched.
+  PopupHandleBase? pauseLatest(PopupChannel channel) {
+    for (final entry in _entries.reversed) {
+      if (entry.channel != channel || !entry.isActive || entry.paused) {
+        continue;
+      }
+      if (pauseEntry(entry.id)) return entry.handle;
+    }
+    return null;
+  }
+
+  /// Pauses a mounted active entry: keep state, hide paint/input, skip back
+  /// and route auto-dismiss. Returns `false` if the entry cannot be paused.
+  bool pauseEntry(String id) {
+    final entry = _find(id);
+    if (entry == null || !entry.isActive || entry.paused) return false;
+    if (entry.state != PopupEntryState.entering &&
+        entry.state != PopupEntryState.visible) {
+      return false;
+    }
+    entry.paused = true;
+    // Invalidate generation so in-flight `until` / timer callbacks cannot
+    // dismiss the entry while it is paused.
+    entry.cancelLifetime(invalidateGeneration: true);
+    _notifySafely();
+    return true;
+  }
+
+  /// Resumes a previously paused entry. Returns `false` if not paused/active.
+  bool resumeEntry(String id) {
+    final entry = _find(id);
+    if (entry == null || !entry.isActive || !entry.paused) return false;
+    entry.paused = false;
+    if (entry.state == PopupEntryState.visible) _startLifetime(entry);
+    _notifySafely();
+    return true;
+  }
 
   Future<int> dismissChannel(PopupChannel channel) async {
     final matches = _entries.reversed
@@ -456,7 +500,7 @@ class PopupController extends ChangeNotifier {
           entry.state == PopupEntryState.dismissRequested) {
         return true;
       }
-      if (!entry.isActive) continue;
+      if (!entry.isActive || entry.paused) continue;
       switch (entry.backPolicy) {
         case PopupBackPolicy.ignore:
           continue;
@@ -492,14 +536,16 @@ class PopupController extends ChangeNotifier {
             entry.state == PopupEntryState.dismissRequested) {
           return true;
         }
-        return entry.isActive && entry.backPolicy != PopupBackPolicy.ignore;
+        return entry.isActive &&
+            !entry.paused &&
+            entry.backPolicy != PopupBackPolicy.ignore;
       });
 
   /// Applies route ownership policies after the root route changes.
   void handleRouteChanged(Object? currentRouteToken) {
     _mutate(() {
       for (final entry in _entries.reversed.toList(growable: false)) {
-        if (!entry.isActive) continue;
+        if (!entry.isActive || entry.paused) continue;
         final shouldDismiss = switch (entry.routePolicy) {
           PopupRoutePolicy.persist => false,
           PopupRoutePolicy.dismissOnAnyRouteChange => true,
@@ -515,7 +561,9 @@ class PopupController extends ChangeNotifier {
   }
 
   bool isVisibleKey(String key) {
-    final state = _keyed[key]?.state;
+    final entry = _keyed[key];
+    if (entry == null || entry.paused) return false;
+    final state = entry.state;
     return state == PopupEntryState.entering ||
         state == PopupEntryState.visible ||
         state == PopupEntryState.dismissRequested ||

@@ -2,6 +2,23 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.0.2
+
+### Features
+
+- Added pause/resume for temporary overlay hang:
+  - `PopupHandleBase.pause()` / `resume()` / `isPaused`
+  - `Pop.pauseLatest(PopupChannel)` / `Pop.resume(id)`
+- Paused entries stay mounted (Offstage + IgnorePointer) so FlowSheet /
+  form state survives; they skip system back and route auto-dismiss.
+- `Pop.isVisibleKey` returns `false` while paused; `hasChannel` still counts
+  the active paused entry.
+- Example Lab: **Pause / Resume**.
+
+### Docs
+
+- Documented pause/resume in API reference and README.
+
 ## 2.0.1
 
 ### Fixes

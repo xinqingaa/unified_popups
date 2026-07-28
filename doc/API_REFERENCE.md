@@ -153,9 +153,10 @@ Builder 内不需要 `requireHandle()`。只有 Builder 外部还要更新或关
 
 Handle 是控制引用，不等于 Future，但它提供多个 Future：
 
-- `id/key/channel/state/isActive/isMounted`：逻辑 Entry 状态。
+- `id/key/channel/state/isActive/isMounted/isPaused`：逻辑 Entry 状态。
 - `complete([T? value])`：提交 completed Outcome，并等待退出动画与移除。
 - `dismiss()`：提交 manual Outcome，并等待退出动画与移除。
+- `pause()` / `resume()`：临时挂起 / 恢复（Offstage 保活，跳过返回与路由关闭）。
 - `result`：首个关闭决策确定时完成，只返回 nullable value。
 - `outcome`：首个关闭决策确定时完成，包含 value 和 reason。
 - `dismissed`：退出动画完成、视觉节点彻底移除后完成。
@@ -534,6 +535,8 @@ Pop.custom<String>(
 | `Pop.isActiveKey(key)` | keyed Entry 是否仍活跃 |
 | `Pop.hasChannel(channel)` | Channel 是否存在活跃 Entry |
 | `Pop.countChannel(channel)` | Channel 活跃数量 |
+| `Pop.pauseLatest(channel)` | 挂起该 Channel 最新 Entry |
+| `Pop.resume(id)` | 恢复已 pause 的 Entry |
 | `Pop.shutdown()` | 关闭 Runtime |
 
 ## 15. PopupDismissReason

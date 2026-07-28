@@ -63,19 +63,30 @@ class PopupScene extends StatelessWidget {
   }) {
     final config = entry.config;
     final delegate = config == null ? null : _registry.resolve(config);
+    final Widget child;
     if (delegate == null) {
-      return _UnsupportedPopupEntry(
+      child = _UnsupportedPopupEntry(
         key: ValueKey<String>(entry.id),
         runtime: runtime,
         entry: entry,
       );
+    } else {
+      child = _AnimatedPopupEntry(
+        key: ValueKey<String>(entry.id),
+        runtime: runtime,
+        entry: entry,
+        renderer: delegate,
+        fullScreen: fullScreen,
+      );
     }
-    return _AnimatedPopupEntry(
-      key: ValueKey<String>(entry.id),
-      runtime: runtime,
-      entry: entry,
-      renderer: delegate,
-      fullScreen: fullScreen,
+    // Always wrap so pause/resume only flips flags — never remounts State
+    // (FlowSheet internal Navigator / form fields must survive).
+    return Offstage(
+      offstage: entry.paused,
+      child: IgnorePointer(
+        ignoring: entry.paused,
+        child: child,
+      ),
     );
   }
 }
@@ -118,19 +129,28 @@ class _ToastLanes extends StatelessWidget {
   Widget _buildEntry(PopupEntrySnapshot entry) {
     final config = entry.config!;
     final delegate = registry.resolve(config);
+    final Widget child;
     if (delegate == null) {
-      return _UnsupportedPopupEntry(
+      child = _UnsupportedPopupEntry(
         key: ValueKey<String>(entry.id),
         runtime: runtime,
         entry: entry,
       );
+    } else {
+      child = _AnimatedPopupEntry(
+        key: ValueKey<String>(entry.id),
+        runtime: runtime,
+        entry: entry,
+        renderer: delegate,
+        fullScreen: false,
+      );
     }
-    return _AnimatedPopupEntry(
-      key: ValueKey<String>(entry.id),
-      runtime: runtime,
-      entry: entry,
-      renderer: delegate,
-      fullScreen: false,
+    return Offstage(
+      offstage: entry.paused,
+      child: IgnorePointer(
+        ignoring: entry.paused,
+        child: child,
+      ),
     );
   }
 }
@@ -188,6 +208,9 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
       ..duration = animation.duration
       ..reverseDuration = animation.reverseDuration;
     if (oldWidget.entry.state != widget.entry.state) _syncState();
+    if (!oldWidget.entry.paused && widget.entry.paused) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
   }
 
   void _syncState({bool initial = false}) {

@@ -11,15 +11,21 @@ final class ControllerPopupHandle<T, C> implements UpdatablePopupHandle<T, C> {
     required Future<void> Function(T? value) complete,
     required Future<void> Function() dismiss,
     required bool Function(C config) update,
+    required bool Function() pause,
+    required bool Function() resume,
   })  : _record = record,
         _complete = complete,
         _dismiss = dismiss,
-        _update = update;
+        _update = update,
+        _pause = pause,
+        _resume = resume;
 
   final PopupEntryRecord<T, C> _record;
   final Future<void> Function(T? value) _complete;
   final Future<void> Function() _dismiss;
   final bool Function(C config) _update;
+  final bool Function() _pause;
+  final bool Function() _resume;
 
   @override
   String get id => _record.id;
@@ -40,6 +46,9 @@ final class ControllerPopupHandle<T, C> implements UpdatablePopupHandle<T, C> {
   PopupEntryState get state => _record.state;
 
   @override
+  bool get isPaused => _record.paused;
+
+  @override
   Future<PopupOutcome<T>> get outcome => _record.outcomeCompleter.future;
 
   @override
@@ -56,4 +65,10 @@ final class ControllerPopupHandle<T, C> implements UpdatablePopupHandle<T, C> {
 
   @override
   bool update(C config) => _update(config);
+
+  @override
+  bool pause() => _pause();
+
+  @override
+  bool resume() => _resume();
 }

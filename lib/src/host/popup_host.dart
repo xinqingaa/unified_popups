@@ -101,11 +101,17 @@ class _PopupHostState extends State<PopupHost> {
           fit: StackFit.expand,
           children: <Widget>[
             for (final entry in mounted)
-              _PopupHostEntry(
+              Offstage(
                 key: ValueKey<String>(entry.id),
-                runtime: widget.runtime,
-                snapshot: entry,
-                builder: widget.entryBuilder!,
+                offstage: entry.paused,
+                child: IgnorePointer(
+                  ignoring: entry.paused,
+                  child: _PopupHostEntry(
+                    runtime: widget.runtime,
+                    snapshot: entry,
+                    builder: widget.entryBuilder!,
+                  ),
+                ),
               ),
           ],
         );
@@ -119,7 +125,6 @@ class _PopupHostEntry extends StatefulWidget {
     required this.runtime,
     required this.snapshot,
     required this.builder,
-    super.key,
   });
 
   final PopupRuntime runtime;

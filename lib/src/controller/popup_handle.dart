@@ -22,11 +22,25 @@ abstract interface class PopupHandleBase {
   /// 当前生命周期状态。
   PopupEntryState get state;
 
+  /// 是否处于 pause（保留状态但不绘制、不响应手势）。
+  ///
+  /// pause 是正交于 [state] 的展示开关：Entry 仍挂载在 Host 中（Offstage），
+  /// 以便 FlowSheet 等内部 Navigator 状态不丢失。
+  bool get isPaused;
+
   /// 退出动画结束、视觉节点移除后完成。
   Future<void> get dismissed;
 
   /// 无业务结果地关闭弹窗。
   Future<void> dismiss();
+
+  /// 临时挂起：保留逻辑 Entry 与内部 Widget 状态，但不绘制、不参与返回/路由关闭。
+  ///
+  /// 仅对已挂载（entering / visible）且未 pause 的 Entry 生效；成功返回 `true`。
+  bool pause();
+
+  /// 恢复由 [pause] 挂起的 Entry；成功返回 `true`。
+  bool resume();
 }
 
 /// 指向单个逻辑弹窗 Entry 的稳定句柄。
