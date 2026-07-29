@@ -216,9 +216,12 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
   void _syncState({bool initial = false}) {
     if (_visual.animationConfig.type == PopupAnimationType.none) {
       final entering = widget.entry.state == PopupEntryState.entering;
+      final visible = widget.entry.state == PopupEntryState.visible;
       final exiting = widget.entry.state == PopupEntryState.exiting ||
           widget.entry.state == PopupEntryState.dismissRequested;
-      _controller.value = entering ? 1 : 0;
+      // visible 必须保持 1：barrier 走 FadeTransition(opacity: animation)，
+      // 若在 markPresented 后打成 0，会出现「内容在、蒙层消失」。
+      _controller.value = (entering || visible) ? 1 : 0;
       if (entering || exiting) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;

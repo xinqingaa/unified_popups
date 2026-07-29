@@ -104,6 +104,13 @@ abstract final class Pop {
   /// 将系统返回委托给当前弹窗策略；已消费返回 `true`。
   static Future<bool> handleBack() => _runtime.controller.handleBack();
 
+  /// 当前路由是否需要先将系统返回交给弹层处理。
+  ///
+  /// 页面自定义 [PopScope] 可用此同步状态避免与全局 route back bridge
+  /// 同时处理同一次返回事件。
+  static bool get interceptsSystemBack =>
+      _runtime.controller.interceptsSystemBack;
+
   /// 指定 key 的弹窗是否处于可见渲染态。
   static bool isVisibleKey(String key) => _runtime.controller.isVisibleKey(key);
 

@@ -98,7 +98,7 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.1
+  unified_popups: ^2.0.3
 ```
 
 ```dart
@@ -352,6 +352,7 @@ try {
 ## 文档
 
 - [English README](README_EN.md)
+- [调用方规范用法（Skill）](skills/unified-popups-usage/SKILL.md) — 应用内包一层、按需读文档，勿猜 API
 - [为何使用 Overlay，而不是官方 Dialog / Sheet](doc/WHY_OVERLAY.md)
 - [架构设计与实现原理](doc/ARCHITECTURE.md)
 - [完整 API、返回模型与参数参考](doc/API_REFERENCE.md)

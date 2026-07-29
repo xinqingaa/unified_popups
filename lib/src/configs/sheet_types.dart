@@ -8,6 +8,8 @@ enum SheetDirection {
 
 /// 决定 sheet 中哪个区域参与拖拽关闭手势。
 enum SheetDragDismissMode {
+  /// 禁用拖拽关闭。
+  disabled,
   fullBody,
   contentWhenAtTop,
   handleOnly,

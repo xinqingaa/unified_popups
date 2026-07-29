@@ -432,7 +432,7 @@ final value = await Pop.sheet<String>(
 - `SheetDragConfig`：mode、modeListenable、showHandle、handleColor、dismissProgressThreshold、dismissVelocity。
 - `SheetKeyboardConfig`：adjustForKeyboard、animationDuration。
 
-拖拽模式：`fullBody`、`contentWhenAtTop`、`handleOnly`。
+拖拽模式：`disabled`、`fullBody`、`contentWhenAtTop`、`handleOnly`。
 
 ## 10. FlowSheet
 
@@ -455,9 +455,15 @@ final result = await Pop.flowSheet<OrderResult>(
 - `pop<T>(result)`：退出当前内页。
 - `completeCurrent<T>(result)`：完成当前页面等待者但不播放内页返回动画。
 - `closeAll(result)`：完成整个 FlowSheet。
-- `canPop/handleBack`：内部返回能力。
+- `canPop/handleBack`：内部返回能力；`handleBack` 会先询问当前页。
+- `updateDragDismissMode(mode)`：动态更新拖拽关闭模式（含 `disabled`）。
+
+`FlowSheetPageState`：
+
+- `onBack()`：返回 `true` 时消费返回，阻止默认的内页 pop / 整张关闭。
 
 ## 11. Menu
+
 
 ```dart
 final action = await Pop.menu<String>(
@@ -531,6 +537,7 @@ Pop.custom<String>(
 | `Pop.dismissTags(tags)` | 关闭包含任一 tag 的 Entry |
 | `Pop.dismissAll()` | 关闭所有 Entry |
 | `Pop.handleBack()` | 手动执行统一返回分发 |
+| `Pop.interceptsSystemBack` | 当前是否应由弹层先处理系统返回（供页面 PopScope 同步） |
 | `Pop.isVisibleKey(key)` | keyed Entry 是否 visible |
 | `Pop.isActiveKey(key)` | keyed Entry 是否仍活跃 |
 | `Pop.hasChannel(channel)` | Channel 是否存在活跃 Entry |

@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../contracts/flow_sheet_navigator.dart';
 
 abstract interface class FlowSheetLifecycleObserver {
+  bool handleBack();
   void handleLoad();
   void handleShow();
   void handleHide();
@@ -43,6 +44,14 @@ class FlowSheetPageLifecycleController extends ChangeNotifier {
 
   void removeObserver(FlowSheetLifecycleObserver observer) {
     _observers.remove(observer);
+  }
+
+  bool handleBack() {
+    if (_disposed) return false;
+    for (final observer in List<FlowSheetLifecycleObserver>.of(_observers)) {
+      if (observer.handleBack()) return true;
+    }
+    return false;
   }
 
   void load() {

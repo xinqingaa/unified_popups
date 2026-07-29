@@ -43,6 +43,7 @@ export 'src/controller/popup_lifetime.dart';
 export 'src/controller/popup_open_result.dart';
 export 'src/controller/popup_outcome.dart';
 export 'src/controller/popup_ownership.dart';
+export 'src/renderers/popup_entry_animation.dart';
 export 'src/flow_sheets/flow_sheet.dart';
 export 'src/navigation/popup_route_token.dart';
 export 'src/utils/sheet_dimension.dart';

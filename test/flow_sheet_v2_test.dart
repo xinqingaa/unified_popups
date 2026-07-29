@@ -5,6 +5,7 @@ import 'package:unified_popups/src/configs/confirm_config.dart';
 import 'package:unified_popups/src/configs/flow_sheet_config.dart';
 import 'package:unified_popups/src/configs/popup_animation_config.dart';
 import 'package:unified_popups/src/configs/sheet_config.dart';
+import 'package:unified_popups/src/configs/sheet_types.dart';
 import 'package:unified_popups/src/controller/popup_dismiss_reason.dart';
 import 'package:unified_popups/src/controller/popup_entry_state.dart';
 import 'package:unified_popups/src/flow_sheets/flow_sheet.dart';
@@ -163,9 +164,8 @@ void main() {
     await tester.pumpWidget(_FlowApp(runtime: runtime));
     await tester.pumpAndSettle();
 
-    final confirmHandle = api
-        .confirm(const ConfirmConfig(content: 'stay?'))
-        .requireHandle();
+    final confirmHandle =
+        api.confirm(const ConfirmConfig(content: 'stay?')).requireHandle();
     await tester.pumpAndSettle();
     expect(find.text('stay?'), findsOneWidget);
 
@@ -258,6 +258,61 @@ void main() {
     );
     await runtime.shutdown();
   });
+
+  testWidgets('current page can consume back before default navigation',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    var backCount = 0;
+    final controller = FlowSheetController<void>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<void>(
+          FlowSheetConfig<void>(
+            controller: controller,
+            initialPage: _BackBlockingPage(() {
+              backCount += 1;
+              return true;
+            }),
+            size: const SheetSizeConfig(
+              height: SheetDimension.pixel(420),
+            ),
+            animation: const PopupAnimationConfig(
+              type: PopupAnimationType.slideUp,
+              duration: Duration.zero,
+              slideOffset: 1,
+            ),
+          ),
+        )
+        .requireHandle();
+
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    expect(await runtime.controller.handleBack(), isTrue);
+    expect(backCount, 1);
+    expect(handle.isActive, isTrue);
+
+    controller.closeAll();
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
+  test('dynamic drag mode can be disabled and restored', () {
+    final controller = FlowSheetController<void>();
+    addTearDown(controller.dispose);
+
+    controller.updateDragDismissMode(SheetDragDismissMode.disabled);
+    expect(
+      controller.dragDismissModeNotifier.value,
+      SheetDragDismissMode.disabled,
+    );
+
+    controller.updateDragDismissMode(SheetDragDismissMode.fullBody);
+    expect(
+      controller.dragDismissModeNotifier.value,
+      SheetDragDismissMode.fullBody,
+    );
+  });
 }
 
 FlowSheetConfig<R> _config<R>(FlowSheetController<R> controller) {
@@ -284,6 +339,25 @@ class _PageState<T> extends FlowSheetPageState<_Page<T>, T> {
   @override
   Widget build(BuildContext context) =>
       Center(child: Text('page-${widget.id}'));
+}
+
+class _BackBlockingPage extends FlowSheetPage<void> {
+  const _BackBlockingPage(this.onBackCallback)
+      : super(id: 'back-blocking', maintainState: true);
+
+  final bool Function() onBackCallback;
+
+  @override
+  State<_BackBlockingPage> createState() => _BackBlockingPageState();
+}
+
+class _BackBlockingPageState
+    extends FlowSheetPageState<_BackBlockingPage, void> {
+  @override
+  bool onBack() => widget.onBackCallback();
+
+  @override
+  Widget build(BuildContext context) => const Text('back-blocking');
 }
 
 class _LifecyclePage extends FlowSheetPage<void> {

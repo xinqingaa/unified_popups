@@ -82,6 +82,12 @@ abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
   /// 当整个 FlowSheet 关闭而该页面仍在栈中时调用。
   void onClose() {}
 
+  /// 当前页面处理返回事件；返回 true 时阻止默认的内部 pop/关闭行为。
+  bool onBack() => false;
+
+  @override
+  bool handleBack() => onBack();
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();

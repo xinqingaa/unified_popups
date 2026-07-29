@@ -170,8 +170,12 @@ final class PopupTypeApi {
           ownership: _captureOwnership(config.ownership),
           lifecycle: config.lifecycle,
           onBack: () async {
+            if (config.controller.handleCurrentPageBack()) {
+              return true;
+            }
             if (config.controller.canPop) {
-              return config.controller.handleBack();
+              config.controller.pop();
+              return true;
             }
             runtime.controller.dismissEntry(
               handle.id,

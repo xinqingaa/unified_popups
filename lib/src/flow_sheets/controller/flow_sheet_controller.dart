@@ -151,6 +151,12 @@ class FlowSheetController<R> extends ChangeNotifier
     _syncDragDismissMode();
   }
 
+  @override
+  void updateDragDismissMode(SheetDragDismissMode mode) {
+    if (_disposed || dragDismissModeNotifier.value == mode) return;
+    dragDismissModeNotifier.value = mode;
+  }
+
   /// 当栈仍为空时，将 [page] 注入为根条目。
   ///
   /// 由 FlowSheet 宿主组件在首帧调用。若控制器已关闭、已销毁，或栈中已有页面，则不做任何操作。
@@ -248,6 +254,7 @@ class FlowSheetController<R> extends ChangeNotifier
   bool handleBack([Object? result]) {
     if (_closed) return true;
     if (_isHandlingBack) return true;
+    if (handleCurrentPageBack()) return true;
     _isHandlingBack = true;
     if (canPop) {
       pop();
@@ -255,6 +262,11 @@ class FlowSheetController<R> extends ChangeNotifier
       closeAll(result);
     }
     return true;
+  }
+
+  /// 仅询问当前页面是否消费返回，不执行默认的内部 pop 或关闭。
+  bool handleCurrentPageBack() {
+    return _stack.isNotEmpty && _stack.last.lifecycleController.handleBack();
   }
 
   /// 关闭整个 FlowSheet 并完成外层弹窗。

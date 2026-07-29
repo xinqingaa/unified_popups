@@ -105,7 +105,7 @@ style).
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.1
+  unified_popups: ^2.0.3
 ```
 
 ```dart
@@ -362,6 +362,7 @@ behavior, use `copyWith(clearKey: true)`.
 
 Deep-dive docs are currently Chinese; use them alongside this English README:
 
+- [Consumer usage skill](skills/unified-popups-usage/SKILL.md) — wrap in AppPop, read docs on demand, do not guess APIs
 - [Why Overlay instead of official Dialog / Sheet](doc/WHY_OVERLAY.md)
 - [Architecture](doc/ARCHITECTURE.md)
 - [Full API reference](doc/API_REFERENCE.md)

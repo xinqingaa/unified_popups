@@ -2,6 +2,31 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.0.3
+
+### Fixes
+
+- Fixed `PopupAnimationType.none`: after `markPresented`, animation stayed at `0`,
+  so the barrier faded out while content remained visible.
+- FlowSheet system back now asks the current page before default pop/close, and
+  the type API no longer re-enters `handleBack` when the stack can pop.
+
+### Features
+
+- `FlowSheetPageState.onBack()` — return `true` to consume back and block
+  default inward pop / sheet dismiss.
+- `Pop.interceptsSystemBack` — sync flag for page-level `PopScope` so it does
+  not race the global route back bridge on the same event.
+- `SheetDragDismissMode.disabled` and
+  `FlowSheetNavigator.updateDragDismissMode()` for dynamic drag-dismiss control.
+- Exported `popup_entry_animation.dart` from the package entry.
+
+### Docs
+
+- Added consumer usage skill at `skills/unified-popups-usage/`: wrap in an
+  app-level facade (`AppPop`), read docs on demand, keep Handle/Config out of
+  business code. Linked from README / README_EN.
+
 ## 2.0.2
 
 ### Features

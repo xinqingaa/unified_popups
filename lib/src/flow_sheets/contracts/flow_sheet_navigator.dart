@@ -1,3 +1,4 @@
+import '../../configs/sheet_types.dart';
 import '../pages/flow_sheet_page.dart';
 
 /// FlowSheet 内部页面栈的导航 API。
@@ -5,6 +6,11 @@ import '../pages/flow_sheet_page.dart';
 /// 调用方以导航动作（[push]、[replace]、[pop]、[closeAll]）而非页面索引来操作栈。
 /// 在页面已挂载时，可通过 [FlowSheetPageState.nav] 获取实例。
 abstract class FlowSheetNavigator {
+  /// 动态更新当前 FlowSheet 的拖拽关闭模式。
+  ///
+  /// 页面发生 push/pop/replace 后会重新采用新栈顶页面声明的模式。
+  void updateDragDismissMode(SheetDragDismissMode mode);
+
   /// 将 [page] 推入栈中，返回的 future 会在该页面被 [pop] 时携带传入的值完成。
   Future<T?> push<T>(FlowSheetPage<T> page);
 
