@@ -236,7 +236,10 @@ final class DropMenuConfig<T> extends MenuConfigBase {
       backPolicy: PopupBackPolicy.dismiss,
     ),
     this.ownership = const PopupOwnership(),
-    this.barrier = const PopupBarrierConfig(color: Colors.transparent),
+    this.barrier = const PopupBarrierConfig(
+      color: Colors.transparent,
+      dismissOnDrag: true,
+    ),
     this.animationConfig = const PopupAnimationConfig(
       type: PopupAnimationType.fade,
       duration: Duration(milliseconds: 140),

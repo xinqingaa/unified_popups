@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../configs/drop_menu_config.dart';
 import '../configs/popup_animation_config.dart';
+import '../configs/popup_barrier_config.dart';
 import '../configs/popup_position.dart';
 import '../configs/popup_visual_config.dart';
 import '../configs/sheet_config.dart';
@@ -350,21 +351,41 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
             bottom: barrier.insets.bottom,
             child: FadeTransition(
               opacity: animation,
-              child: ModalBarrier(
-                color: barrier.color,
-                dismissible: barrier.dismissible,
-                semanticsLabel: barrier.semanticsLabel,
-                onDismiss: barrier.dismissible
-                    ? () => widget.runtime.controller.dismissEntry(
-                          widget.entry.id,
-                          reason: PopupDismissReason.barrier,
-                        )
-                    : null,
-              ),
+              child: _buildBarrier(barrier),
             ),
           ),
         aligned,
       ],
+    );
+  }
+
+  Widget _buildBarrier(PopupBarrierConfig barrier) {
+    void dismiss() {
+      widget.runtime.controller.dismissEntry(
+        widget.entry.id,
+        reason: PopupDismissReason.barrier,
+      );
+    }
+
+    final modal = ModalBarrier(
+      color: barrier.color,
+      dismissible: barrier.dismissible,
+      semanticsLabel: barrier.semanticsLabel,
+      onDismiss: barrier.dismissible ? dismiss : null,
+    );
+
+    if (!barrier.dismissible || !barrier.dismissOnDrag) {
+      return modal;
+    }
+
+    // 空白处拖动/滑动关闭：手势由 barrier 消费，不转发下层滚动。
+    return Listener(
+      behavior: HitTestBehavior.deferToChild,
+      onPointerMove: (event) {
+        if (event.delta.distanceSquared < 0.25) return;
+        dismiss();
+      },
+      child: modal,
     );
   }
 

@@ -185,7 +185,7 @@ Controller 的业务关闭和对象 dispose 也是两个阶段：先完成所有
 
 `MenuPlacement.auto` 首帧先不可见布局，取得菜单真实尺寸，再结合 SafeArea、键盘、offset 和四侧溢出选择 above/below 与 start/end，并在本次会话内锁定方向。Anchor 卸载时监听器以 `anchorDetached` 关闭 Entry。
 
-Menu 默认使用透明可关闭 Barrier：点外关闭，同时阻止下层滚动。传 `PopupBarrierConfig.hidden()` 后底层可以滚动，Follower 继续跟随 Anchor。
+Menu 默认使用透明可关闭 Barrier：点外或拖动关闭（`dismissOnDrag: true`），同时阻止下层滚动。传 `PopupBarrierConfig.hidden()` 后底层可以滚动，Follower 继续跟随 Anchor。
 
 DropMenu 是建立在同一个 Menu Renderer 上的数据模型层，增加一级选择、二级 Section、选中态、禁用态和 LiquidGlass。一级项目通常完成 Handle；二级项目可以只通过 `onSelected` 通知并保持外层菜单打开。
 

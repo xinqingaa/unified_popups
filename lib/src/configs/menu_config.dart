@@ -57,7 +57,7 @@ abstract class MenuConfigBase implements PopupVisualConfig {
 final class MenuConfig<T> extends MenuConfigBase {
   /// 创建一个锚定菜单配置。
   ///
-  /// 默认 [barrier] 是透明可点击关闭的遮罩，会拦截菜单下方的滚动。传入
+  /// 默认 [barrier] 是透明可点击/拖动关闭的遮罩，会拦截菜单下方的滚动。传入
   /// [PopupBarrierConfig.hidden] 可允许滚动穿透。
   MenuConfig({
     required this.anchor,
@@ -70,7 +70,10 @@ final class MenuConfig<T> extends MenuConfigBase {
       backPolicy: PopupBackPolicy.dismiss,
     ),
     this.ownership = const PopupOwnership(),
-    this.barrier = const PopupBarrierConfig(color: Colors.transparent),
+    this.barrier = const PopupBarrierConfig(
+      color: Colors.transparent,
+      dismissOnDrag: true,
+    ),
     this.animationConfig = const PopupAnimationConfig(
       type: PopupAnimationType.fade,
     ),

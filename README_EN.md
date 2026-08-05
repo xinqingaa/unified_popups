@@ -105,7 +105,7 @@ style).
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.3
+  unified_popups: ^2.0.4
 ```
 
 ```dart
@@ -338,9 +338,10 @@ PopupAnchor(
 );
 ```
 
-Menu defaults to a transparent, tap-to-dismiss barrier that also blocks
-underlying scroll. Pass `PopupBarrierConfig.hidden()` only when the page must
-keep scrolling while the menu follows its anchor.
+Menu defaults to a transparent tap/drag-to-dismiss barrier
+(`dismissOnDrag: true`) that also blocks underlying scroll. Pass
+`PopupBarrierConfig.hidden()` only when the page must keep scrolling while the
+menu follows its anchor.
 
 DropMenu uses `DropMenu.single` or `DropMenu.nested`. Standard DropMenu
 defaults to global `replaceExisting`.

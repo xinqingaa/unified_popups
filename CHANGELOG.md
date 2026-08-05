@@ -2,6 +2,19 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.0.4
+
+### Features
+
+- `PopupBarrierConfig.dismissOnDrag` — when `dismissible` is true, drag/swipe
+  on the barrier dismisses the popup (gesture consumed, not forwarded).
+- Menu / DropMenu default barrier sets `dismissOnDrag: true` so outside drag
+  closes like a tap, without scrolling content underneath.
+
+### Docs
+
+- Documented `dismissOnDrag` in API reference; clarified Menu barrier defaults.
+
 ## 2.0.3
 
 ### Fixes

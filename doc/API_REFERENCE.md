@@ -212,6 +212,7 @@ Behavior 不包含 channel。Channel 由 Toast、Sheet 等能力本身固定。
 
 - `visible`：是否绘制/安装 Barrier。
 - `dismissible`：点击是否关闭。
+- `dismissOnDrag`：在可关闭 Barrier 上拖动/滑动是否关闭（手势由 Barrier 消费，不转发下层）。Menu / DropMenu 默认 `true`。
 - `color`：颜色。
 - `semanticsLabel`：无障碍描述。
 - `insets`：Barrier 不覆盖的边缘范围。
@@ -480,6 +481,8 @@ final action = await Pop.menu<String>(
 `MenuConfig<T>`：`anchor`、`builder`、`placement`、`offset`、`style`、
 `behavior`、`ownership`、`barrier`、`animationConfig`、`lifecycle`。
 
+默认 `barrier` 为透明可点击/拖动关闭（`dismissOnDrag: true`），阻止下层滚动。
+
 `PopupMenuStyle`：`padding`、`constraints`、`decoration`。
 
 `MenuPlacement`：auto、belowStart、belowEnd、aboveStart、aboveEnd。Anchor 必须通过
@@ -501,6 +504,8 @@ final value = await Pop.dropMenu<String>(
 `DropMenuConfig<T>`：`anchor`、`menu`、`menuStyle`、`placement`、`offset`、
 `onSelected`、`onOpenSectionChanged`、`behavior`、`ownership`、`barrier`、
 `animationConfig`、`lifecycle`。
+
+默认 `barrier` 同 Menu：透明可点击/拖动关闭（`dismissOnDrag: true`）。
 
 `DropMenu.single`：items、selectedValue、emptyText。
 

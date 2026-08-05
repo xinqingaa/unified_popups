@@ -98,7 +98,7 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.3
+  unified_popups: ^2.0.4
 ```
 
 ```dart
@@ -323,8 +323,8 @@ PopupAnchor(
 );
 ```
 
-Menu 默认使用透明、可点击关闭的 Barrier，并阻止底层滚动。只有需要底层滚动且菜单
-跟随 Anchor 时才传 `PopupBarrierConfig.hidden()`。
+Menu 默认使用透明、可点击/拖动关闭的 Barrier（`dismissOnDrag: true`），并阻止底层
+滚动。只有需要底层滚动且菜单跟随 Anchor 时才传 `PopupBarrierConfig.hidden()`。
 
 DropMenu 使用 `DropMenu.single` 或 `DropMenu.nested`；标准 DropMenu 默认全局
 `replaceExisting`。

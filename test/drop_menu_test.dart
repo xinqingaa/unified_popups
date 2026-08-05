@@ -148,6 +148,22 @@ void main() {
     expect(Pop.countChannel(PopupChannel.menu), 0);
   });
 
+  testWidgets('transparent default barrier dismisses on outside drag',
+      (tester) async {
+    await tester.pumpWidget(const _TestApp(child: _SingleMenuHarness()));
+    await tester.pump();
+
+    await tester.tap(find.text('打开一级菜单'));
+    await tester.pumpAndSettle();
+    expect(Pop.countChannel(PopupChannel.menu), 1);
+
+    final gesture = await tester.startGesture(const Offset(10, 10));
+    await gesture.moveBy(const Offset(0, 24));
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(Pop.countChannel(PopupChannel.menu), 0);
+  });
+
   testWidgets('liquid glass resolves theme colors and accepts overrides',
       (tester) async {
     ResolvedLiquidGlassStyle? light;
