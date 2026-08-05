@@ -35,8 +35,8 @@ AppBar ⋯ 也可跳到 API 展柜。
 | Loading | 原地更新、until 失败关闭、分位置双 Loading、Handle、返回 block |
 | Confirm / Date | 按钮 vs 遮罩/返回语义、outcome、堆叠、日期样式 |
 | Sheet | 四方向、三种拖拽（指示器仅底部）、键盘、dockToEdge、堆叠 |
-| FlowSheet | 全屏/半屏迷你栈、返回委托、产品 Flow 入口 |
-| Menu Anchor | DropMenu 全局替换、透明 Barrier、滚动跟随、placement、卸载关闭 |
+| FlowSheet | 全屏/半屏迷你栈、`popToRoot`、返回委托、产品 Flow 入口 |
+| Menu Anchor | DropMenu 全局替换、透明 Barrier（含 `dismissOnDrag`）、滚动跟随、placement、卸载关闭 |
 | Custom / Handle | CustomPopup、outcome/dismissed、tags/channel、查询 API |
 | 策略 | 返回顺序、persist/owner 路由、captureRoute、Ownership |
 | 异步边界 | Future/Stream/Timer/build 阶段调用 |

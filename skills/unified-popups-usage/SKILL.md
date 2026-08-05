@@ -112,7 +112,7 @@ MaterialApp(
 - 入口：`Pop.xxx(Config)` → `PopupOpenResult`；业务值 `.result`；控制用 Handle（仅封装内）。
 - Loading 必须有关闭路径（见 §6 / `PopupLifetime`）。
 - Sheet / Menu / Custom 用 builder 注入的 handle 完成/关闭（见 §3.4、§9+）。
-- FlowSheet 收尾与 `onBack` 见 §10。
+- FlowSheet 收尾、`onBack`、`popToRoot` 见 §10。
 - 只 import `package:unified_popups/unified_popups.dart`。
 
 ## 检查清单

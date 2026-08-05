@@ -24,6 +24,12 @@ abstract class FlowSheetNavigator {
   /// 当仅剩根页面时不执行任何操作；如需关闭整个 sheet，请使用 [closeAll]。
   void pop<T>([T? result]);
 
+  /// 弹出到根页面（交易主页等），保留栈底一页；已在根页时为 no-op。
+  ///
+  /// 栈顶页面的等待者收到可选的 [result]，其余被弹出页面以 `null` 完成。
+  /// 不关闭整个 sheet；如需关 sheet，请使用 [closeAll]。
+  void popToRoot([Object? result]);
+
   /// 完成当前页面对应 [push] 所返回的 future，但不播放返回转场，也不将该页面从栈中移除。
   ///
   /// 适用于结果已交付且 sheet 即将 [closeAll] 的场景，避免内部弹出动画与 sheet 退出动画同时播放。

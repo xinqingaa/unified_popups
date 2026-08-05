@@ -82,7 +82,8 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 ### FlowSheet · 多步流程
 
-分步填写、申请向导：系统返回先退内页，再关整张 Sheet；Confirm 盖在上面时仍可拦截返回。
+分步填写、申请向导：系统返回先退内页，再关整张 Sheet；可用 `popToRoot` 回到根页且
+不关 sheet；Confirm 盖在上面时仍可拦截返回。
 
 ![FlowSheet](doc/images/flowSheet.jpg)
 
@@ -98,7 +99,7 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.4
+  unified_popups: ^2.0.5
 ```
 
 ```dart

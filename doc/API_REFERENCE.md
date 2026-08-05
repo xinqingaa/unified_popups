@@ -454,6 +454,8 @@ final result = await Pop.flowSheet<OrderResult>(
 
 - `push<T>(page)`、`replace<T>(page)`：进入内页并等待内页结果。
 - `pop<T>(result)`：退出当前内页。
+- `popToRoot(result)`：弹出到根页面（已在根页为 no-op）；栈顶等待者收
+  `result`，其余被弹出页以 `null` 完成。不关闭整张 sheet。
 - `completeCurrent<T>(result)`：完成当前页面等待者但不播放内页返回动画。
 - `closeAll(result)`：完成整个 FlowSheet。
 - `canPop/handleBack`：内部返回能力；`handleBack` 会先询问当前页。

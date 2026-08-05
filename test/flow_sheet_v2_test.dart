@@ -46,6 +46,46 @@ void main() {
     expect(controller.isDisposed, isTrue);
   });
 
+  testWidgets('flowSheet popToRoot returns to root without closing outer',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    final second = controller.push<int>(const _Page<int>('second'));
+    await tester.pumpAndSettle();
+    final third = controller.push<String>(const _Page<String>('third'));
+    await tester.pumpAndSettle();
+    expect(find.text('page-third'), findsOneWidget);
+    expect(controller.canPop, isTrue);
+
+    controller.popToRoot('from-top');
+    expect(await third, 'from-top');
+    expect(await second, isNull);
+    await tester.pumpAndSettle();
+
+    expect(find.text('page-initial'), findsOneWidget);
+    expect(find.text('page-second'), findsNothing);
+    expect(find.text('page-third'), findsNothing);
+    expect(controller.canPop, isFalse);
+    expect(handle.isActive, isTrue);
+
+    // Already on root: no-op.
+    controller.popToRoot();
+    expect(controller.canPop, isFalse);
+    expect(find.text('page-initial'), findsOneWidget);
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
   testWidgets('system back pops an inner page before the outer flowSheet',
       (tester) async {
     final runtime = PopupRuntime();

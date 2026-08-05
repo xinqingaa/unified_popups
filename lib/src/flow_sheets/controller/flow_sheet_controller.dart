@@ -234,6 +234,35 @@ class FlowSheetController<R> extends ChangeNotifier
     }
   }
 
+  /// 弹出到根页面。
+  ///
+  /// 语义参见 [FlowSheetNavigator.popToRoot]。
+  @override
+  void popToRoot([Object? result]) {
+    if (_closed) return;
+    if (_stack.length <= 1) return;
+
+    final root = _stack.first;
+    final toRemove = _stack.sublist(1);
+    _stack
+      ..clear()
+      ..add(root);
+
+    // Topmost waiter gets [result]; intermediate pages complete with null.
+    for (var i = toRemove.length - 1; i >= 0; i--) {
+      final entry = toRemove[i];
+      final entryResult = i == toRemove.length - 1 ? result : null;
+      entry.pendingResult = entryResult;
+      entry.completeIfPending(entryResult);
+      _disposeEntry(entry, FlowSheetLifecycleEndReason.remove);
+    }
+
+    _syncDragDismissMode();
+    notifyListeners();
+    _scheduleShow(root);
+    _isHandlingBack = false;
+  }
+
   /// 完成当前页面的结果，但不执行弹出操作。
   ///
   /// 语义参见 [FlowSheetNavigator.completeCurrent]。

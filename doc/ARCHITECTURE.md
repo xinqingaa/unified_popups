@@ -175,7 +175,14 @@ Sheet 与普通弹窗使用同一个 Entry 和外层 AnimationController。四�
 
 FlowSheet 外层仍是统一的 Sheet Entry，因此参与全局堆叠、路由、Barrier、Handle 和退出动画。内部由一次性 `FlowSheetController` 和嵌套 Navigator 维护页面栈。
 
-系统返回先委托内部 Controller：有第二页时 pop 内页；位于首页时完成整个外层 Popup。页面自己的 result、maintainState 和 onLoad/onShow/onHide/onRemove/onClose 与外层 Popup Outcome 分开管理。
+内页导航：`push` / `pop` / `popToRoot` / `replace` / `completeCurrent` / `closeAll`。
+`popToRoot` 回到栈底根页且不关闭整张 sheet（已在根页为 no-op）；栈顶等待者可收
+`result`，其余被弹出页以 `null` 完成。收尾优先 `completeCurrent` + `closeAll`，
+避免内页返回动画与 sheet 退出动画叠播。
+
+系统返回先询问当前页 `onBack()`，再委托内部 Controller：有第二页时 pop 内页；
+位于首页时完成整个外层 Popup。页面自己的 result、maintainState 和
+onLoad/onShow/onHide/onRemove/onClose 与外层 Popup Outcome 分开管理。
 
 Controller 的业务关闭和对象 dispose 也是两个阶段：先完成所有 pending 页面 Future，再等外层 Renderer 移除且内部 Host detach 后释放 notifier。
 

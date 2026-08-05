@@ -3,7 +3,7 @@ description: >-
   Unified Overlay popup system for Flutter: toast, loading, confirm, date,
   sheet, flow sheet, menu and drop menu. One Pop API, no BuildContext,
   shared back and route policies.
-version: 2.0.4
+version: 2.0.5
 homepage: https://github.com/xinqingaa/unified_popups
 repository: https://github.com/xinqingaa/unified_popups
 issue_tracker: https://github.com/xinqingaa/unified_popups/issues

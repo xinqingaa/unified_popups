@@ -1,146 +1,135 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for agents working in this repository.
 
 ## Overview
 
-Unified Popups is a Flutter package for Overlay-based popups. All entry points are on the `Pop` static API: toast, loading, confirm, sheet, flowSheet, date, and menu.
+`unified_popups` is a Flutter Overlay popup package. Public entry is the `Pop`
+static API: toast, loading, confirm, date, sheet, flowSheet, menu, dropMenu,
+custom. Configs are the only create-time contracts; no `BuildContext` required.
 
 ## Development Commands
 
-### Code Quality
 ```bash
 flutter analyze
-cd example && flutter run
-dart format .
-```
-
-### Testing
-```bash
 flutter test
+dart format lib test example/lib
+cd example && flutter run
 cd example && flutter test
 ```
 
-## Architecture
+## Architecture (v2)
 
-### Core Components
+### Core
 
-**PopupManager** (`lib/src/core/popup_manager.dart`)
-- Singleton managing Overlay entries; tracks `_popups` + `_popupOrder`
-- Per-popup AnimationController and optional auto-dismiss Timer
-- `SafeOverlayEntry` defers rebuild during build phase
-- Hide APIs: `hide(id)`, `hideLast()`, `hideAll()`, `hideByType()`, `hideLastNonToast()`
-- `hideLastNonToast()` honors `onBackPressed` (`true` = consumed, keep overlay)
-- Route-aware dismissal via `dismissOnRouteChange`
+**Pop** (`lib/src/api/pop.dart`)
+- Single create entry: `Pop.xxx(Config)` → `PopupOpenResult<T>`
+- `.result` for business values; Handle via `.requireHandle()` / `.handleOrNull`
+- Host: `Pop.hostBuilder` + `Pop.routeObserver` (no navigatorKey bootstrap)
 
-**Pop APIs** (`lib/src/apis/pop.dart`)
-- Part files: toast, loading, confirm, sheet, flow_sheet, date, menu
-- Loading is singleton (`hideByType(PopupType.loading)`); others allow multi-instance
-- Most APIs expose optional `dismissOnRouteChange`; sheet / flowSheet also expose `onBackPressed`
+**PopupRuntime** (`lib/src/runtime/`)
+- Owns Controller, route observer, at most one active Host
+- Pending calls before first Host mount; `hostUnavailable` after Host gone
 
-**PopupConfig** (`lib/src/models/popup_config.dart`)
-- Shared config: child, position, animation, barrier, type, `dismissOnRouteChange`, `onBackPressed`, dock-to-edge
+**PopupController** (`lib/src/controller/`)
+- Sole state authority: registry, conflict, lifetime, back, route policies
+- Hide/query: `Pop.dismiss*`, channel/tag/key helpers, pause/resume
 
-**Widgets** (`lib/src/widgets/`)
-- `popup_layout.dart` plus type widgets: toast, loading, confirm, sheet, date, menu
-- Sheet: drag modes, drag handle, keyboard adjust
-- `pop_scope_widget.dart`: system back → close popups before routes
+**PopupHost + PopupScene** (`lib/src/host/`, `lib/src/renderers/popup_scene.dart`)
+- Private Overlay above app child; Scene rebuild keeps Entry Keys stable
+- Barrier: `PopupBarrierConfig` (`dismissible`, `dismissOnDrag`, color, insets)
 
-**FlowSheet module** (`lib/src/flow_sheets/`)
-- `Pop.flowSheet` wraps `Pop.sheet` with an internal page stack
-- `FlowSheetController`, `FlowSheetPage` / `FlowSheetPageState`, lifecycle hooks
-- Navigation: `push` / `pop` / `replace` / `completeCurrent` / `closeAll`
+**Configs / Renderers** (`lib/src/configs/`, `lib/src/renderers/`)
+- Per-capability Config + Renderer (toast, loading, confirm, date, sheet, menu…)
 
-**PopupRouteObserver** (`lib/src/core/popup_route_observer.dart`)
-- Watches push / pop / replace / didRemove → `hidePopupsOnRouteChange()`
+**FlowSheet** (`lib/src/flow_sheets/`)
+- Outer sheet Entry + inner page stack via `FlowSheetController`
+- Navigation: `push` / `pop` / `popToRoot` / `replace` / `completeCurrent` /
+  `closeAll`
+- Prefer `completeCurrent` + `closeAll` to avoid double exit animation
+- `FlowSheetPageState.onBack()` can consume system back; `updateDragDismissMode`
 
-### Key Design Patterns
+**Navigation** (`lib/src/navigation/`)
+- `Pop.routeObserver` → route change dismiss per `routePolicy`
 
-1. **SafeOverlayEntry** — defer `markNeedsBuild` during build phase
-2. **Part files** — Pop / PopupManager split while keeping privates
-3. **Animation per popup** — independent controllers
-4. **Type-based filtering** — back button and route-dismiss defaults
-5. **Builder + dismiss** — sheet / menu inject close callback
-6. **FlowSheet stack** — finish with `completeCurrent` / `closeAll` to avoid double exit animation
+### Layout under `lib/src`
 
-### Initialization Pattern
+`api` · `configs` · `controller` · `runtime` · `host` · `renderers` ·
+`navigation` · `flow_sheets` · `widgets` · `utils`
+
+Public exports: `lib/unified_popups.dart`. Usage docs: `doc/` (not `docs/`).
+
+### Initialization
 
 ```dart
-final navigatorKey = GlobalKey<NavigatorState>();
-
-void main() {
-  runApp(MyApp(navigatorKey: navigatorKey));
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    PopupManager.initialize(navigatorKey: navigatorKey);
-  });
-}
-
 MaterialApp(
-  navigatorKey: navigatorKey,
-  navigatorObservers: [PopupRouteObserver()],
-  builder: (context, child) => PopScopeWidget(
-    child: child ?? const SizedBox.shrink(),
-  ),
+  navigatorObservers: [Pop.routeObserver],
+  builder: Pop.hostBuilder,
   home: const HomePage(),
-)
+);
 ```
 
-### Popup Types & Behavior
+### Popup types & defaults (summary)
 
-| Type | Multi-instance? | Auto-dismiss on route change | Back button |
-|------|-----------------|------------------------------|-------------|
-| Toast | Yes | No | Ignored by `hideLastNonToast` |
-| Loading | No (singleton) | No | Closed via `hideLastNonToast()` |
-| Confirm | Yes | Yes (default) | Blocked by default (`PopupBackPolicy.block`) |
-| Sheet | Yes | Yes (default) | `onBackPressed` if set, else close |
-| FlowSheet | Yes (via sheet) | Yes (sheet default) | Default `controller.handleBack` |
-| Date | Yes | No | Close via `hideLastNonToast()` |
-| Menu | Yes | No | Close via `hideLastNonToast()` |
+| Type | Multi? | Typical back |
+|------|--------|--------------|
+| Toast | Yes | ignore |
+| Loading | Keyed singleton-style | block |
+| Confirm | Yes | block + non-dismissible barrier |
+| Date | Yes | dismiss |
+| Sheet | Yes | dismiss (or `onBackPressed`) |
+| FlowSheet | Yes (via sheet) | inner `handleBack` / `onBack` |
+| Menu / DropMenu | Yes | dismiss; default barrier `dismissOnDrag: true` |
+| Custom | Yes | configurable |
 
-### Animation defaults
-
-Toast 200ms · Loading 150ms · Confirm / Date 250ms · Menu 200ms · Sheet / FlowSheet 400ms. All accept `animationDuration` / `animationCurve`.
-
-### Common Patterns
+### Common patterns
 
 ```dart
-Pop.toast('Message', toastType: ToastType.success);
+Pop.toast(const ToastConfig.text('已保存', type: ToastType.success));
 
-Pop.loading(message: 'Loading...');
-try { await operation(); } finally { Pop.hideLoading(); }
+Pop.loading(const LoadingConfig.text('提交中'));
+try {
+  await submit();
+} finally {
+  Pop.dismissChannel(PopupChannel.loading);
+}
 
-final ok = await Pop.confirm(title: 'Confirm', content: 'Description');
-
-final selected = await Pop.sheet<String>(
-  title: 'Select',
-  childBuilder: (dismiss) => ListTile(
-    title: Text('Option'),
-    onTap: () => dismiss('opt'),
+final ok = await Pop.confirm(
+  const ConfirmConfig(
+    title: '确认',
+    content: '继续？',
+    confirmAction: ConfirmAction.text('确定'),
+    cancelAction: ConfirmAction.text('取消'),
   ),
-);
+).result;
 
 final controller = FlowSheetController<String>();
 await Pop.flowSheet<String>(
-  controller: controller,
-  initialPage: MyFirstPage(controller: controller),
-);
-
-final date = await Pop.date(title: 'Birthday');
-
-await Pop.menu<String>(
-  anchorKey: key,
-  builder: (dismiss) => ListTile(title: Text('Edit'), onTap: () => dismiss('edit')),
-);
+  FlowSheetConfig(
+    controller: controller,
+    initialPage: MyFirstPage(),
+  ),
+).result;
+// Inner: controller.push / pop / popToRoot / replace / completeCurrent / closeAll
 ```
 
-### Example app
+Product apps should wrap `Pop` in an `AppPop` (or equivalent) facade — see
+`example/lib/app/app_pop.dart` and `skills/unified-popups-usage/`.
 
-FitPulse demo under `example/`: tabs Today / Workouts / Progress / Profile, Lab via AppBar ⋯, flows in `example/lib/flows/`. Run `cd example && flutter run`. Docs under `docs/` — update `API_REFERENCE` + CHANGELOG when APIs change.
+### Docs to update when APIs change
+
+- `doc/API_REFERENCE.md`
+- `CHANGELOG.md`
+- `README.md` / `README_EN.md` (version + user-facing behavior)
+- `CLAUDE.md` / `AGENTS.md` when structure or agent guidance changes
+- `doc/ARCHITECTURE.md` / `doc/MIGRATION_V1_TO_V2.md` when design contracts change
 
 ### Constraints
 
-- Loading singleton; toast not dismissible by id
-- Sheet / menu close via injected `dismiss`
-- FlowSheet: prefer `completeCurrent` / `closeAll` to finish
-- `dockToEdge` only bottom / left / right; `edgeGap` must match nav height
-- Always `try/finally` around loading
+- Loading needs a clear dismiss path (`PopupLifetime` or `dismissChannel`)
+- Sheet / Menu / Custom complete via injected Handle
+- FlowSheet: `popToRoot` returns to root without closing the sheet; use
+  `closeAll` to finish the session
+- Menu / DropMenu default transparent barrier blocks under-scroll; use
+  `PopupBarrierConfig.hidden()` only when scroll-through is required
+- Prefer `try/finally` (or `PopupLifetime.until`) around loading

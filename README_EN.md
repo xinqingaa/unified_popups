@@ -88,7 +88,8 @@ confirmation.
 ### FlowSheet · multi-step flow
 
 Wizards and multi-page forms: system back pops inner pages first, then closes
-the sheet. A Confirm on top can still block back.
+the sheet. Use `popToRoot` to return to the root page without closing the sheet.
+A Confirm on top can still block back.
 
 ![FlowSheet](doc/images/flowSheet.jpg)
 
@@ -105,7 +106,7 @@ style).
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.4
+  unified_popups: ^2.0.5
 ```
 
 ```dart

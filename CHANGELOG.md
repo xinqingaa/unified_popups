@@ -2,6 +2,23 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.0.5
+
+### Features
+
+- `FlowSheetNavigator.popToRoot([result])` — pop the inner stack to the root
+  page without closing the sheet (no-op when already on root). Topmost waiter
+  receives `result`; intermediate pages complete with `null`.
+
+### Docs
+
+- Documented `popToRoot` across API reference, architecture, migration guide,
+  READMEs, example README, and consumer skill.
+- Rewrote `CLAUDE.md` for the v2 Runtime/Controller/Host model (removed stale
+  PopupManager guidance).
+- Updated `AGENTS.md`: correct `lib/src` layout, `doc/` paths, and a docs
+  checklist that forbids backfilling changelog into already-published versions.
+
 ## 2.0.4
 
 ### Features

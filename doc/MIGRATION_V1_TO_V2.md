@@ -218,8 +218,9 @@ final result = await Pop.flowSheet<Result>(
 ).result;
 ```
 
-内部页面继续使用 `nav.push/pop/replace/completeCurrent/closeAll`。系统返回优先退出
-内页，位于首页时关闭整个 FlowSheet。
+内部页面继续使用
+`nav.push/pop/popToRoot/replace/completeCurrent/closeAll`。`popToRoot` 回到根页且
+不关 sheet。系统返回优先退出内页，位于首页时关闭整个 FlowSheet。
 
 ## 5. 返回模型迁移
 
