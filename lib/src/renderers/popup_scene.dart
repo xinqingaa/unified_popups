@@ -82,7 +82,11 @@ class PopupScene extends StatelessWidget {
     }
     // Always wrap so pause/resume only flips flags — never remounts State
     // (FlowSheet internal Navigator / form fields must survive).
+    // Key MUST be on this Stack child: Flutter matches Stack children by index
+    // when keys are missing, so removing an earlier sibling would remount later
+    // entries (replay enter / snap exit). Inner keys alone are not enough.
     return Offstage(
+      key: ValueKey<String>(entry.id),
       offstage: entry.paused,
       child: IgnorePointer(
         ignoring: entry.paused,
@@ -146,7 +150,10 @@ class _ToastLanes extends StatelessWidget {
         fullScreen: false,
       );
     }
+    // Same as PopupScene._buildEntry: Column children need a stable key so
+    // dismissing an earlier toast does not remount later lane items.
     return Offstage(
+      key: ValueKey<String>(entry.id),
       offstage: entry.paused,
       child: IgnorePointer(
         ignoring: entry.paused,

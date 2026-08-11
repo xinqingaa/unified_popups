@@ -2,6 +2,21 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.0.6
+
+### Fixes
+
+- `PopupScene` / toast lanes now put `ValueKey(entry.id)` on the outer
+  `Offstage` Stack/Column child (not only on the inner animated entry). Removing
+  an earlier sibling no longer remounts later entries, which previously replayed
+  enter animations or snapped exit animations to zero (e.g. dismiss menu then
+  open sheet, or dismiss a lower entry while an upper one is exiting).
+
+### Docs
+
+- Clarified in `ARCHITECTURE.md` that Entry keys must sit on the Scene's direct
+  layout children for identity to survive sibling removal.
+
 ## 2.0.5
 
 ### Features

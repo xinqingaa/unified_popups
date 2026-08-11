@@ -106,7 +106,7 @@ style).
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.5
+  unified_popups: ^2.0.6
 ```
 
 ```dart

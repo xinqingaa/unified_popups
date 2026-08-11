@@ -37,6 +37,7 @@ cd example && flutter test
 
 **PopupHost + PopupScene** (`lib/src/host/`, `lib/src/renderers/popup_scene.dart`)
 - Private Overlay above app child; Scene rebuild keeps Entry Keys stable
+  (keys on outer Offstage Stack/Column children, not only inner animated entry)
 - Barrier: `PopupBarrierConfig` (`dismissible`, `dismissOnDrag`, color, insets)
 
 **Configs / Renderers** (`lib/src/configs/`, `lib/src/renderers/`)
