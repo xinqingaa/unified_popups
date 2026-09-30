@@ -72,6 +72,7 @@ final class PopupEntryRecord<T, C> {
   PopupEntryState state = PopupEntryState.created;
   PopupOutcome<T>? finalOutcome;
   bool wasMounted = false;
+
   /// Orthogonal to [state]: keep entry mounted but hide interaction/paint.
   bool paused = false;
 

@@ -85,14 +85,16 @@ void main() {
     );
   });
 
-  test('ConfirmAction makes text and Widget buttons structurally exclusive',
+  test('ConfirmConfig text slots are independent of custom button builders',
       () {
-    const text = ConfirmAction.text('Confirm');
-    const content = ConfirmAction.content(Text('Confirm'));
-
-    expect(text.text, 'Confirm');
-    expect(text.child, isNull);
-    expect(content.text, isNull);
-    expect(content.child, isA<Text>());
+    const labeled = ConfirmConfig(
+      content: 'x',
+      confirmText: 'yes',
+      cancelText: 'no',
+    );
+    expect(labeled.confirmButton, isNull);
+    expect(labeled.cancelButton, isNull);
+    expect(labeled.confirmText, 'yes');
+    expect(labeled.cancelText, 'no');
   });
 }

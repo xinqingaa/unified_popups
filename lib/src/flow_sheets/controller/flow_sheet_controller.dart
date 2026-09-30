@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 import '../../configs/sheet_types.dart';
@@ -14,12 +16,12 @@ import '../pages/flow_sheet_page.dart';
 /// 每个入栈页面都持有独立的 [Completer] 来管理结果，与路由 future 解耦，因此即使页面仍在
 /// 播放动画，[closeAll] 也不会造成未完成 future 的泄漏。
 ///
-/// 生命周期分为两个独立阶段：
-/// 1. **业务关闭**：完成所有待处理 future，并触发页面的
-///    [FlowSheetPageState.onHide]/[FlowSheetPageState.onClose] 钩子。当 [closeAll]
-///    完成或外层弹窗结果落定时会同步执行。
-/// 2. **对象销毁**（[dispose]）：释放各类 notifier。FlowSheet 宿主组件在退出动画期间可能仍持有
-///    该控制器，因此销毁会推迟到弹窗被移除且宿主已卸载之后，以避免出现“已销毁后仍被使用”的错误。
+/// 生命周期分为三个阶段：
+/// 1. **结束业务会话**（[closeAll] / outcome）：完成 pending future，禁止再导航；
+///    **保留页面树**供外层 Sheet 退出动画使用。
+/// 2. **页面收尾**（dismissed）：触发 [FlowSheetPageState.onHide] /
+///    [FlowSheetPageState.onClose]，卸生命周期。
+/// 3. **对象销毁**（[dispose]）：释放 notifier。推迟到弹窗移除且宿主卸载之后。
 ///
 /// [R] 是通过 [closeAll] 返回给打开该 sheet 调用方的最终结果类型。
 ///
@@ -62,6 +64,10 @@ class FlowSheetController<R> extends ChangeNotifier
   bool _hostAttached = false;
   bool _hostDetached = false;
   bool _isHandlingBack = false;
+
+  /// True while an animated [resetTo] is playing; back must not reveal the
+  /// previous root (password / gate) underneath the incoming home page.
+  bool _isResettingTo = false;
   Object? _host;
 
   /// 为单个弹窗会话保留此控制器。
@@ -81,10 +87,12 @@ class FlowSheetController<R> extends ChangeNotifier
     }
   }
 
-  /// 将该一次性会话绑定到统一的外层弹窗 [handle]。
+  /// 绑定外层弹窗 [handle]。
   ///
-  /// 当 handle 的 outcome 完成时会自动执行业务关闭；当 handle 被 dismiss（退出动画结束）后，
-  /// 一旦宿主卸载即可进行销毁。
+  /// - [PopupHandle.outcome] 落定时：结束业务会话（完成 pending future、禁止再导航），
+  ///   **不立刻卸页面**，以便退出动画期间内容与 Sheet 一起滑走。
+  /// - [PopupHandle.dismissed]（退出动画结束）后：触发页面 onClose / 卸生命周期，
+  ///   再在宿主卸载后销毁控制器。
   ///
   /// 若控制器已关闭、已销毁，或已绑定到另一个 handle，则抛出 [StateError]。
   void attachPopupHandle(PopupHandle<R> handle) {
@@ -96,8 +104,9 @@ class FlowSheetController<R> extends ChangeNotifier
     }
     _sessionClaimed = true;
     _popupHandle = handle;
-    handle.outcome.then((_) => _closeBusiness());
+    handle.outcome.then((_) => _endSessionKeepPages());
     handle.dismissed.then((_) {
+      _disposeStackForClose();
       _popupDismissed = true;
       _maybeDispose();
     });
@@ -122,16 +131,29 @@ class FlowSheetController<R> extends ChangeNotifier
     _maybeDispose();
   }
 
-  /// 完成所有待处理 future 并触发生命周期关闭钩子；具备幂等性。
-  void _closeBusiness() {
+  /// 结束业务会话：完成 pending future、禁止再导航；页面留给退出动画。
+  void _endSessionKeepPages() {
     if (_closed) return;
     _closed = true;
     _isHandlingBack = false;
+    _isResettingTo = false;
     for (final entry in _stack.reversed) {
       entry.completeIfPending();
+    }
+  }
+
+  /// 退出动画结束后卸页面生命周期（onHide → onClose）。
+  void _disposeStackForClose() {
+    for (final entry in _stack.reversed) {
       _disposeEntry(entry, FlowSheetLifecycleEndReason.close);
     }
     _syncDragDismissMode();
+  }
+
+  /// 结束业务会话并卸掉页面；供 [dispose] 等同步收尾路径使用。
+  void _closeBusiness() {
+    _endSessionKeepPages();
+    _disposeStackForClose();
   }
 
   /// 仅在弹窗已被移除且宿主已卸载（或从未挂载）之后才销毁控制器。
@@ -176,12 +198,26 @@ class FlowSheetController<R> extends ChangeNotifier
   @override
   bool get canPop => _stack.length > 1;
 
-  /// 将 [page] 推入内部栈。
-  ///
-  /// 语义参见 [FlowSheetNavigator.push]。若控制器已关闭，则返回一个立即完成的 future。
+  @override
+  bool contains(String id, {String? identity}) =>
+      _indexOf(id, identity: identity) != null;
+
+  /// 将 [page] 推入内部栈。同 [id] 只留一页：栈顶相同则 [replace]，
+  /// 在下面则只卸那一页再压新页。语义参见 [FlowSheetNavigator.push]。
   @override
   Future<T?> push<T>(FlowSheetPage<T> page) {
     if (_closed) return Future<T?>.value();
+    final existingIndex = _indexOf(page.id);
+    if (existingIndex != null && existingIndex == _stack.length - 1) {
+      return replace<T>(page);
+    }
+    if (existingIndex != null) {
+      _spliceAt(existingIndex);
+    }
+    return _pushNew<T>(page);
+  }
+
+  Future<T?> _pushNew<T>(FlowSheetPage<T> page) {
     final previousTop = _stack.isNotEmpty ? _stack.last : null;
     final entry = FlowSheetEntry(page);
     previousTop?.lifecycleController.hide();
@@ -192,13 +228,24 @@ class FlowSheetController<R> extends ChangeNotifier
     return entry.completer.future.then((value) => value as T?);
   }
 
+  /// 只卸掉 [index] 那一条，上面的页原位留下。
+  void _spliceAt(int index) {
+    final removed = _stack.removeAt(index);
+    removed.completeIfPending();
+    _disposeEntry(removed, FlowSheetLifecycleEndReason.remove);
+  }
+
   /// 用 [page] 替换栈顶页面。
   ///
   /// 语义参见 [FlowSheetNavigator.replace]。
   @override
   Future<T?> replace<T>(FlowSheetPage<T> page) {
     if (_closed) return Future<T?>.value();
-    if (_stack.isEmpty) return push<T>(page);
+    if (_stack.isEmpty) return _pushNew<T>(page);
+    final existingIndex = _indexOf(page.id);
+    if (existingIndex != null && existingIndex < _stack.length - 1) {
+      _spliceAt(existingIndex);
+    }
     final removed = _stack.removeLast();
     final entry = FlowSheetEntry(page);
     _stack.add(entry);
@@ -263,6 +310,36 @@ class FlowSheetController<R> extends ChangeNotifier
     _isHandlingBack = false;
   }
 
+  /// 弹出直到 [id] 成为栈顶。
+  ///
+  /// 语义参见 [FlowSheetNavigator.popTo]。
+  @override
+  void popTo(String id, [Object? result, String? identity]) {
+    if (_closed) return;
+    final index = _indexOf(id, identity: identity);
+    assert(
+      index != null,
+      'FlowSheet has no page id="$id"'
+      '${identity != null ? ' identity="$identity"' : ''}.',
+    );
+    if (index == null) return;
+    if (index == _stack.length - 1) return;
+
+    final target = _stack[index];
+    final toRemove = _stack.sublist(index + 1);
+    _stack.removeRange(index + 1, _stack.length);
+
+    for (final entry in toRemove.reversed) {
+      entry.completeIfPending();
+      _disposeEntry(entry, FlowSheetLifecycleEndReason.remove);
+    }
+
+    _syncDragDismissMode();
+    notifyListeners();
+    _scheduleShow(target, poppedToResult: result, deliverPoppedTo: true);
+    _isHandlingBack = false;
+  }
+
   /// 完成当前页面的结果，但不执行弹出操作。
   ///
   /// 语义参见 [FlowSheetNavigator.completeCurrent]。
@@ -275,6 +352,169 @@ class FlowSheetController<R> extends ChangeNotifier
     entry.completeIfPending(result);
   }
 
+  /// 交付当前页结果并关闭整张 FlowSheet。
+  ///
+  /// 语义参见 [FlowSheetNavigator.completeAndCloseAll]。
+  @override
+  void completeAndCloseAll<T>([T? result]) {
+    if (_closed) return;
+    completeCurrent<T>(result);
+    closeAll(result);
+  }
+
+  /// 将内部栈重置为单一 [page]。
+  ///
+  /// 语义参见 [FlowSheetNavigator.resetTo]。
+  @override
+  Future<T?> resetTo<T>(FlowSheetPage<T> page, {bool animate = false}) {
+    if (_closed) return Future<T?>.value();
+    if (animate && _stack.isNotEmpty) {
+      return _resetToAnimated(page);
+    }
+    return _resetToImmediate(page);
+  }
+
+  Future<T?> _resetToImmediate<T>(FlowSheetPage<T> page) {
+    final removing = List<FlowSheetEntry>.from(_stack);
+    _stack.clear();
+    for (final entry in removing) {
+      entry.completeIfPending(entry.pendingResult);
+      _disposeEntry(entry, FlowSheetLifecycleEndReason.remove);
+    }
+    final entry = FlowSheetEntry(page);
+    _stack.add(entry);
+    _syncDragDismissMode();
+    notifyListeners();
+    _scheduleShow(entry);
+    return entry.completer.future.then((value) => value as T?);
+  }
+
+  Future<T?> _resetToAnimated<T>(FlowSheetPage<T> page) {
+    _stack.last.lifecycleController.hide();
+    final entry = FlowSheetEntry(page, suppressSwipePop: true);
+    _stack.add(entry);
+    _isResettingTo = true;
+    _syncDragDismissMode();
+    notifyListeners();
+    _scheduleShow(entry);
+    unawaited(_finishAnimatedResetTo(entry));
+    return entry.completer.future.then((value) => value as T?);
+  }
+
+  Future<void> _finishAnimatedResetTo(FlowSheetEntry entry) async {
+    try {
+      await _waitForIncomingRouteAnimation(entry);
+      if (!_closed && !entry.disposed) {
+        _collapseBelow(entry);
+      }
+    } finally {
+      _isResettingTo = false;
+    }
+  }
+
+  /// Drop every page under [keep] after the incoming enter animation.
+  ///
+  /// [keep] stays the same [FlowSheetEntry] so the Navigator keeps its route
+  /// and does not replay the enter transition.
+  void _collapseBelow(FlowSheetEntry keep) {
+    if (_closed || keep.disposed) return;
+    if (_stack.isEmpty || !identical(_stack.last, keep)) return;
+    if (_stack.length <= 1) return;
+    final removing = _stack.sublist(0, _stack.length - 1);
+    _stack
+      ..clear()
+      ..add(keep);
+    _syncDragDismissMode();
+    notifyListeners();
+    for (final entry in removing) {
+      entry.completeIfPending(entry.pendingResult);
+      _disposeEntry(entry, FlowSheetLifecycleEndReason.remove);
+    }
+  }
+
+  Future<void> _waitForIncomingRouteAnimation(FlowSheetEntry entry) async {
+    final incoming = await _waitForIncomingRoute(entry);
+    if (incoming == null) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      return;
+    }
+
+    final animation = incoming.animation;
+    if (animation == null || animation.isCompleted || animation.isDismissed) {
+      return;
+    }
+
+    final done = Completer<void>();
+    void listener(AnimationStatus status) {
+      if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        animation.removeStatusListener(listener);
+        if (!done.isCompleted) done.complete();
+      }
+    }
+
+    animation.addStatusListener(listener);
+    if (animation.isCompleted || animation.isDismissed) {
+      animation.removeStatusListener(listener);
+      if (!done.isCompleted) done.complete();
+    }
+    await done.future;
+  }
+
+  Future<ModalRoute<dynamic>?> _waitForIncomingRoute(
+      FlowSheetEntry entry) async {
+    for (var attempt = 0; attempt < 8; attempt++) {
+      await _nextFrame();
+      final top = _topModalRoute();
+      if (top != null && _routeOwnsEntry(top, entry)) return top;
+    }
+    return null;
+  }
+
+  Future<void> _nextFrame() {
+    final frame = Completer<void>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!frame.isCompleted) frame.complete();
+    });
+    return frame.future;
+  }
+
+  ModalRoute<dynamic>? _topModalRoute() {
+    final nav = _navigatorKey.currentState;
+    if (nav == null) return null;
+    Route<dynamic>? top;
+    nav.popUntil((route) {
+      top = route;
+      return true;
+    });
+    final route = top;
+    return route is ModalRoute<dynamic> ? route : null;
+  }
+
+  bool _routeOwnsEntry(Route<dynamic> route, FlowSheetEntry entry) {
+    final settings = route.settings;
+    return settings is Page<dynamic> &&
+        settings.key == ValueKey<FlowSheetEntry>(entry);
+  }
+
+  /// 卸掉栈顶已交付结果的页面。
+  ///
+  /// 语义参见 [FlowSheetNavigator.discardCompletedAbove]。
+  @override
+  void discardCompletedAbove() {
+    if (_closed) return;
+    var changed = false;
+    while (_stack.length > 1 && _stack.last.completer.isCompleted) {
+      final entry = _stack.removeLast();
+      _disposeEntry(entry, FlowSheetLifecycleEndReason.remove);
+      changed = true;
+    }
+    if (!changed) return;
+    if (_stack.isNotEmpty) _scheduleShow(_stack.last);
+    _syncDragDismissMode();
+    notifyListeners();
+  }
+
   /// 处理 FlowSheet 的系统返回与边缘滑动返回手势。
   ///
   /// 外层弹窗的返回桥接会委托到此处，使多页面流程在关闭 sheet 之前先弹出内部页面。
@@ -283,6 +523,7 @@ class FlowSheetController<R> extends ChangeNotifier
   bool handleBack([Object? result]) {
     if (_closed) return true;
     if (_isHandlingBack) return true;
+    if (_isResettingTo) return true;
     if (handleCurrentPageBack()) return true;
     _isHandlingBack = true;
     if (canPop) {
@@ -301,10 +542,13 @@ class FlowSheetController<R> extends ChangeNotifier
   /// 关闭整个 FlowSheet 并完成外层弹窗。
   ///
   /// 语义参见 [FlowSheetNavigator.closeAll]。
+  ///
+  /// 结束业务会话并 complete 外层 handle；页面树保留到退出动画结束，
+  /// 避免「内容先消失、空壳再下滑」。
   @override
   void closeAll([Object? result]) {
     if (_closed) return;
-    _closeBusiness();
+    _endSessionKeepPages();
     _popupHandle?.complete(result as R?);
   }
 
@@ -332,7 +576,23 @@ class FlowSheetController<R> extends ChangeNotifier
     }
   }
 
-  void _scheduleShow(FlowSheetEntry entry) {
+  /// 不传 [identity] 时按 [FlowSheetPage.id]（种类）查找；
+  /// 传了 [identity] 时再按对象键收窄。同 [id] 栈内最多一页。
+  int? _indexOf(String id, {String? identity}) {
+    for (var i = 0; i < _stack.length; i++) {
+      final page = _stack[i].page;
+      if (page.id != id) continue;
+      if (identity != null && page.identity != identity) continue;
+      return i;
+    }
+    return null;
+  }
+
+  void _scheduleShow(
+    FlowSheetEntry entry, {
+    Object? poppedToResult,
+    bool deliverPoppedTo = false,
+  }) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_closed ||
           entry.disposed ||
@@ -341,6 +601,9 @@ class FlowSheetController<R> extends ChangeNotifier
         return;
       }
       entry.lifecycleController.show();
+      if (deliverPoppedTo) {
+        entry.lifecycleController.poppedTo(poppedToResult);
+      }
     });
   }
 

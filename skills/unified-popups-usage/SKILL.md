@@ -112,7 +112,9 @@ MaterialApp(
 - 入口：`Pop.xxx(Config)` → `PopupOpenResult`；业务值 `.result`；控制用 Handle（仅封装内）。
 - Loading 必须有关闭路径（见 §6 / `PopupLifetime`）。
 - Sheet / Menu / Custom 用 builder 注入的 handle 完成/关闭（见 §3.4、§9+）。
-- FlowSheet 收尾、`onBack`、`popToRoot` 见 §10。
+- FlowSheet 收尾、`onBack`、`popToRoot`、`contains`/`popTo`/`onPoppedTo`、
+  `resetTo`、`completeAndCloseAll`、`settleChannel`、`enableSwipePop` 见 §10 与 §14。
+  `push` 按 `id` 只留一页。关 Sheet 后再跳全屏路由要先 `settleChannel`。
 - 只 import `package:unified_popups/unified_popups.dart`。
 
 ## 检查清单

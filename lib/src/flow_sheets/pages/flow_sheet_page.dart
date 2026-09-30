@@ -11,32 +11,55 @@ import '../lifecycle/flow_sheet_lifecycle_controller.dart';
 abstract class FlowSheetPage<T> extends StatefulWidget {
   /// 创建一个 FlowSheet 页面。
   ///
-  /// [id] 用于调试，在同一个流程内应保持唯一。[maintainState] 决定该页面被其他页面覆盖时
-  /// 是否保留状态。[dragDismissMode] 在该页面位于栈顶时覆盖整体的拖拽关闭模式；为 null 时
-  /// 使用打开 sheet 时配置的模式。
+  /// [id] 是页种类键（同一类步骤/主页用同一个 [id]，如 `'trade-main'`）。
+  /// 同一 [id] 在一场会话的栈内只允许一页：[FlowSheetNavigator.push] 遇到已有
+  /// 同 `id` 时会卸掉旧页再放入新页（栈顶则 [FlowSheetNavigator.replace]）。
+  /// [identity] 是可选的业务对象键（如 `symbol`、`orderNo`），供查找与日志使用，
+  /// 不是栈内唯一键，也不能让同一 [id] 并存多份。
+  ///
+  /// [FlowSheetNavigator.contains] / [FlowSheetNavigator.popTo] 不传
+  /// `identity` 时按 [id] 查找；传了再按对象键收窄。
+  ///
+  /// [maintainState] 决定该页面被其他页面覆盖时是否保留状态。[dragDismissMode]
+  /// 在该页面位于栈顶时覆盖整体的拖拽关闭模式；为 null 时使用打开 sheet 时配置的模式。
+  ///
+  /// [enableSwipePop] 为 false 时，非首页不使用 [CupertinoPageRoute]，从而禁用 iOS 侧滑返回
+  /// （侧滑会直接 pop 内嵌路由，绕过 [FlowSheetPageState.onBack]）。
   const FlowSheetPage({
     super.key,
     required this.id,
+    this.identity,
     this.maintainState = false,
     this.dragDismissMode,
+    this.enableSwipePop = true,
   });
 
   final String id;
 
+  /// 可选业务对象键（日志 / [FlowSheetNavigator.contains] 收窄），不参与唯一性。
+  final String? identity;
+
+  /// `identity == null ? id : '$id#$identity'`，便于日志；栈内唯一按 [id]。
+  String get instanceId => identity == null ? id : '$id#$identity';
+
   final bool maintainState;
 
   final SheetDragDismissMode? dragDismissMode;
+
+  /// 非首页是否允许 iOS 侧滑返回（默认 true）。
+  final bool enableSwipePop;
 }
 
 /// [FlowSheetPage] 子类对应的基础 [State]。
 ///
 /// 提供 [nav] 用于栈内导航，[isFlowSheetVisible] 用于查询可见性。生命周期钩子
-/// （[onLoad]、[onShow]、[onHide]、[onRemove]、[onClose]）均为可选，按需重写即可。
+/// （[onLoad]、[onShow]、[onHide]、[onRemove]、[onClose]、[onPoppedTo]）均为可选，按需重写即可。
 ///
 /// 生命周期触发顺序：
 /// - 页面首次成为当前页：[onLoad] → [onShow]
 /// - 被新入栈的页面覆盖：[onHide]
 /// - 上方页面弹出后再次显示：[onShow]
+/// - 因 [FlowSheetNavigator.popTo] 成为栈顶：[onShow]（若刚恢复可见）→ [onPoppedTo]
 /// - 从栈中移除（pop 或 replace）：[onHide]（若可见）→ [onRemove]
 /// - 整个 sheet 关闭：[onHide]（若可见）→ [onClose]
 abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
@@ -81,6 +104,11 @@ abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
 
   /// 当整个 FlowSheet 关闭而该页面仍在栈中时调用。
   void onClose() {}
+
+  /// 因 [FlowSheetNavigator.popTo] 重新成为栈顶且携带业务结果时调用。
+  ///
+  /// 普通 [pop] / 系统返回只会 [onShow]，不会走这里。[result] 可能为 null。
+  void onPoppedTo(Object? result) {}
 
   /// 当前页面处理返回事件；返回 true 时阻止默认的内部 pop/关闭行为。
   bool onBack() => false;
@@ -140,6 +168,12 @@ abstract class FlowSheetPageState<W extends FlowSheetPage<T>, T>
     handleHide();
     _endedByFlowSheet = true;
     onClose();
+  }
+
+  @override
+  void handlePoppedTo(Object? result) {
+    if (_endedByFlowSheet) return;
+    onPoppedTo(result);
   }
 
   @override

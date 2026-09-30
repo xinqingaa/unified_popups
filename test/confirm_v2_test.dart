@@ -13,61 +13,85 @@ import 'package:unified_popups/src/controller/popup_entry_state.dart';
 import 'package:unified_popups/src/controller/popup_lifecycle_callbacks.dart';
 import 'package:unified_popups/src/controller/popup_open_result.dart';
 import 'package:unified_popups/src/host/popup_host.dart';
+import 'package:unified_popups/src/renderers/confirm_renderer.dart';
 import 'package:unified_popups/src/renderers/popup_scene.dart';
 import 'package:unified_popups/src/runtime/popup_runtime.dart';
 
 void main() {
-  testWidgets('confirm defaults to divider button style', (tester) async {
-    final runtime = PopupRuntime();
-    addTearDown(runtime.shutdown);
-    final api = PopupTypeApi(runtime);
-    api.confirm(
-      const ConfirmConfig(
-        content: 'divider?',
-        confirmAction: ConfirmAction.text('yes'),
-        cancelAction: ConfirmAction.text('no'),
-        animationConfig: PopupAnimationConfig(duration: Duration.zero),
-      ),
-    );
-    await tester.pumpWidget(_ConfirmApp(runtime: runtime));
-    await tester.pump();
-
-    final ink = tester.widgetList<Ink>(find.byType(Ink)).toList();
-    expect(ink, isNotEmpty);
-    final decoration = ink.first.decoration! as BoxDecoration;
-    expect(decoration.border, isNotNull);
-    expect(decoration.color, Colors.transparent);
-  });
-
-  testWidgets('confirm filled style uses solid backgrounds without divider',
+  testWidgets('confirm defaults to capsule filled and outline buttons',
       (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final api = PopupTypeApi(runtime);
     api.confirm(
       const ConfirmConfig(
-        content: 'filled?',
-        confirmAction: ConfirmAction.text('yes'),
-        cancelAction: ConfirmAction.text('no'),
+        content: 'capsule?',
+        confirmText: 'yes',
+        cancelText: 'no',
         animationConfig: PopupAnimationConfig(duration: Duration.zero),
-        style: ConfirmStyle(
-          buttonStyle: ConfirmButtonStyle.filled,
-          confirmBackgroundColor: Colors.red,
-        ),
       ),
     );
     await tester.pumpWidget(_ConfirmApp(runtime: runtime));
     await tester.pump();
 
-    final confirmInk = tester
-        .widgetList<Ink>(find.ancestor(
-          of: find.text('yes'),
-          matching: find.byType(Ink),
-        ))
-        .first;
-    final decoration = confirmInk.decoration! as BoxDecoration;
-    expect(decoration.color, Colors.red);
-    expect(decoration.border, isNull);
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.byType(Divider), findsNothing);
+  });
+
+  testWidgets('confirm header image is full-bleed above content padding',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    PopupTypeApi(runtime).confirm(
+      const ConfirmConfig(
+        title: 'Title',
+        content: 'Body',
+        confirmText: 'ok',
+        imagePath: 'assets/images/missing.png',
+        imageHeight: 140,
+        style: ConfirmStyle(
+          contentPadding: EdgeInsets.fromLTRB(26, 20, 26, 0),
+          imageGap: 0,
+          margin: EdgeInsets.zero,
+        ),
+        animationConfig: PopupAnimationConfig(duration: Duration.zero),
+      ),
+    );
+    await tester.pumpWidget(_ConfirmApp(runtime: runtime));
+    await tester.pump();
+
+    final imageRect =
+        tester.getRect(find.byKey(ConfirmRendererKeys.headerImage));
+    final titleRect = tester.getRect(find.text('Title'));
+    expect(imageRect.height, 140);
+    expect(titleRect.top, greaterThanOrEqualTo(imageRect.bottom));
+    expect(titleRect.left, closeTo(imageRect.left + 26, 0.5));
+    expect(
+      tester.widget<Image>(find.byKey(ConfirmRendererKeys.headerImage)).fit,
+      BoxFit.cover,
+    );
+  });
+
+  testWidgets('confirm header imageFit can be overridden', (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    PopupTypeApi(runtime).confirm(
+      const ConfirmConfig(
+        content: 'Body',
+        confirmText: 'ok',
+        imagePath: 'assets/images/missing.png',
+        imageFit: BoxFit.fill,
+        animationConfig: PopupAnimationConfig(duration: Duration.zero),
+      ),
+    );
+    await tester.pumpWidget(_ConfirmApp(runtime: runtime));
+    await tester.pump();
+
+    expect(
+      tester.widget<Image>(find.byKey(ConfirmRendererKeys.headerImage)).fit,
+      BoxFit.fill,
+    );
   });
 
   testWidgets('confirm and cancel callbacks only follow their own buttons',
@@ -81,8 +105,8 @@ void main() {
           ConfirmConfig(
             content: 'continue?',
             bodyExtension: const Text('extra'),
-            confirmAction: const ConfirmAction.text('yes'),
-            cancelAction: const ConfirmAction.text('no'),
+            confirmText: 'yes',
+            cancelText: 'no',
             animationConfig:
                 const PopupAnimationConfig(duration: Duration.zero),
             lifecycle: PopupLifecycleCallbacks<bool>(
@@ -104,6 +128,41 @@ void main() {
     await handle.dismissed;
   });
 
+  testWidgets('custom confirm action owns the tap without InkWell',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final handle = PopupTypeApi(runtime)
+        .confirm(
+          ConfirmConfig(
+            content: 'custom?',
+            confirmButton: (onTap) => GestureDetector(
+              onTap: onTap,
+              child: const Text('yes'),
+            ),
+            cancelButton: (onTap) => GestureDetector(
+              onTap: onTap,
+              child: const Text('no'),
+            ),
+            animationConfig:
+                const PopupAnimationConfig(duration: Duration.zero),
+          ),
+        )
+        .requireHandle();
+    await tester.pumpWidget(_ConfirmApp(runtime: runtime));
+    await tester.pump();
+
+    expect(
+      find.ancestor(of: find.text('yes'), matching: find.byType(InkWell)),
+      findsNothing,
+    );
+
+    await tester.tap(find.text('yes'));
+    expect(await handle.result, isTrue);
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
   testWidgets('close button does not invoke confirm or cancel callbacks',
       (tester) async {
     final runtime = PopupRuntime();
@@ -115,8 +174,8 @@ void main() {
         .confirm(
           ConfirmConfig(
             content: 'close me',
-            confirmAction: const ConfirmAction.text('yes'),
-            cancelAction: const ConfirmAction.text('no'),
+            confirmText: 'yes',
+            cancelText: 'no',
             showCloseButton: true,
             animationConfig:
                 const PopupAnimationConfig(duration: Duration.zero),

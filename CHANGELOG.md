@@ -2,6 +2,171 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.2.0
+
+### Breaking
+
+- `FlowSheetNavigator.push` keeps one page per `id`. If that `id` is already
+  the top, `push` replaces it. If it sits lower in the stack, only that old
+  page is removed (pages above it stay) and the new page is pushed on top.
+  Same-`id` instances no longer coexist via `identity`. `identity` remains an
+  optional object key for lookup / logging. Re-entering a page kind can just
+  `push`; `contains` / `popTo` stay for explicit “pop down to this page”.
+  This supersedes the 2.1.0 rule that different `identity` values could share
+  an `id`.
+
+### Fixes
+
+- A full-screen popup with a visible barrier now takes focus with a
+  `FocusScopeNode` instead of a leaf `FocusNode`. A text field inside the
+  popup can become the primary focus, so the keyboard opens. On dismiss, the
+  previous route’s focus is restored only when that popup scope still holds
+  focus.
+- Sheet and FlowSheet clear the primary focus when the exit animation starts,
+  and on the first drag in the dismiss direction, so the keyboard moves with
+  the panel. Toast and Loading do not steal focus from the page underneath.
+- A sheet that has already been dragged partway toward closed uses a reverse
+  duration scaled by the remaining progress and `Curves.linear`. An undragged
+  dismiss still uses `reverseDuration` (or `duration`) and `reverseCurve`.
+
+### Docs
+
+- API reference, architecture, READMEs, the example README, and the consumer
+  skill now describe the 2.0.7–2.2.0 contracts, including behaviors that
+  previously shipped only in code: `settleChannel`, `completeAndCloseAll`,
+  `discardCompletedAbove`, `enableSwipePop`, `FlowSheetFocus`, sheet chrome,
+  and the default loading indicator.
+
+## 2.1.0
+
+### Features
+
+- `FlowSheetPage.identity` — optional business-object key (e.g. `symbol`,
+  `orderNo`) alongside the existing `id` (page species). `FlowSheetPage.
+  instanceId` (`identity == null ? id : '$id#$identity'`) is the actual
+  uniqueness/lookup key used by the stack, so multiple instances of the same
+  `id` can now coexist as long as their `identity` differs (e.g. the same
+  trade-main page hosting AAPL and, separately, TSLA in one session).
+- `FlowSheetNavigator.contains(id, {identity})` / `popTo(id, [result],
+  [identity])` — the optional `identity` narrows a lookup from "does this
+  species exist" (unchanged default behavior) to "does *this exact instance*
+  exist". Existing call sites that never pass `identity` are unaffected.
+
+### Fixes
+
+- `push` / `replace` / `resetTo(animate: true)` now assert uniqueness on
+  `instanceId`, not the raw `id`. Previously, two pages sharing an `id` but
+  representing different business objects (e.g. a trade-main page reused for
+  a different symbol reached through a nested "all orders" host) could not
+  coexist, which forced call sites to reuse one page instance across unrelated
+  objects — the reused instance then displayed stale data for fields it never
+  re-bound. Declaring `identity` on such pages lets the stack tell them apart
+  and lets business code find/replace the exact instance it means via
+  `contains`/`popTo(identity: ...)` instead of ad-hoc equality checks.
+
+### Note
+
+Superseded by 2.2.0: the same `id` is again limited to one page in the stack.
+`identity` is no longer a uniqueness key.
+
+## 2.0.7
+
+### Features
+
+- `FlowSheetNavigator.contains(id)` — whether a page id is in the inner stack
+  (including the current page). Use this instead of `canPop` when the question
+  is "is this host present", not "is there a page above".
+- `FlowSheetNavigator.popTo(id, [result])` — pop until that id is top
+  (no-op if missing or already top). Removed pages complete their push Futures
+  with `null`. The payload is delivered only to the target via
+  `FlowSheetPageState.onPoppedTo`.
+- `FlowSheetPage.id` is the routing key for the session. In this version a
+  duplicate id asserts in debug. 2.1.0 allows a second page when `identity`
+  differs; 2.2.0 replaces that with one page per `id`.
+- `FlowSheetNavigator.resetTo(page, {animate})` — `animate: true` plays a
+  forward horizontal enter, then collapses the stack so the new page is root
+  (cannot swipe back to the previous gate). Default remains an instant
+  replace. While that enter plays, system back is consumed and does not pop
+  the incoming page onto the gate. The FlowSheet back path goes through
+  `handleBack` when the stack can pop.
+- `FlowSheetNavigator.completeAndCloseAll(result)` — complete the current page
+  and close the whole sheet without an inner-page return transition. Use this
+  when the next step is a full-screen route and the flow should not return.
+- `FlowSheetNavigator.discardCompletedAbove()` — drop pages that already
+  completed their push future and are still sitting above the current page,
+  with no return transition.
+- `FlowSheetPage.enableSwipePop` (default `true`). Set it to `false` to skip
+  `CupertinoPageRoute` on non-root pages, so an iOS edge swipe cannot pop the
+  inner route and bypass `onBack`.
+- `FlowSheetFocus.handOffToPreviousPage` and `waitForRouteNearComplete` —
+  hand focus back before pop, and wait until the route transition is near
+  completion before requesting focus.
+- `Pop.settleChannel(channel)` — close entries on that channel that are still
+  active, then wait until every still-mounted entry (including ones already
+  exiting) has finished `dismissed`.
+- The FlowSheet root page uses a zero-duration route. The outer sheet
+  animation is the entrance. Non-root pages keep a horizontal transition.
+  `resetTo(animate: true)` still slides the new page in, then collapses it
+  to the root.
+- `closeAll` ends the business session immediately (pending futures complete,
+  further navigation is rejected) and keeps the page tree until the outer
+  exit animation finishes. `onHide` / `onClose` run after that animation.
+
+### Fixes
+
+- Sheet titles now honor `titleAlign` across the full header width. The title
+  `Text` was previously centered by a `Stack`, so `titleAlign: left` still
+  looked centered.
+- Opening or dismissing a popup during `State.dispose` / route teardown no
+  longer throws `setState() or markNeedsBuild() called when widget tree was
+  locked`. `PopupController` defers notifications only in
+  `persistentCallbacks`; other phases (including animation callbacks) still
+  notify synchronously, so timing is unchanged.
+- A `SheetDragConfig.modeListenable` change that arrives outside the idle or
+  post-frame phase is applied on the next frame instead of calling `setState`
+  on a locked tree.
+
+### Changes
+
+- Confirm `imagePath` is a full-bleed header above `contentPadding`: width
+  stretches to the dialog, clipped by the container radius. `imageHeight`
+  still applies (default 80). `imageFit` defaults to `BoxFit.cover`.
+  `imageWidth` is ignored.
+- The default Loading indicator is a `CupertinoActivityIndicator` with radius
+  14. `LoadingStyle.indicatorStrokeWidth` does not affect that indicator. A
+  custom `LoadingIndicatorConfig.child` is still rotated.
+- Sheet default content padding is `EdgeInsets.fromLTRB(16, 8, 16, 16)`.
+- Sheet default corner radius is 32 on the outer corners for that direction,
+  and the panel clips its child to that radius.
+- The bottom drag handle is 38×6 with 10px of padding below it.
+- Bottom-sheet keyboard avoidance applies `viewInsets` immediately.
+  `SheetKeyboardConfig.animationDuration` remains on the config and is not
+  used by the renderer.
+- Sheet open requests are updatable. The same key with
+  `PopupConflictPolicy.updateExisting` can refresh that entry in place. The
+  business child built for a handle is kept until the handle changes, so an
+  in-place config update does not rerun `builder`.
+
+### Breaking
+
+- Confirm default is inset capsule buttons (`FilledButton` / `OutlinedButton`),
+  not full-bleed divider chrome.
+- Removed `ConfirmAction`, `ConfirmButtonStyle`, and button-skin fields on
+  `ConfirmStyle` (`buttonStyle`, `confirmStyle`, `cancelStyle`,
+  `buttonBorderRadius`, `confirmBackgroundColor`, `cancelBackgroundColor`,
+  `confirmBorder`, `cancelBorder`, `dividerColor`, `dividerWidth`, `padding`).
+- Slots are `confirmButton` / `cancelButton` builders, or `confirmText` /
+  `cancelText` for the default capsule. Custom builders must call `onTap`.
+- Layout uses `contentPadding` + `buttonPadding` plus named gaps
+  (`titleGap`, `contentButtonGap`, `buttonSpacing`, …). Optional `separator`
+  / `buttonSeparator` cover full-bleed divider recipes.
+
+### Docs
+
+- Documented the 2.0.7 FlowSheet, Confirm, Sheet, Loading, and
+  `settleChannel` contracts in API §6–§10 and §14, ARCHITECTURE, READMEs,
+  the example README, and the consumer skill.
+
 ## 2.0.6
 
 ### Fixes

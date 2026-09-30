@@ -82,8 +82,11 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 ### FlowSheet · 多步流程
 
-分步填写、申请向导：系统返回先退内页，再关整张 Sheet；可用 `popToRoot` 回到根页且
-不关 sheet；Confirm 盖在上面时仍可拦截返回。
+分步填写、申请向导：系统返回先退内页，再关整张 Sheet。`push` 按 `id` 只留一页。
+`popToRoot` 回到根页且不关 sheet；`contains` / `popTo` 回到指定页（结果走
+`onPoppedTo`）。门槛页换成新首页用 `resetTo`（`animate: true` 先右滑再收成根页）。
+离开去全屏路由用 `completeAndCloseAll`，再 `Pop.settleChannel`。
+Confirm 盖在上面时仍可拦截返回。
 
 ![FlowSheet](doc/images/flowSheet.jpg)
 
@@ -99,7 +102,7 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.6
+  unified_popups: ^2.2.0
 ```
 
 ```dart
@@ -126,8 +129,8 @@ final ok = await Pop.confirm(
   const ConfirmConfig(
     title: '删除记录',
     content: '删除后无法恢复。',
-    confirmAction: ConfirmAction.text('删除'),
-    cancelAction: ConfirmAction.text('取消'),
+    confirmText: '删除',
+    cancelText: '取消',
   ),
 ).result;
 ```
@@ -181,8 +184,8 @@ final confirmed = await Pop.confirm(
   const ConfirmConfig(
     title: '删除记录',
     content: '删除后无法恢复。',
-    confirmAction: ConfirmAction.text('删除'),
-    cancelAction: ConfirmAction.text('取消'),
+    confirmText: '删除',
+    cancelText: '取消',
   ),
 ).result;
 ```
@@ -222,8 +225,8 @@ abstract final class AppPop {
           ConfirmConfig(
             title: title,
             content: content,
-            confirmAction: const ConfirmAction.text('确定'),
-            cancelAction: const ConfirmAction.text('取消'),
+            confirmText: '确定',
+            cancelText: '取消',
           ),
         ).result ??
         false;
@@ -335,6 +338,7 @@ DropMenu 使用 `DropMenu.single` 或 `DropMenu.nested`；标准 DropMenu 默认
 ```dart
 await Pop.dismissTop();
 await Pop.dismissChannel(PopupChannel.sheet);
+await Pop.settleChannel(PopupChannel.sheet);
 await Pop.dismissTags({'network'});
 await Pop.dismissAll();
 
@@ -346,6 +350,9 @@ try {
   if (paused != null) Pop.resume(paused.id);
 }
 ```
+
+`dismissChannel` 只关闭仍 active 的 Entry。`settleChannel` 还会等待该 channel
+上仍在退出动画中的弹层全部 `dismissed`，适合关 Sheet 后再 `push` 全屏路由。
 
 `PopupBehaviorConfig` 的 channel 由具体能力固定。业务只配置 key、tags、冲突、路由
 和返回策略。已有 Behavior 需要清空 key 时使用 `copyWith(clearKey: true)`。

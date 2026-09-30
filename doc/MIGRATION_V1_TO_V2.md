@@ -129,8 +129,8 @@ v2：
 final ok = await Pop.confirm(
   const ConfirmConfig(
     content: '确定继续？',
-    confirmAction: ConfirmAction.text('确定'),
-    cancelAction: ConfirmAction.text('取消'),
+    confirmText: '确定',
+    cancelText: '取消',
   ),
 ).result;
 
@@ -219,8 +219,12 @@ final result = await Pop.flowSheet<Result>(
 ```
 
 内部页面继续使用
-`nav.push/pop/popToRoot/replace/completeCurrent/closeAll`。`popToRoot` 回到根页且
-不关 sheet。系统返回优先退出内页，位于首页时关闭整个 FlowSheet。
+`nav.push/pop/popToRoot/contains/popTo/replace/resetTo/completeCurrent/completeAndCloseAll/discardCompletedAbove/closeAll`。
+`push` 按 `id` 只留一页。`popToRoot` 回到根页且不关 sheet。
+`contains(id, {identity})` / `popTo(id, result, identity)` 回到指定页，结果走
+`onPoppedTo`。去全屏且不再返回时用 `completeAndCloseAll`，再
+`Pop.settleChannel`。系统返回优先退出内页，位于首页时关闭整个 FlowSheet。
+非首页可用 `enableSwipePop: false` 关掉 iOS 侧滑。
 
 ## 5. 返回模型迁移
 

@@ -101,8 +101,7 @@ class _SheetBodyState extends State<_SheetBody> {
                   appBar: AppBar(title: const Text('Detail page')),
                   body: Center(
                     child: FilledButton(
-                      onPressed: () =>
-                          widget.navigatorKey.currentState!.pop(),
+                      onPressed: () => widget.navigatorKey.currentState!.pop(),
                       child: const Text('Pop detail'),
                     ),
                   ),

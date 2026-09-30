@@ -131,8 +131,8 @@ Confirm 默认为强交互。若需要点遮罩或系统返回关闭，显式打
 Pop.confirm(
   const ConfirmConfig(
     content: '可取消的确认',
-    confirmAction: ConfirmAction.text('确定'),
-    cancelAction: ConfirmAction.text('取消'),
+    confirmText: '确定',
+    cancelText: '取消',
     showCloseButton: true,
     barrier: PopupBarrierConfig(dismissible: true),
     behavior: PopupBehaviorConfig(

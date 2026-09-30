@@ -81,8 +81,8 @@ class _IntroPageState extends FlowSheetPageState<_IntroPage, void> {
       const ConfirmConfig(
         title: '开始填写？',
         content: '确认后进入后续步骤。取消则留在本页。',
-        confirmAction: ConfirmAction.text('开始'),
-        cancelAction: ConfirmAction.text('取消'),
+        confirmText: '开始',
+        cancelText: '取消',
       ),
     ).result;
     if (!mounted || ok != true) return;

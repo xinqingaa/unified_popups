@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import '../configs/confirm_config.dart';
 import '../controller/popup_dismiss_reason.dart';
 import '../runtime/popup_runtime.dart';
+import '../widgets/confirm_default_button.dart';
+
+abstract final class ConfirmRendererKeys {
+  static const headerImage =
+      ValueKey<String>('unified_popups.confirm.header_image');
+}
 
 class ConfirmRenderer extends StatelessWidget {
   const ConfirmRenderer({
@@ -16,8 +22,6 @@ class ConfirmRenderer extends StatelessWidget {
   final String entryId;
   final ConfirmConfig config;
 
-  bool get _isDivider => config.style.buttonStyle == ConfirmButtonStyle.divider;
-
   @override
   Widget build(BuildContext context) {
     final style = config.style;
@@ -27,6 +31,7 @@ class ConfirmRenderer extends StatelessWidget {
               Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         );
+    final headerImage = _headerImage();
     return Material(
       color: Colors.transparent,
       child: Container(
@@ -38,47 +43,26 @@ class ConfirmRenderer extends StatelessWidget {
           children: <Widget>[
             Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
+                if (headerImage != null) headerImage,
+                if (headerImage != null && style.imageGap > 0)
+                  SizedBox(height: style.imageGap),
                 Padding(
-                  padding: style.padding,
+                  padding: style.contentPadding,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      if (config.imagePath != null) ...<Widget>[
-                        Image.asset(
-                          config.imagePath!,
-                          width: config.imageWidth,
-                          height: config.imageHeight,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      if (config.titleWidget != null ||
-                          config.title != null) ...[
-                        config.titleWidget ??
-                            Text(
-                              config.title!,
-                              style: style.titleStyle ??
-                                  Theme.of(context).textTheme.titleLarge,
-                              textAlign: style.textAlign,
-                            ),
-                        const SizedBox(height: 12),
-                      ],
-                      config.contentWidget ??
-                          Text(
-                            config.content!,
-                            style: style.contentStyle,
-                            textAlign: style.textAlign,
-                          ),
-                      if (config.bodyExtension != null) ...<Widget>[
-                        const SizedBox(height: 16),
-                        config.bodyExtension!,
-                      ],
-                      if (!_isDivider) const SizedBox(height: 24),
-                      if (!_isDivider) _buttons(context),
-                    ],
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: _contentChildren(context),
                   ),
                 ),
-                if (_isDivider) _buttons(context),
+                if (style.contentButtonGap > 0)
+                  SizedBox(height: style.contentButtonGap),
+                if (config.separator != null) config.separator!,
+                Padding(
+                  padding: style.buttonPadding,
+                  child: _buttons(),
+                ),
               ],
             ),
             if (config.showCloseButton)
@@ -105,26 +89,74 @@ class ConfirmRenderer extends StatelessWidget {
     );
   }
 
-  Widget _buttons(BuildContext context) {
-    final hasCancel = config.cancelAction != null;
-    final cancel = _button(
-      context,
-      child: _actionChild(config.cancelAction),
-      confirm: false,
-      hasCancel: hasCancel,
+  Widget? _headerImage() {
+    final path = config.imagePath;
+    if (path == null || path.isEmpty) return null;
+    final height = config.imageHeight ?? 80;
+    return Image.asset(
+      path,
+      key: ConfirmRendererKeys.headerImage,
+      width: double.infinity,
+      height: height,
+      fit: config.imageFit,
+      alignment: Alignment.topCenter,
+      errorBuilder: (context, error, stackTrace) => SizedBox(
+        width: double.infinity,
+        height: height,
+      ),
     );
-    final confirm = _button(
-      context,
-      child: _actionChild(config.confirmAction),
-      confirm: true,
-      hasCancel: hasCancel,
+  }
+
+  List<Widget> _contentChildren(BuildContext context) {
+    final style = config.style;
+    final children = <Widget>[];
+    final hasTitle = config.titleWidget != null || config.title != null;
+    if (hasTitle) {
+      children.add(
+        config.titleWidget ??
+            Text(
+              config.title!,
+              style: style.titleStyle ?? Theme.of(context).textTheme.titleLarge,
+              textAlign: style.textAlign,
+            ),
+      );
+      if (style.titleGap > 0) {
+        children.add(SizedBox(height: style.titleGap));
+      }
+    }
+    children.add(
+      config.contentWidget ??
+          Text(
+            config.content!,
+            style: style.contentStyle,
+            textAlign: style.textAlign,
+          ),
     );
-    final spacing = config.style.buttonSpacing;
+    if (config.bodyExtension != null) {
+      if (style.bodyExtensionGap > 0) {
+        children.add(SizedBox(height: style.bodyExtensionGap));
+      }
+      children.add(config.bodyExtension!);
+    }
+    return children;
+  }
+
+  Widget _buttons() {
+    final cancelBuilder = config.cancelButton ??
+        (config.cancelText == null
+            ? null
+            : ConfirmDefaultButton.outline(config.cancelText!));
+    final confirmBuilder =
+        config.confirmButton ?? ConfirmDefaultButton.filled(config.confirmText);
+    final hasCancel = cancelBuilder != null;
+    final cancel = hasCancel ? cancelBuilder(() => _choose(false)) : null;
+    final confirm = confirmBuilder(() => _choose(true));
+    final between = _buttonBetween(hasCancel);
     if (config.buttonLayout == ConfirmButtonLayout.row) {
       return Row(
         children: <Widget>[
-          if (hasCancel) Expanded(child: cancel),
-          if (hasCancel && !_isDivider) SizedBox(width: spacing),
+          if (hasCancel) Expanded(child: cancel!),
+          if (between != null) between,
           Expanded(child: confirm),
         ],
       );
@@ -132,102 +164,20 @@ class ConfirmRenderer extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        if (hasCancel) cancel,
-        if (hasCancel && !_isDivider) SizedBox(height: spacing),
         confirm,
+        if (between != null) between,
+        if (hasCancel) cancel!,
       ],
     );
   }
 
-  Widget _actionChild(ConfirmAction? action) {
-    if (action == null) return const SizedBox.shrink();
-    return action.child ?? Text(action.text!);
-  }
-
-  Widget _button(
-    BuildContext context, {
-    required Widget child,
-    required bool confirm,
-    required bool hasCancel,
-  }) {
-    final style = config.style;
-    final scheme = Theme.of(context).colorScheme;
-    final Color background;
-    if (_isDivider) {
-      background = confirm
-          ? style.confirmBackgroundColor ?? Colors.transparent
-          : style.cancelBackgroundColor ?? Colors.transparent;
-    } else {
-      background = confirm
-          ? style.confirmBackgroundColor ?? scheme.primary
-          : style.cancelBackgroundColor ?? scheme.surfaceContainerHighest;
-    }
-
-    final BoxBorder? border;
-    if (style.confirmBorder != null && confirm) {
-      border = style.confirmBorder;
-    } else if (style.cancelBorder != null && !confirm) {
-      border = style.cancelBorder;
-    } else if (_isDivider) {
-      border = _dividerBorder(
-        context,
-        confirm: confirm,
-        hasCancel: hasCancel,
-      );
-    } else {
-      border = null;
-    }
-
-    final borderRadius =
-        _isDivider ? BorderRadius.zero : style.buttonBorderRadius;
-    final defaultFg = _isDivider
-        ? (confirm ? scheme.onSurface : scheme.onSurfaceVariant)
-        : (confirm ? scheme.onPrimary : scheme.onSurface);
-
-    return Material(
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: borderRadius),
-      clipBehavior: Clip.antiAlias,
-      child: Ink(
-        decoration: BoxDecoration(
-          color: background,
-          border: border,
-          borderRadius: borderRadius,
-        ),
-        child: InkWell(
-          onTap: () => _choose(confirm),
-          child: DefaultTextStyle.merge(
-            style: TextStyle(
-              color: defaultFg,
-              fontWeight: confirm && _isDivider ? FontWeight.w600 : null,
-            ).merge(confirm ? style.confirmStyle : style.cancelStyle),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Center(child: child),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  BoxBorder _dividerBorder(
-    BuildContext context, {
-    required bool confirm,
-    required bool hasCancel,
-  }) {
-    final style = config.style;
-    final color = style.dividerColor ?? Theme.of(context).dividerColor;
-    final width = style.dividerWidth;
-    final top = BorderSide(color: color, width: width);
+  Widget? _buttonBetween(bool hasCancel) {
+    if (!hasCancel) return null;
+    if (config.buttonSeparator != null) return config.buttonSeparator;
+    final spacing = config.style.buttonSpacing;
+    if (spacing <= 0) return null;
     final isRow = config.buttonLayout == ConfirmButtonLayout.row;
-    if (isRow && hasCancel && !confirm) {
-      return Border(
-        top: top,
-        right: BorderSide(color: color, width: width),
-      );
-    }
-    return Border(top: top);
+    return isRow ? SizedBox(width: spacing) : SizedBox(height: spacing);
   }
 
   void _choose(bool confirm) {

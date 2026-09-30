@@ -169,24 +169,51 @@ Loading 和带 key 的 Toast 更新时保留同一个 Entry 和 Handle，递增 
 
 Sheet 与普通弹窗使用同一个 Entry 和外层 AnimationController。四个方向统一使用 0–1 动画进度，Renderer 将进度映射为完整面板位移。
 
-拖拽只更新动画进度，不重新构造业务 child。松手时结合 progress 和 velocity 判断关闭或回弹。`fullBody`、`contentWhenAtTop`、`handleOnly` 控制手势入口；拖拽指示器只在底部方向显示。
+拖拽只更新动画进度，不重新构造业务 child。为某个 Handle 构建出的业务 child 会缓存到 Handle 变化。松手时结合 progress 和 velocity 判断关闭或回弹。`fullBody`、`contentWhenAtTop`、`handleOnly` 控制手势入口；拖拽指示器只在底部方向显示（38×6）。未指定圆角时，进入边外角为 32，面板裁切内容。
+
+往关闭方向拖动一开始就失焦；退出开始时 Sheet / FlowSheet 也会失焦。已经拖过一段再关闭时，退场时长按剩余进度缩短并使用线性曲线。底部键盘避让直接贴 `viewInsets`，`SheetKeyboardConfig.animationDuration` 不参与渲染。
+
+带可见蒙层的全屏弹层用 `FocusScope` 接住焦点，内部输入框可以成为主焦点。关闭时仅在弹层焦点域仍握着焦点时才还原先前焦点。
 
 外层 Align/SafeArea 负责屏幕位置，Renderer 内层 SafeArea 负责 dock 边缘和系统区域。dock 的 `edgeGap` 同时转换为 Barrier insets，使保留区域可以继续交互。
+
+Sheet 打开请求标记为 `updatable`，同 key 的 `updateExisting` 可以原地换配置并保留 Handle。
 
 ## 8. FlowSheet 实现
 
 FlowSheet 外层仍是统一的 Sheet Entry，因此参与全局堆叠、路由、Barrier、Handle 和退出动画。内部由一次性 `FlowSheetController` 和嵌套 Navigator 维护页面栈。
 
-内页导航：`push` / `pop` / `popToRoot` / `replace` / `completeCurrent` / `closeAll`。
-`popToRoot` 回到栈底根页且不关闭整张 sheet（已在根页为 no-op）；栈顶等待者可收
-`result`，其余被弹出页以 `null` 完成。收尾优先 `completeCurrent` + `closeAll`，
-避免内页返回动画与 sheet 退出动画叠播。
+内页导航：`push` / `pop` / `popToRoot` / `contains` / `popTo` / `replace` /
+`resetTo` / `completeCurrent` / `completeAndCloseAll` / `discardCompletedAbove` /
+`closeAll`。
 
-系统返回先询问当前页 `onBack()`，再委托内部 Controller：有第二页时 pop 内页；
+`push` 按 `id` 只留一页：栈顶同 `id` 等于 `replace`；该 `id` 在下面则只卸那一页，
+上面的页留下，再把新页压到顶。`identity` 只用于 `contains` / `popTo` 收窄和日志，
+不能让同一 `id` 并存。`instanceId` 是 `id` 与 `identity` 的组合字符串，不是栈约束。
+
+栈底首页是零时长路由，入场只跟随外层 Sheet。非首页默认 `CupertinoPageRoute`
+（含 iOS 侧滑）。`enableSwipePop: false` 时非首页改为水平 `SlideTransition`，
+侧滑不能绕过 `onBack`。
+
+`resetTo(animate: true)` 先右滑推入新首页，动画期间禁止系统返回揭开旧门槛，
+动画结束后收成单页根。`popToRoot` 回到栈底根页且不关闭整张 sheet（已在根页为
+no-op）；栈顶等待者可收 `result`，其余被弹出页以 `null` 完成。
+`contains(id, {identity})` / `popTo(id, result, identity)` 按 page id 查找；
+传了 `identity` 再按对象键收窄。`popTo` 的 `result` 只走目标页 `onPoppedTo`，
+不走 push Future。
+
+去全屏路由且不再回到本 FlowSheet 时用 `completeAndCloseAll`。子页只交结果、
+由上一页关整层时用 `completeCurrent`，上一页再 `closeAll`。
+`discardCompletedAbove` 卸掉已经交付、仍压在上面的页，不播返回动画。
+`closeAll` 立刻结束业务会话并 complete 外层 handle，页面树留到退出动画结束
+再跑 `onHide` / `onClose`。关完再跳路由时再 `Pop.settleChannel`。
+
+系统返回先询问当前页 `onBack()`，再走 `handleBack`：有第二页时 pop 内页；
 位于首页时完成整个外层 Popup。页面自己的 result、maintainState 和
-onLoad/onShow/onHide/onRemove/onClose 与外层 Popup Outcome 分开管理。
+onLoad/onShow/onHide/onRemove/onClose/onPoppedTo 与外层 Popup Outcome 分开管理。
 
-Controller 的业务关闭和对象 dispose 也是两个阶段：先完成所有 pending 页面 Future，再等外层 Renderer 移除且内部 Host detach 后释放 notifier。
+Controller 分三段：结束业务会话（完成 pending future，禁止再导航，保留页面树）；
+外层 dismissed 后卸页面生命周期；宿主卸载后再 dispose notifier。
 
 ## 9. Menu 与 DropMenu 实现
 

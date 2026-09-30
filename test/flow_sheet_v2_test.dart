@@ -86,6 +86,167 @@ void main() {
     await handle.dismissed;
   });
 
+  testWidgets('flowSheet contains and popTo deliver payload to target page',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final events = <String>[];
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(
+          FlowSheetConfig<String>(
+            controller: controller,
+            initialPage: _LifecyclePage('host', events),
+            size: const SheetSizeConfig(height: SheetDimension.pixel(420)),
+            animation: const PopupAnimationConfig(
+              type: PopupAnimationType.slideUp,
+              duration: Duration.zero,
+              slideOffset: 1,
+            ),
+          ),
+        )
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    expect(controller.contains('host'), isTrue);
+    expect(controller.contains('missing'), isFalse);
+
+    final second = controller.push<int>(const _Page<int>('second'));
+    await tester.pumpAndSettle();
+    final third = controller.push<String>(const _Page<String>('third'));
+    await tester.pumpAndSettle();
+    expect(controller.contains('second'), isTrue);
+    expect(controller.canPop, isTrue);
+
+    controller.popTo('host', 'amend-item');
+    expect(await third, isNull);
+    expect(await second, isNull);
+    await tester.pumpAndSettle();
+
+    expect(find.text('lifecycle-host'), findsOneWidget);
+    expect(find.text('page-second'), findsNothing);
+    expect(find.text('page-third'), findsNothing);
+    expect(controller.contains('second'), isFalse);
+    expect(controller.canPop, isFalse);
+    expect(handle.isActive, isTrue);
+    expect(events, contains('host:poppedTo:amend-item'));
+    final poppedAt = events.indexOf('host:poppedTo:amend-item');
+    final lastShow = events.lastIndexOf('host:show');
+    expect(lastShow, lessThan(poppedAt));
+
+    controller.popTo('host', 'ignored');
+    await tester.pumpAndSettle();
+    expect(
+      events.where((event) => event.startsWith('host:poppedTo:')).length,
+      1,
+    );
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
+  testWidgets('flowSheet popTo missing id is a no-op', (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+    controller.push<int>(const _Page<int>('second'));
+    await tester.pumpAndSettle();
+
+    expect(
+      () => controller.popTo('missing'),
+      throwsA(isA<AssertionError>()),
+    );
+    expect(find.text('page-second'), findsOneWidget);
+    expect(controller.canPop, isTrue);
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
+  testWidgets('push same id on top replaces the old page', (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    final aapl = controller.push<String>(
+      const _Page<String>('amend', identity: 'A'),
+    );
+    await tester.pumpAndSettle();
+    expect(controller.entries.last.page.identity, 'A');
+
+    final b = controller.push<String>(
+      const _Page<String>('amend', identity: 'B'),
+    );
+    expect(await aapl, isNull);
+    await tester.pumpAndSettle();
+
+    expect(controller.entries.map((e) => e.page.id), ['initial', 'amend']);
+    expect(controller.entries.last.page.identity, 'B');
+    expect(find.text('page-amend'), findsOneWidget);
+    expect(controller.contains('amend', identity: 'A'), isFalse);
+    expect(controller.contains('amend', identity: 'B'), isTrue);
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    expect(await b, isNull);
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
+  testWidgets('push same id below splices only that page then pushes on top',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    final allOrders =
+        controller.push<Object>(const _Page<Object>('all-orders'));
+    await tester.pumpAndSettle();
+    controller.push<Object>(const _Page<Object>('amend'));
+    await tester.pumpAndSettle();
+    expect(
+      controller.entries.map((e) => e.page.id),
+      ['initial', 'all-orders', 'amend'],
+    );
+
+    controller.push<Object>(const _Page<Object>('all-orders'));
+    expect(await allOrders, isNull);
+    await tester.pumpAndSettle();
+
+    expect(
+      controller.entries.map((e) => e.page.id),
+      ['initial', 'amend', 'all-orders'],
+    );
+    expect(find.text('page-all-orders'), findsOneWidget);
+    expect(controller.contains('amend'), isTrue);
+    expect(controller.canPop, isTrue);
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
   testWidgets('system back pops an inner page before the outer flowSheet',
       (tester) async {
     final runtime = PopupRuntime();
@@ -337,6 +498,115 @@ void main() {
     await handle.dismissed;
   });
 
+  testWidgets('flowSheet resetTo replaces stack without keeping old pages',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    controller.resetTo(const _Page<void>('home'));
+    expect(controller.canPop, isFalse);
+    expect(controller.entries.single.page.id, 'home');
+    await tester.pumpAndSettle();
+    expect(find.text('page-home'), findsOneWidget);
+    expect(find.text('page-initial'), findsNothing);
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
+  testWidgets('flowSheet resetTo animate plays enter then becomes root',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    controller.resetTo(const _Page<void>('home'), animate: true);
+    expect(controller.canPop, isTrue);
+    expect(controller.entries.length, 2);
+    await tester.pump();
+    expect(find.text('page-home'), findsOneWidget);
+    await tester.pumpAndSettle();
+
+    expect(controller.canPop, isFalse);
+    expect(controller.entries.single.page.id, 'home');
+    expect(find.text('page-home'), findsOneWidget);
+    expect(find.text('page-initial'), findsNothing);
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
+  testWidgets('flowSheet resetTo animate does not pop back to the gate',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    controller.resetTo(const _Page<void>('home'), animate: true);
+    await tester.pump();
+
+    expect(await runtime.controller.handleBack(), isTrue);
+    await tester.pumpAndSettle();
+
+    expect(find.text('page-home'), findsOneWidget);
+    expect(find.text('page-initial'), findsNothing);
+    expect(handle.isActive, isTrue);
+    expect(controller.canPop, isFalse);
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
+  testWidgets('flowSheet resetTo animate from a deeper stack becomes root',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final controller = FlowSheetController<String>();
+    final handle = PopupTypeApi(runtime)
+        .flowSheet<String>(_config(controller))
+        .requireHandle();
+    await tester.pumpWidget(_FlowApp(runtime: runtime));
+    await tester.pumpAndSettle();
+
+    controller.push<int>(const _Page<int>('second'));
+    await tester.pumpAndSettle();
+
+    controller.resetTo(const _Page<void>('home'), animate: true);
+    await tester.pumpAndSettle();
+
+    expect(controller.canPop, isFalse);
+    expect(find.text('page-home'), findsOneWidget);
+    expect(find.text('page-initial'), findsNothing);
+    expect(find.text('page-second'), findsNothing);
+
+    controller.closeAll('done');
+    expect(await handle.result, 'done');
+    await tester.pumpAndSettle();
+    await handle.dismissed;
+  });
+
   test('dynamic drag mode can be disabled and restored', () {
     final controller = FlowSheetController<void>();
     addTearDown(controller.dispose);
@@ -369,7 +639,7 @@ FlowSheetConfig<R> _config<R>(FlowSheetController<R> controller) {
 }
 
 class _Page<T> extends FlowSheetPage<T> {
-  const _Page(String id) : super(id: id, maintainState: true);
+  const _Page(String id, {super.identity}) : super(id: id, maintainState: true);
 
   @override
   State<_Page<T>> createState() => _PageState<T>();
@@ -423,6 +693,8 @@ class _LifecyclePageState extends FlowSheetPageState<_LifecyclePage, void> {
   void onRemove() => _record('remove');
   @override
   void onClose() => _record('close');
+  @override
+  void onPoppedTo(Object? result) => _record('poppedTo:$result');
 
   @override
   Widget build(BuildContext context) => Text('lifecycle-${widget.id}');

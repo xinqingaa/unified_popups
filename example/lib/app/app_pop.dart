@@ -91,11 +91,22 @@ abstract final class AppPop {
         title: title,
         content: content,
         bodyExtension: bodyExtension,
-        confirmAction: ConfirmAction.text(confirmText),
-        cancelAction: ConfirmAction.text(cancelText),
-        style: ConfirmStyle(
-          confirmStyle: destructive ? const TextStyle(color: Colors.red) : null,
-        ),
+        confirmText: confirmText,
+        cancelText: cancelText,
+        confirmButton: destructive
+            ? (onTap) => SizedBox(
+                  width: double.infinity,
+                  height: 40,
+                  child: FilledButton(
+                    onPressed: onTap,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: const StadiumBorder(),
+                    ),
+                    child: Text(confirmText),
+                  ),
+                )
+            : null,
       ),
     ).result;
     return value == true;

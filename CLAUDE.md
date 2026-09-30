@@ -45,10 +45,19 @@ cd example && flutter test
 
 **FlowSheet** (`lib/src/flow_sheets/`)
 - Outer sheet Entry + inner page stack via `FlowSheetController`
-- Navigation: `push` / `pop` / `popToRoot` / `replace` / `completeCurrent` /
-  `closeAll`
-- Prefer `completeCurrent` + `closeAll` to avoid double exit animation
+- Navigation: `push` / `pop` / `popToRoot` / `contains` / `popTo` / `replace` /
+  `resetTo` / `completeCurrent` / `completeAndCloseAll` /
+  `discardCompletedAbove` / `closeAll`
+- `push` keeps one page per `id` (top match replaces; a lower match is spliced
+  out, pages above stay). `identity` is lookup / logging only
+- Prefer `completeCurrent` + `closeAll`, or `completeAndCloseAll`, to avoid a
+  double exit animation. `closeAll` keeps the page tree until the outer exit
+  finishes. Then `Pop.settleChannel` before the next full-screen route
+- Root page has no horizontal transition. `enableSwipePop: false` disables the
+  iOS edge swipe on non-root pages
 - `FlowSheetPageState.onBack()` can consume system back; `updateDragDismissMode`
+- `onPoppedTo` receives `popTo` payloads. `FlowSheetFocus` hands focus across
+  inner pages
 
 **Navigation** (`lib/src/navigation/`)
 - `Pop.routeObserver` → route change dismiss per `routePolicy`
@@ -99,8 +108,8 @@ final ok = await Pop.confirm(
   const ConfirmConfig(
     title: '确认',
     content: '继续？',
-    confirmAction: ConfirmAction.text('确定'),
-    cancelAction: ConfirmAction.text('取消'),
+    confirmText: '确定',
+    cancelText: '取消',
   ),
 ).result;
 
@@ -111,7 +120,10 @@ await Pop.flowSheet<String>(
     initialPage: MyFirstPage(),
   ),
 ).result;
-// Inner: controller.push / pop / popToRoot / replace / completeCurrent / closeAll
+// Inner: controller.push / pop / popToRoot / contains / popTo / replace /
+// resetTo / completeCurrent / completeAndCloseAll / closeAll
+// After closeAll, await Pop.settleChannel(PopupChannel.flowSheet) before a
+// full-screen route.
 ```
 
 Product apps should wrap `Pop` in an `AppPop` (or equivalent) facade — see
@@ -130,7 +142,10 @@ Product apps should wrap `Pop` in an `AppPop` (or equivalent) facade — see
 - Loading needs a clear dismiss path (`PopupLifetime` or `dismissChannel`)
 - Sheet / Menu / Custom complete via injected Handle
 - FlowSheet: `popToRoot` returns to root without closing the sheet; use
-  `closeAll` to finish the session
+  `closeAll` or `completeAndCloseAll` to finish the session. `push` keeps one
+  page per `id`
+- Sheet default radius is 32 and content padding bottom is 16. Keyboard inset
+  is immediate. Default Loading indicator is a Cupertino activity indicator
 - Menu / DropMenu default transparent barrier blocks under-scroll; use
   `PopupBarrierConfig.hidden()` only when scroll-through is required
 - Prefer `try/finally` (or `PopupLifetime.until`) around loading

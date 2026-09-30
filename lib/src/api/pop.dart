@@ -91,6 +91,12 @@ abstract final class Pop {
   static Future<int> dismissChannel(PopupChannel channel) =>
       _runtime.controller.dismissChannel(channel);
 
+  /// 等待指定 channel 下仍挂载（含退出动画中）的弹层全部结束。
+  ///
+  /// 仍 active 的会先关闭；已在退出中的只等待 [PopupHandleBase.dismissed]。
+  static Future<void> settleChannel(PopupChannel channel) =>
+      _runtime.controller.settleChannel(channel);
+
   /// 关闭带有任一给定 tag 的弹窗，返回关闭数量。
   static Future<int> dismissTags(Set<String> tags) =>
       _runtime.controller.dismissTags(tags);

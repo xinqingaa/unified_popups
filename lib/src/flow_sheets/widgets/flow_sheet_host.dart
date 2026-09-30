@@ -7,19 +7,29 @@ import '../contracts/flow_sheet_route_builder.dart';
 import '../lifecycle/flow_sheet_lifecycle_controller.dart';
 import '../pages/flow_sheet_page.dart';
 
-/// 把 [FlowSheetEntry] 映射为 Cupertino 风格转场的声明式 [Page]。
+/// 把 [FlowSheetEntry] 映射为声明式 [Page]。
+///
+/// - 栈底首页（[isRoot]）：无水平转场，只跟随外层 Sheet 的上滑打开；
+///   避免 `replace` 换首页时出现「从右往左」的假入场。
+///   `resetTo(animate: true)` 先把新页当非首页推入，因此仍走下方横向转场；
+///   动画结束后再收成单页根。
+/// - 非首页：默认 [CupertinoPageRoute] 横向滑动（含 iOS 侧滑返回）。
 class _FlowPage extends Page<dynamic> {
   _FlowPage(
     this.entry,
     this.controller, {
     required this.pageBackgroundColor,
     required this.routeBuilder,
+    required this.isRoot,
   }) : super(key: ValueKey<FlowSheetEntry>(entry));
 
   final FlowSheetEntry entry;
   final FlowSheetHostDelegate controller;
   final Color? pageBackgroundColor;
   final FlowSheetRouteBuilder? routeBuilder;
+
+  /// 是否为 FlowSheet 内嵌栈的栈底页。
+  final bool isRoot;
 
   @override
   Route<dynamic> createRoute(BuildContext context) {
@@ -40,6 +50,33 @@ class _FlowPage extends Page<dynamic> {
         maintainState: entry.page.maintainState,
       );
     }
+    if (isRoot) {
+      // 首页：零时长转场。Sheet 打开动画负责入场；replace 换首页也不播右滑。
+      return PageRouteBuilder<dynamic>(
+        settings: this,
+        maintainState: entry.page.maintainState,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) => child,
+      );
+    }
+    // 禁用侧滑：不用 CupertinoPageRoute（其自带 iOS 边缘返回手势）。
+    // animated resetTo also suppresses swipe so the incoming home cannot
+    // be flicked back to the gate / password page.
+    if (!entry.page.enableSwipePop || entry.suppressSwipePop) {
+      return PageRouteBuilder<dynamic>(
+        settings: this,
+        maintainState: entry.page.maintainState,
+        pageBuilder: (context, animation, secondaryAnimation) => child,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final offset = Tween<Offset>(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).animate(animation);
+          return SlideTransition(position: offset, child: child);
+        },
+      );
+    }
     return CupertinoPageRoute<dynamic>(
       settings: this,
       maintainState: entry.page.maintainState,
@@ -54,9 +91,11 @@ class _FlowPage extends Page<dynamic> {
   }
 }
 
-/// FlowSheet 的展示宿主：用内嵌 [Navigator]（Pages API）承载页面栈，
-/// push/pop 默认由 [CupertinoPageRoute] 提供原生横向滑动转场（含 iOS 侧滑返回）；
-/// 保活页（maintainState）由路由 `maintainState` 控制。
+/// FlowSheet 的展示宿主：用内嵌 [Navigator]（Pages API）承载页面栈。
+///
+/// - 栈底首页：无水平转场（见 [_FlowPage.isRoot]）
+/// - push/pop 子页：默认 [CupertinoPageRoute] 横向滑动（含 iOS 侧滑返回）
+/// - 保活页（maintainState）由路由 `maintainState` 控制
 ///
 /// 系统返回不由本宿主直接处理：由外层 route observer → popup controller →
 /// flowSheet `backPolicy.delegate` 依次 pop 内页或关闭整张 sheet。
@@ -136,12 +175,13 @@ class _FlowSheetHostState extends State<FlowSheetHost> {
           child: Navigator(
             key: widget.controller.navigatorKey,
             pages: [
-              for (final entry in entries)
+              for (var i = 0; i < entries.length; i++)
                 _FlowPage(
-                  entry,
+                  entries[i],
                   widget.controller,
                   pageBackgroundColor: widget.pageBackgroundColor,
                   routeBuilder: widget.routeBuilder,
+                  isRoot: i == 0,
                 ),
             ],
             onDidRemovePage: (page) {

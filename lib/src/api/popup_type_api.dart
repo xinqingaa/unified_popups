@@ -135,6 +135,7 @@ final class PopupTypeApi {
             : PopupBackPolicy.delegate,
         ownership: _captureOwnership(config.ownership),
         lifecycle: config.lifecycle,
+        updatable: true,
         onBack: config.onBack == null
             ? null
             : () async {
@@ -174,8 +175,9 @@ final class PopupTypeApi {
               return true;
             }
             if (config.controller.canPop) {
-              config.controller.pop();
-              return true;
+              // Goes through handleBack so animated resetTo can consume
+              // back without popping the incoming home onto the gate.
+              return config.controller.handleBack();
             }
             runtime.controller.dismissEntry(
               handle.id,

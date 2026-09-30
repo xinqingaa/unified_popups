@@ -47,8 +47,8 @@ abstract final class AppPop {
           ConfirmConfig(
             title: title,
             content: content,
-            confirmAction: const ConfirmAction.text('确定'),
-            cancelAction: const ConfirmAction.text('取消'),
+            confirmText: '确定',
+            cancelText: '取消',
           ),
         ).result ??
         false;

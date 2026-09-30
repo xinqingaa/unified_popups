@@ -88,8 +88,12 @@ confirmation.
 ### FlowSheet · multi-step flow
 
 Wizards and multi-page forms: system back pops inner pages first, then closes
-the sheet. Use `popToRoot` to return to the root page without closing the sheet.
-A Confirm on top can still block back.
+the sheet. `push` keeps one page per `id`. Use `popToRoot` to return to the
+root page without closing the sheet. Use `contains` / `popTo` to return to a
+named page (`result` arrives on `onPoppedTo`). Use `resetTo` to replace the
+stack with a new home (`animate: true` slides it in, then collapses to a
+single root). Use `completeAndCloseAll`, then `Pop.settleChannel`, when the
+next step is a full-screen route. A Confirm on top can still block back.
 
 ![FlowSheet](doc/images/flowSheet.jpg)
 
@@ -106,7 +110,7 @@ style).
 
 ```yaml
 dependencies:
-  unified_popups: ^2.0.6
+  unified_popups: ^2.2.0
 ```
 
 ```dart
@@ -133,8 +137,8 @@ final ok = await Pop.confirm(
   const ConfirmConfig(
     title: 'Delete record',
     content: 'This cannot be undone.',
-    confirmAction: ConfirmAction.text('Delete'),
-    cancelAction: ConfirmAction.text('Cancel'),
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
   ),
 ).result;
 ```
@@ -192,8 +196,8 @@ final confirmed = await Pop.confirm(
   const ConfirmConfig(
     title: 'Delete record',
     content: 'This cannot be undone.',
-    confirmAction: ConfirmAction.text('Delete'),
-    cancelAction: ConfirmAction.text('Cancel'),
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
   ),
 ).result;
 ```
@@ -235,8 +239,8 @@ abstract final class AppPop {
           ConfirmConfig(
             title: title,
             content: content,
-            confirmAction: const ConfirmAction.text('OK'),
-            cancelAction: const ConfirmAction.text('Cancel'),
+            confirmText: 'OK',
+            cancelText: 'Cancel',
           ),
         ).result ??
         false;
@@ -352,9 +356,15 @@ defaults to global `replaceExisting`.
 ```dart
 await Pop.dismissTop();
 await Pop.dismissChannel(PopupChannel.sheet);
+await Pop.settleChannel(PopupChannel.sheet);
 await Pop.dismissTags({'network'});
 await Pop.dismissAll();
 ```
+
+`dismissChannel` closes entries that are still active. `settleChannel` also
+waits until every still-mounted entry on that channel, including ones already
+exiting, has finished `dismissed`. Use it before pushing a full-screen route
+after a sheet closes.
 
 `PopupBehaviorConfig` channel is fixed per capability. Apps configure key,
 tags, conflict, route, and back policies. To clear a key on an existing

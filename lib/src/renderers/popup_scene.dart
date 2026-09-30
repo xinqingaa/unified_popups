@@ -184,7 +184,7 @@ class _AnimatedPopupEntry extends StatefulWidget {
 class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  FocusNode? _entryFocus;
+  FocusScopeNode? _entryFocus;
   FocusNode? _previousFocus;
 
   PopupVisualConfig get _visual =>
@@ -200,7 +200,7 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     );
     if (widget.fullScreen && _visual.barrier.visible) {
       _previousFocus = FocusManager.instance.primaryFocus;
-      _entryFocus = FocusNode(debugLabel: 'Popup ${widget.entry.id}');
+      _entryFocus = FocusScopeNode(debugLabel: 'Popup ${widget.entry.id}');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _entryFocus?.requestFocus();
       });
@@ -230,6 +230,9 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
       // visible 必须保持 1：barrier 走 FadeTransition(opacity: animation)，
       // 若在 markPresented 后打成 0，会出现「内容在、蒙层消失」。
       _controller.value = (entering || visible) ? 1 : 0;
+      if (exiting && widget.entry.config is SheetConfigBase) {
+        FocusManager.instance.primaryFocus?.unfocus();
+      }
       if (entering || exiting) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -259,12 +262,22 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
         _controller.value = 1;
       case PopupEntryState.dismissRequested:
       case PopupEntryState.exiting:
+        // Sheet / FlowSheet：退出开始时立刻失焦，键盘与面板同步下落。
+        // 限定 Sheet，避免 toast/loading 关闭时误收底下页面键盘。
+        if (widget.entry.config is SheetConfigBase) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        }
+        final animation = _visual.animationConfig;
+        final fullDuration = animation.reverseDuration ?? animation.duration;
+        final dragged = _controller.value < 1;
+        final duration = dragged
+            ? _scaledDuration(fullDuration, _controller.value)
+            : fullDuration;
         _controller
             .animateBack(
           0,
-          duration: _visual.animationConfig.reverseDuration ??
-              _visual.animationConfig.duration,
-          curve: _visual.animationConfig.reverseCurve,
+          duration: duration,
+          curve: dragged ? Curves.linear : animation.reverseCurve,
         )
             .whenCompleteOrCancel(() {
           if (mounted) {
@@ -279,12 +292,20 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     }
   }
 
+  Duration _scaledDuration(Duration full, double t) {
+    if (full == Duration.zero) return Duration.zero;
+    return Duration(
+      microseconds: (full.inMicroseconds * t.clamp(0.0, 1.0)).round(),
+    );
+  }
+
   @override
   void dispose() {
     _controller.dispose();
+    final shouldRestoreFocus = _entryFocus?.hasFocus ?? false;
     _entryFocus?.dispose();
     final previousFocus = _previousFocus;
-    if (previousFocus?.context != null) {
+    if (shouldRestoreFocus && previousFocus?.context != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (previousFocus?.context != null) previousFocus?.requestFocus();
       });
@@ -311,7 +332,10 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     );
     final entryFocus = _entryFocus;
     if (entryFocus != null) {
-      content = Focus(focusNode: entryFocus, child: content);
+      content = FocusScope(
+        node: entryFocus,
+        child: content,
+      );
     }
     content = PopupEntryAnimation(
       animation: animation,

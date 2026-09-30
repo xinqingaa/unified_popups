@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../configs/sheet_config.dart';
 import '../configs/sheet_types.dart';
@@ -33,12 +34,13 @@ class SheetRenderer extends StatefulWidget {
 }
 
 class _SheetRendererState extends State<SheetRenderer> {
-  static const _handleLongSide = 40.0;
-  static const _handleShortSide = 4.0;
+  static const _handleLongSide = 38.0;
+  static const _handleShortSide = 6.0;
 
   Widget? _businessContent;
   late SheetDragDismissMode _dragMode;
   double _dragExtent = 1;
+  bool _unfocusedForDrag = false;
 
   bool get _horizontal =>
       widget.config.direction == SheetDirection.left ||
@@ -60,8 +62,7 @@ class _SheetRendererState extends State<SheetRenderer> {
       oldWidget.config.drag.modeListenable?.removeListener(_onDragModeChanged);
       widget.config.drag.modeListenable?.addListener(_onDragModeChanged);
     }
-    if (!identical(oldWidget.config, widget.config) ||
-        !identical(oldWidget.handle, widget.handle)) {
+    if (!identical(oldWidget.handle, widget.handle)) {
       _businessContent = null;
     }
     _dragMode =
@@ -78,7 +79,17 @@ class _SheetRendererState extends State<SheetRenderer> {
     final next =
         widget.config.drag.modeListenable?.value ?? widget.config.drag.mode;
     if (_dragMode == next || !mounted) return;
-    setState(() => _dragMode = next);
+    _dragMode = next;
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.idle ||
+        phase == SchedulerPhase.postFrameCallbacks) {
+      setState(() {});
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {});
+    });
   }
 
   double _directedDelta(Offset delta) => switch (widget.config.direction) {
@@ -93,6 +104,11 @@ class _SheetRendererState extends State<SheetRenderer> {
 
   void _dragUpdate(DragUpdateDetails details) {
     final directed = _directedDelta(details.delta);
+    // 一开始往关闭方向拖就失焦，键盘与面板同步下落。
+    if (!_unfocusedForDrag && directed > 0) {
+      _unfocusedForDrag = true;
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
     widget.motion.value = widget.motion.value - directed / _dragExtent;
   }
 
@@ -103,14 +119,21 @@ class _SheetRendererState extends State<SheetRenderer> {
             _directedVelocity(details.velocity) >=
                 widget.config.drag.dismissVelocity;
     if (shouldDismiss) {
-      FocusManager.instance.primaryFocus?.unfocus();
+      if (!_unfocusedForDrag) {
+        FocusManager.instance.primaryFocus?.unfocus();
+      }
+      _unfocusedForDrag = false;
       widget.motion.dismiss(reason: PopupDismissReason.drag);
     } else {
+      _unfocusedForDrag = false;
       unawaited(widget.motion.animateToVisible());
     }
   }
 
-  void _dragCancel() => unawaited(widget.motion.animateToVisible());
+  void _dragCancel() {
+    _unfocusedForDrag = false;
+    unawaited(widget.motion.animateToVisible());
+  }
 
   Widget _dragTarget(Widget child) {
     if (_horizontal) {
@@ -212,6 +235,7 @@ class _SheetRendererState extends State<SheetRenderer> {
       );
     }
 
+    final borderRadius = config.style.borderRadius ?? _defaultRadius();
     Widget panel = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
       child: SizedBox(
@@ -221,21 +245,24 @@ class _SheetRendererState extends State<SheetRenderer> {
           decoration: BoxDecoration(
             color: config.style.backgroundColor ??
                 Theme.of(context).colorScheme.surface,
-            borderRadius: config.style.borderRadius ?? _defaultRadius(),
+            borderRadius: borderRadius,
             boxShadow: config.style.boxShadow ??
                 const <BoxShadow>[
                   BoxShadow(
                       blurRadius: 10, color: Colors.black12, spreadRadius: 2),
                 ],
           ),
-          child: Material(
-            color: Colors.transparent,
-            // Always inset content (v1 SheetWidget). For bottom sheets the
-            // outer PopupScene SafeArea consumes status-bar padding first, so
-            // this does not push the drag handle down on short panels.
-            // Top/left/right default useSafeArea=false (no outer layer) and
-            // still need this inner SafeArea to clear the notch / home indicator.
-            child: SafeArea(child: body),
+          child: ClipRRect(
+            borderRadius: borderRadius,
+            child: Material(
+              color: Colors.transparent,
+              // Always inset content (v1 SheetWidget). For bottom sheets the
+              // outer PopupScene SafeArea consumes status-bar padding first, so
+              // this does not push the drag handle down on short panels.
+              // Top/left/right default useSafeArea=false (no outer layer) and
+              // still need this inner SafeArea to clear the notch / home indicator.
+              child: SafeArea(child: body),
+            ),
           ),
         ),
       ),
@@ -264,9 +291,7 @@ class _SheetRendererState extends State<SheetRenderer> {
     panel = Padding(padding: _dockPadding(), child: panel);
     if (config.direction == SheetDirection.bottom &&
         config.keyboard.adjustForKeyboard) {
-      panel = AnimatedPadding(
-        duration: config.keyboard.animationDuration,
-        curve: Curves.easeOut,
+      panel = Padding(
         padding: EdgeInsets.only(
           bottom: math.max(0, MediaQuery.viewInsetsOf(context).bottom),
         ),
@@ -306,7 +331,7 @@ class _SheetRendererState extends State<SheetRenderer> {
         Theme.of(context).bottomSheetTheme.dragHandleColor ??
         Theme.of(context).colorScheme.onSurfaceVariant;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Center(
         child: SizedBox(
           key: SheetRendererKeys.dragHandle,
@@ -315,7 +340,7 @@ class _SheetRendererState extends State<SheetRenderer> {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(_handleShortSide / 2),
             ),
           ),
         ),
@@ -325,20 +350,21 @@ class _SheetRendererState extends State<SheetRenderer> {
 
   Widget _buildHeader(BuildContext context) {
     final header = widget.config.header;
+    final title = header.titleWidget ??
+        (header.title == null
+            ? const SizedBox.shrink()
+            : Text(
+                header.title!,
+                style:
+                    header.titleStyle ?? Theme.of(context).textTheme.titleLarge,
+                textAlign: header.titleAlign,
+              ));
     return Padding(
       padding: header.padding,
       child: Stack(
         alignment: Alignment.center,
         children: <Widget>[
-          header.titleWidget ??
-              (header.title == null
-                  ? const SizedBox.shrink()
-                  : Text(
-                      header.title!,
-                      style: header.titleStyle ??
-                          Theme.of(context).textTheme.titleLarge,
-                      textAlign: header.titleAlign,
-                    )),
+          SizedBox(width: double.infinity, child: title),
           if (header.showCloseButton)
             PositionedDirectional(
               end: 0,
@@ -354,7 +380,7 @@ class _SheetRendererState extends State<SheetRenderer> {
   }
 
   BorderRadius _defaultRadius() {
-    const radius = Radius.circular(20);
+    const radius = Radius.circular(32);
     return switch (widget.config.direction) {
       SheetDirection.top =>
         const BorderRadius.only(bottomLeft: radius, bottomRight: radius),

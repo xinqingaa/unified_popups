@@ -9,6 +9,7 @@ abstract interface class FlowSheetLifecycleObserver {
   void handleHide();
   void handleRemove();
   void handleClose();
+  void handlePoppedTo(Object? result);
 }
 
 enum FlowSheetLifecycleEndReason { remove, close }
@@ -81,6 +82,13 @@ class FlowSheetPageLifecycleController extends ChangeNotifier {
       observer.handleHide();
     }
     notifyListeners();
+  }
+
+  void poppedTo(Object? result) {
+    if (_disposed) return;
+    for (final observer in List<FlowSheetLifecycleObserver>.of(_observers)) {
+      observer.handlePoppedTo(result);
+    }
   }
 
   void disposeLifecycle(FlowSheetLifecycleEndReason reason) {

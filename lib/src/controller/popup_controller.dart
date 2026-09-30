@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../configs/popup_back_policy.dart';
 import '../configs/popup_channel.dart';
@@ -42,6 +43,7 @@ class PopupController extends ChangeNotifier {
   bool _changeNotifierDisposed = false;
   int _mutationDepth = 0;
   bool _notificationPending = false;
+  bool _notificationDeferred = false;
 
   bool get isHostAttached => _hostAttached;
 
@@ -456,6 +458,25 @@ class PopupController extends ChangeNotifier {
     return matches.length;
   }
 
+  /// 等待 [channel] 下仍挂载（含退出动画中）的弹层全部 dismissed。
+  ///
+  /// 对仍 active 的 Entry 会先请求关闭；对已在 exiting 的 Entry 只等待
+  /// [PopupHandleBase.dismissed]。用于「关 Sheet 后再跳全屏路由」。
+  Future<void> settleChannel(PopupChannel channel) async {
+    final matches = _entries.reversed
+        .where((entry) => entry.channel == channel && entry.state.isMounted)
+        .toList(growable: false);
+    if (matches.isEmpty) return;
+    _mutate(() {
+      for (final entry in matches) {
+        if (entry.isActive) {
+          _requestClose(entry, PopupDismissReason.manual);
+        }
+      }
+    });
+    await Future.wait(matches.map((entry) => entry.dismissed));
+  }
+
   Future<int> dismissTags(Set<String> tags) async {
     final matches = _entries.reversed
         .where((entry) => entry.isActive && entry.tags.any(tags.contains))
@@ -662,7 +683,40 @@ class PopupController extends ChangeNotifier {
       _notificationPending = true;
       return;
     }
-    notifyListeners();
+    _dispatchNotification();
+  }
+
+  /// 发出通知；若此刻 Element 树被锁定，则顺延到本帧结束后再发。
+  ///
+  /// Flutter 在 build / layout / paint 以及卸载失活 Element（finalizeTree）期间
+  /// 会锁定 Element 树，这些都发生在 persistentCallbacks 阶段。业务若在 build、
+  /// `State.dispose` 或路由销毁过程中打开/关闭弹层，直接通知会让宿主的
+  /// ListenableBuilder 在锁定的树上调用 markNeedsBuild 而抛错。
+  ///
+  /// 其它阶段（含动画驱动的 transientCallbacks）树未锁定，必须同步通知，
+  /// 否则进出场动画结束后的状态流转会被推迟一帧。
+  void _dispatchNotification() {
+    if (_changeNotifierDisposed) return;
+    if (_currentSchedulerPhase() != SchedulerPhase.persistentCallbacks) {
+      notifyListeners();
+      return;
+    }
+    if (_notificationDeferred) return;
+    _notificationDeferred = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _notificationDeferred = false;
+      if (_changeNotifierDisposed) return;
+      notifyListeners();
+    });
+  }
+
+  SchedulerPhase? _currentSchedulerPhase() {
+    try {
+      return SchedulerBinding.instance.schedulerPhase;
+    } catch (_) {
+      // 纯 Dart 测试没有 binding，此时不可能有帧在进行中。
+      return null;
+    }
   }
 
   R _mutate<R>(R Function() mutation) {
@@ -673,7 +727,7 @@ class PopupController extends ChangeNotifier {
       _mutationDepth--;
       if (_mutationDepth == 0 && _notificationPending) {
         _notificationPending = false;
-        if (!_changeNotifierDisposed) notifyListeners();
+        _dispatchNotification();
       }
     }
   }

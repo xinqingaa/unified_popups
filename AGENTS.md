@@ -47,7 +47,8 @@ Use `flutter_test`; product demos stay in `example/`. Specs end with
 `_test.dart` and group by capability. Assert async UI with `pumpAndSettle`.
 New features need at least one regression test. Changes to `PopupController`,
 `PopupScene`, or FlowSheet must cover overlay / stack cleanup (including
-`popToRoot` and barrier `dismissOnDrag` when those surfaces change).
+`popToRoot`, `contains` / `popTo`, same-`id` `push`, and barrier
+`dismissOnDrag` when those surfaces change).
 
 ## Documentation checklist (API / behavior changes)
 

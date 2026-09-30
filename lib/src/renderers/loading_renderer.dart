@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../configs/loading_config.dart';
@@ -55,9 +56,9 @@ class _LoadingRendererState extends State<LoadingRenderer>
     final style = config.style;
     final custom = config.indicator.child;
     final indicator = custom == null
-        ? CircularProgressIndicator(
+        ? CupertinoActivityIndicator(
             color: style.indicatorColor,
-            strokeWidth: style.indicatorStrokeWidth,
+            radius: 14,
           )
         : RotationTransition(turns: _rotation, child: custom);
     final message = config.content ??
