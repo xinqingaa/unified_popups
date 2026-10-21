@@ -111,16 +111,9 @@ Toast、Loading、Date、Custom 没有这个字段。
 | `Pop.menu` | `PopupMenuStyle.surface` | `PopupSurface.solid()` |
 | `Pop.dropMenu` | `DropMenuStyle.surface` | `PopupSurface.glass()` |
 
-- `PopupSurface.solid()`：实色。
-- `PopupSurface.glass()`：液态玻璃。可调 `LiquidGlassStyle`、`blurSigma`、
-  `blurDelay`、`enableShadow`、`backdropBlendMode`。
-- `PopupSurface.builder(...)`：外部容器。拿到内容和圆角，自己负责裁剪、模糊和阴影。
-
-圆角仍用各 Style 的 `borderRadius`：Confirm 12，Sheet 进入边 32，Menu 8，
-DropMenu 18。玻璃不使用实色的 `decoration` / `backgroundColor` / `boxShadow`。
-尺寸、拖拽、键盘、安全区和菜单摆放仍由库负责。描边可以继承
-`LiquidGlassEdgePainter`，或单独 `import 'package:unified_popups/liquid_glass.dart'`。
-完整字段见 `doc/API_REFERENCE.md`「玻璃容器」。
+`PopupSurface.solid()` 实色，`PopupSurface.glass()` 液态玻璃，
+`PopupSurface.builder(...)` 换外部容器。圆角、模糊和阴影参数见
+`doc/API_REFERENCE.md` §5「玻璃容器」。
 
 ## 30 秒上手
 
@@ -201,32 +194,9 @@ PopupOpenResult<bool>
    └─ switch ───────────> opened / updated / rejected / toggled
 ```
 
-普通业务结果：
-
-```dart
-final confirmed = await Pop.confirm(
-  const ConfirmConfig(
-    title: '删除记录',
-    content: '删除后无法恢复。',
-    confirmText: '删除',
-    cancelText: '取消',
-  ),
-).result;
-```
-
-外部命令式控制：
-
-```dart
-final handle = Pop.loading(
-  const LoadingConfig.text('上传中'),
-).requireHandle();
-
-await handle.dismiss();
-```
-
-`.result` 是便捷但有损的业务值：用户取消、外部关闭、冲突拒绝或 toggle 都可能得到
-`null`。需要准确原因时读取 `handle.outcome`；冲突可能合法发生时使用
-`handleOrNull`，不要使用可能抛出 `StateError` 的 `requireHandle()`。
+`.result` 在取消、外部关闭、冲突拒绝或 toggle 时可能是 `null`。要原因读
+`handle.outcome`；冲突可能发生时用 `handleOrNull`。打开决策和 Handle 成员见
+`doc/API_REFERENCE.md` §3。
 
 ## 推荐在 App 内再封装一层
 
@@ -270,47 +240,12 @@ final confirmed = await AppPop.confirm(
 Example 中 FitPulse 产品区使用 `AppPop`，API Lab 保留原始 `Pop.xxx(Config)`，分别
 展示真实项目封装和 SDK 完整契约。
 
-## Builder Handle
+## 接着会用到的几件事
 
-Sheet、Menu、Custom 的 Builder 会自动获得 Handle，不需要 `requireHandle()`：
+Sheet、Menu、Custom 的 builder 直接拿到 Handle：`handle.complete(value)` 完成，
+`handle.dismiss()` 取消。
 
-```dart
-final selected = await Pop.sheet<String>(
-  SheetConfig<String>(
-    builder: (context, handle) => Column(
-      children: [
-        ListTile(
-          title: const Text('复制'),
-          onTap: () => handle.complete('copy'),
-        ),
-        TextButton(
-          onPressed: handle.dismiss,
-          child: const Text('取消'),
-        ),
-      ],
-    ),
-  ),
-).result;
-```
-
-- `complete(value)`：业务正常完成并携带结果。
-- `dismiss()`：取消或无结果关闭。
-- `result`：只返回 nullable value。
-- `outcome`：返回 value 与准确 `PopupDismissReason`。
-- `dismissed`：退出动画完成、视觉节点移除后完成。
-
-## Loading 与 until
-
-Loading 的载荷构造互斥且明确：
-
-```dart
-const LoadingConfig.indicator();
-const LoadingConfig.text('提交中');
-const LoadingConfig.content(MyLoadingContent());
-```
-
-`PopupLifetime.until` 在 Future 成功或失败 settled 时都会关闭 Popup，业务异常仍由
-业务调用方处理：
+Loading 可以绑在一次请求上，Future 结束时关掉；重复打开默认更新同一个全局 Loading：
 
 ```dart
 final request = saveData();
@@ -325,61 +260,14 @@ Pop.loading(
 await request;
 ```
 
-默认 Loading 使用全局 key 与 `updateExisting`，重复调用更新同一个 Entry 和 Handle。
+Menu 默认的透明 Barrier 会挡住下层滚动。要页面继续滚动、菜单跟着 Anchor 走，才传
+`PopupBarrierConfig.hidden()`。DropMenu 用 `DropMenu.single` 或 `DropMenu.nested`。
 
-## Menu 与 DropMenu
+关 Sheet 再进全屏路由时，用 `Pop.settleChannel` 等退出动画结束。`dismissChannel`
+只关仍在显示的层。
 
-```dart
-final anchor = PopupAnchorController();
-
-PopupAnchor(
-  controller: anchor,
-  child: IconButton(
-    icon: const Icon(Icons.more_horiz),
-    onPressed: () async {
-      final action = await Pop.menu<String>(
-        MenuConfig<String>(
-          anchor: anchor,
-          builder: (context, handle) => ListTile(
-            title: const Text('编辑'),
-            onTap: () => handle.complete('edit'),
-          ),
-        ),
-      ).result;
-    },
-  ),
-);
-```
-
-Menu 默认使用透明、可点击/拖动关闭的 Barrier（`dismissOnDrag: true`），并阻止底层
-滚动。只有需要底层滚动且菜单跟随 Anchor 时才传 `PopupBarrierConfig.hidden()`。
-
-DropMenu 使用 `DropMenu.single` 或 `DropMenu.nested`；标准 DropMenu 默认全局
-`replaceExisting`。
-
-## 批量管理
-
-```dart
-await Pop.dismissTop();
-await Pop.dismissChannel(PopupChannel.sheet);
-await Pop.settleChannel(PopupChannel.sheet);
-await Pop.dismissTags({'network'});
-await Pop.dismissAll();
-
-// 临时挂起（跳转详情后恢复）
-final paused = Pop.pauseLatest(PopupChannel.sheet);
-try {
-  await openDetail();
-} finally {
-  if (paused != null) Pop.resume(paused.id);
-}
-```
-
-`dismissChannel` 只关闭仍 active 的 Entry。`settleChannel` 还会等待该 channel
-上仍在退出动画中的弹层全部 `dismissed`，适合关 Sheet 后再 `push` 全屏路由。
-
-`PopupBehaviorConfig` 的 channel 由具体能力固定。业务只配置 key、tags、冲突、路由
-和返回策略。已有 Behavior 需要清空 key 时使用 `copyWith(clearKey: true)`。
+字段和其余管理 API 见 `doc/API_REFERENCE.md` 的返回模型、Loading、Sheet、Menu
+和全局管理。
 
 ## 文档
 

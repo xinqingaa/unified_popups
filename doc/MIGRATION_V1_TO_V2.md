@@ -218,35 +218,17 @@ final result = await Pop.flowSheet<Result>(
 ).result;
 ```
 
-内部页面继续使用
-`nav.push/pop/popToRoot/contains/popTo/replace/resetTo/completeCurrent/completeAndCloseAll/discardCompletedAbove/closeAll`。
-`push` 按 `id` 只留一页。`popToRoot` 回到根页且不关 sheet。
-`contains(id, {identity})` / `popTo(id, result, identity)` 回到指定页，结果走
-`onPoppedTo`。去全屏且不再返回时用 `completeAndCloseAll`，再
-`Pop.settleChannel`。系统返回优先退出内页，位于首页时关闭整个 FlowSheet。
-非首页可用 `enableSwipePop: false` 关掉 iOS 侧滑。
+内页仍由 `FlowSheetController` 导航。现行语义（`push` 按 `id` 只留一页、
+`popToRoot` 不关 sheet、`settleChannel`、`enableSwipePop`）见
+[API 参考](API_REFERENCE.md) FlowSheet 一节。
 
 ### 玻璃容器
 
-Confirm、Sheet、FlowSheet、Menu、DropMenu 用同一个 `style.surface`。
-前四个默认 `PopupSurface.solid()`，DropMenu 默认 `PopupSurface.glass()`。
-Toast、Loading、Date、Custom 没有这个字段。
+v1 没有统一壳。v2 的 Confirm、Sheet、FlowSheet、Menu、DropMenu 用
+`style.surface`，字段见 [API 参考](API_REFERENCE.md) §5。
 
-- `PopupSurface.glass()`：液态玻璃。可调 `LiquidGlassStyle`、`blurSigma`、
-  `blurDelay`、`enableShadow`、`backdropBlendMode`。圆角仍用各 Style 的
-  `borderRadius`（Confirm 12、Sheet 进入边 32、Menu 8、DropMenu 18）。
-- `PopupSurface.builder(...)`：外部容器。拿到内容和圆角，自己负责裁剪、模糊和阴影。
-
-玻璃不使用实色的 `decoration` / `backgroundColor` / `boxShadow`。尺寸、拖拽、
-键盘、安全区和菜单摆放仍由库负责。描边继承 `LiquidGlassEdgePainter`，或
-`import 'package:unified_popups/liquid_glass.dart'`。完整字段见
-`doc/API_REFERENCE.md`「玻璃容器」。
-
-```dart
-style: ConfirmStyle(surface: PopupSurface.glass())
-style: const PopupMenuStyle(surface: PopupSurface.glass())
-menuStyle: const DropMenuStyle() // 默认已是玻璃
-```
+从 2.2.0 的 `DropMenuStyle` 迁到 2.2.1 时，`glassStyle`、`blurSigma`、
+`blurDelay`、`enableShadow` 改写到 `surface: PopupSurface.glass(...)`。默认壳仍是玻璃。
 
 ## 5. 返回模型迁移
 

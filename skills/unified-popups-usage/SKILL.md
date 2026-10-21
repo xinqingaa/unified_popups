@@ -38,10 +38,11 @@ description: >-
 | 首次接入 / 初始化 | `README.md`「30 秒上手」+ `doc/API_REFERENCE.md` §1 初始化 |
 | 扩展或新建 `AppPop` 封装 | `doc/API_REFERENCE.md` §3（含 §3.7 App 级二次封装）+ `example/lib/app/app_pop.dart` + 本目录 [examples.md](examples.md) |
 | 业务页只调已有门面 | 读项目内 `AppPop`（或等价）；**不必**读完整 API，除非门面缺失要补封装 |
-| Toast / Loading / Confirm / Date / Sheet / FlowSheet / Menu / DropMenu / Custom | `doc/API_REFERENCE.md` 对应 §5–§13 **仅一节** |
+| Toast / Loading / Confirm / Date / Sheet / FlowSheet / Menu / DropMenu / Custom | `doc/API_REFERENCE.md` 对应 §6–§14 **仅一节** |
+| 玻璃容器 | `doc/API_REFERENCE.md` §5 |
 | `.result` / Handle / 打开被拒 | `doc/API_REFERENCE.md` §3 |
 | behavior / barrier / animation / lifetime | `doc/API_REFERENCE.md` §4 对应小节 |
-| dismiss / back / pause / 查询 API | `doc/API_REFERENCE.md` §14 |
+| dismiss / back / pause / 查询 API | `doc/API_REFERENCE.md` §15 |
 | 为何不用 `showDialog` | `doc/WHY_OVERLAY.md` |
 | 返回键 / 路由策略原理 | `doc/ARCHITECTURE.md`（需要时） |
 | v1 迁移 | `doc/MIGRATION_V1_TO_V2.md` |
@@ -52,15 +53,16 @@ description: >-
 
 | 能力 | 章节 |
 | --- | --- |
-| Toast | §5 |
-| Loading | §6 |
-| Confirm | §7 |
-| Date | §8 |
-| Sheet | §9 |
-| FlowSheet | §10 |
-| Menu | §11 |
-| DropMenu | §12 |
-| Custom | §13 |
+| 玻璃容器 | §5 |
+| Toast | §6 |
+| Loading | §7 |
+| Confirm | §8 |
+| Date | §9 |
+| Sheet | §10 |
+| FlowSheet | §11 |
+| Menu | §12 |
+| DropMenu | §13 |
+| Custom | §14 |
 
 **禁止**：未打开上表文档就编写 `Pop.*` / `*Config` / Handle 相关代码。  
 **禁止**：把 `API_REFERENCE.md` 全文一次性读入；按节按需。
@@ -93,15 +95,16 @@ MaterialApp(
 
 | 意图 | 去读 |
 | --- | --- |
-| 轻提示 | §5 Toast |
-| 异步等待 | §6 Loading |
-| 破坏性确认 | §7 Confirm |
-| 选日期 | §8 Date |
-| 单页面板 | §9 Sheet |
-| 多步向导 | §10 FlowSheet |
-| 锚点菜单 | §11 Menu |
-| 筛选 / 分组菜单 | §12 DropMenu |
-| 其它进同一生命周期 | §13 Custom |
+| 轻提示 | §6 Toast |
+| 异步等待 | §7 Loading |
+| 破坏性确认 | §8 Confirm |
+| 选日期 | §9 Date |
+| 单页面板 | §10 Sheet |
+| 多步向导 | §11 FlowSheet |
+| 锚点菜单 | §12 Menu |
+| 筛选 / 分组菜单 | §13 DropMenu |
+| 其它进同一生命周期 | §14 Custom |
+| 玻璃壳 | §5 玻璃容器 |
 
 不要用 `showDialog` / `showModalBottomSheet` 替代上表（见 `doc/WHY_OVERLAY.md`）。
 
@@ -110,20 +113,16 @@ MaterialApp(
 读完 §3 / 对应能力节后再落实：
 
 - 入口：`Pop.xxx(Config)` → `PopupOpenResult`；业务值 `.result`；控制用 Handle（仅封装内）。
-- Loading 必须有关闭路径（见 §6 / `PopupLifetime`）。
-- Sheet / Menu / Custom 用 builder 注入的 handle 完成/关闭（见 §3.4、§9+）。
+- Loading 必须有关闭路径（见 §7 / `PopupLifetime`）。
+- Sheet / Menu / Custom 用 builder 注入的 handle 完成/关闭（见 §3.4、§10+）。
 - FlowSheet 收尾、`onBack`、`popToRoot`、`contains`/`popTo`/`onPoppedTo`、
-  `resetTo`、`completeAndCloseAll`、`settleChannel`、`enableSwipePop` 见 §10 与 §14。
+  `resetTo`、`completeAndCloseAll`、`settleChannel`、`enableSwipePop` 见 §11 与 §15。
   `push` 按 `id` 只留一页。关 Sheet 后再跳全屏路由要先 `settleChannel`。
 - 弹层只 import `package:unified_popups/unified_popups.dart`。单独复用玻璃组件时可
   import `package:unified_popups/liquid_glass.dart`。
-- 玻璃容器只有 Confirm、Sheet、FlowSheet、Menu、DropMenu，开关都是
-  `style.surface`。前四个默认 `PopupSurface.solid()`，DropMenu 默认
-  `PopupSurface.glass()`。Toast、Loading、Date、Custom 没有这个字段。
-  `glass` 可调 `LiquidGlassStyle`、`blurSigma`、`blurDelay`、`enableShadow`、
-  `backdropBlendMode`；圆角用各 Style 的 `borderRadius`。`builder` 拿到内容和
-  圆角，自己负责裁剪、模糊和阴影。见 §9「玻璃容器」。玻璃 FlowSheet 内页不要再铺
-  不透明底。
+- 玻璃容器只有 Confirm、Sheet、FlowSheet、Menu、DropMenu，开关是 `style.surface`。
+  前四个默认实色，DropMenu 默认玻璃。Toast、Loading、Date、Custom 没有这个字段。
+  字段、圆角和模糊参数见 §5。玻璃 FlowSheet 内页不要再铺不透明底。
 
 ## 检查清单
 

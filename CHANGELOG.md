@@ -42,6 +42,13 @@ Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https
   last frame of the push. Transparent pages now slide together by a full
   width. Opaque pages keep the Cupertino transition, including the edge swipe.
 
+### Docs
+
+- Agent guidance is one file: `AGENTS.md`. `CLAUDE.md` is a symlink to it.
+- The glass field contract is its own section in the API reference.
+  Architecture, migration, the READMEs, and the consumer skill point there
+  instead of restating radii and glass parameters.
+
 ## 2.2.0
 
 ### Breaking

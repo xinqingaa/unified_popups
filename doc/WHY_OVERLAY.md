@@ -72,12 +72,7 @@ Sheet / FlowSheet（流程）
 Menu / DropMenu（锚点菜单）
 ```
 
-Confirm、Sheet、FlowSheet、Menu、DropMenu 的容器壳是同一个 `style.surface`：
-`PopupSurface.solid()`、`PopupSurface.glass()` 或 `PopupSurface.builder`。
-前四个默认实色，DropMenu 默认玻璃。Toast、Loading、Date、Custom 没有这个开关。
-`glass` 可调 `LiquidGlassStyle`、模糊、阴影和混合模式；圆角用各 Style 的
-`borderRadius`；`builder` 拿到内容和圆角，自己负责裁剪、模糊和阴影。契约见
-`doc/API_REFERENCE.md`「玻璃容器」。
+Confirm、Sheet、FlowSheet、Menu、DropMenu 可以换成同一套容器壳。哪几种有这个开关、默认实色还是玻璃，见 [API 参考](API_REFERENCE.md) §5「玻璃容器」。
 
 若用官方能力拼装，常见结果是：
 

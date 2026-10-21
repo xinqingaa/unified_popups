@@ -247,236 +247,7 @@ Popup 关闭。
 - `onOutcome`：首个关闭请求确定结果。
 - `onDismissed`：退场完成且节点移除。
 
-## 5. Toast
-
-文本：
-
-```dart
-Pop.toast(
-  const ToastConfig.text(
-    '保存成功',
-    type: ToastType.success,
-    position: PopupPosition.bottom,
-  ),
-);
-```
-
-Widget：
-
-```dart
-Pop.toast(const ToastConfig.content(MyToastContent()));
-```
-
-两个构造器的公共参数：
-
-- `position`：top/center/bottom/left/right。
-- `type`：success/warn/error/none。
-- `icon`：`ToastIconConfig(assetPath, size, color)`。
-- `layoutDirection`：图标与内容排列轴。
-- `style`：`ToastStyle`。
-- `toggle`：点击时替换 message/icon/type。
-- `onTap`：点击回调。
-- `behavior/ownership/barrier/animation/lifetime/lifecycle`：通用策略。
-
-`ToastStyle` 字段：`padding`、`margin`、`decoration`、`textStyle`、
-`textAlign`、`spacing`。
-
-无 Barrier Toast 每个位置最多显示 3 个，超出后 FIFO queued。
-
-## 6. Loading
-
-```dart
-Pop.loading(
-  const LoadingConfig.text(
-    '上传中',
-    lifetime: PopupLifetime.manual(),
-  ),
-);
-```
-
-载荷使用三个互斥构造器：
-
-- `LoadingConfig.indicator()`：只有默认指示器。
-- `LoadingConfig.text(message)`：指示器与文本。
-- `LoadingConfig.content(widget)`：指示器与自定义内容。
-
-默认指示器是半径 14 的 `CupertinoActivityIndicator`。`LoadingStyle.indicatorColor`
-会传给它；`indicatorStrokeWidth` 不影响该默认指示器。自定义
-`LoadingIndicatorConfig.child` 仍按 `rotationDuration` 旋转。
-
-`LoadingConfig`：
-
-- `message/content`：由命名构造器保证互斥。
-- `style`：`LoadingStyle`。
-- `indicator`：`LoadingIndicatorConfig`。
-- `position`：显示位置。
-- `behavior/ownership/barrier/animation/lifetime/lifecycle`。
-
-`LoadingStyle`：`backgroundColor`、`borderRadius`、`padding`、`textStyle`、
-`indicatorColor`、`indicatorStrokeWidth`。
-
-`LoadingIndicatorConfig`：`child`、`rotationDuration`。
-
-默认 key 为 `PopupKeys.globalLoading`，策略为 `updateExisting`，BackPolicy 为
-`block`。`Pop.hideLoading()` 关闭默认全局 Loading。
-
-## 7. Confirm
-
-默认是强交互：只能通过确认 / 取消按钮关闭。点遮罩与系统返回 / 侧滑默认不会关闭；
-右上角关闭按钮默认隐藏。默认按钮为胶囊（主 `FilledButton`、次 `OutlinedButton`）。
-
-```dart
-final confirmed = await Pop.confirm(
-  const ConfirmConfig(
-    title: '删除记录',
-    content: '删除后无法恢复。',
-    confirmText: '删除',
-    cancelText: '取消',
-  ),
-).result;
-```
-
-自定义整颗按钮时传入 builder，库不包 `InkWell`，须调用 `onTap`：
-
-```dart
-Pop.confirm(
-  ConfirmConfig(
-    content: '自定义按钮',
-    confirmButton: (onTap) => FilledButton(
-      onPressed: onTap,
-      child: const Text('确定'),
-    ),
-    cancelText: '取消',
-  ),
-);
-```
-
-若需要点遮罩、系统返回或关闭按钮关闭，显式打开对应能力：
-
-```dart
-Pop.confirm(
-  const ConfirmConfig(
-    content: '可取消的确认',
-    confirmText: '确定',
-    cancelText: '取消',
-    showCloseButton: true,
-    barrier: PopupBarrierConfig(dismissible: true),
-    behavior: PopupBehaviorConfig(
-      backPolicy: PopupBackPolicy.dismiss,
-    ),
-  ),
-);
-```
-
-`ConfirmConfig`：
-
-- `title/titleWidget`：标题。
-- `content/contentWidget`：正文，至少提供一个。
-- `bodyExtension`：正文下方扩展 Widget。
-- `confirmButton` / `cancelButton`：自定义按钮 builder；非空时忽略对应文案。
-- `confirmText` / `cancelText`：默认胶囊按钮文案；`cancelText` 与
-  `cancelButton` 都为空则不显示取消。
-- `separator`：内容带与按钮带之间的通栏分隔。
-- `buttonSeparator`：两按钮之间的分隔；非空时忽略 `buttonSpacing`。
-- `showCloseButton`：右上角关闭按钮，默认 `false`。
-- `imagePath/imageHeight/imageFit`：通栏顶图（在 `contentPadding` 之外、标题之上）。
-  宽度铺满容器，高度默认 80，`imageFit` 默认 `BoxFit.cover`，受容器圆角裁切。
-  `imageWidth` 已忽略。
-- `buttonLayout`：row（取消左确认右）/ column（确认上取消下）。
-- `style`：`ConfirmStyle`（仅容器：padding / gap / 标题正文样式）。
-- `onConfirm/onCancel`：只由对应按钮触发。
-- `behavior`：默认 `backPolicy: block`。
-- `barrier`：默认 `dismissible: false`。
-- `ownership/position/animationConfig/lifecycle`。
-
-`ConfirmStyle`：`contentPadding`、`buttonPadding`、`margin`、`decoration`、
-`borderRadius`、`surface`、`titleStyle`、`contentStyle`、`textAlign`、
-`imageGap`、`titleGap`、`bodyExtensionGap`、`contentButtonGap`、
-`buttonSpacing`。`surface` 见下方「玻璃容器」。
-
-`title/titleWidget` 与 `content/contentWidget` 各自互斥；同时提供会触发断言。
-`confirmButton` 优先于 `confirmText`；`cancelButton` 优先于 `cancelText`。
-
-## 8. Date
-
-```dart
-final date = await Pop.date(
-  DateConfig(
-    initialDate: DateTime(2000, 1, 1),
-    minDate: DateTime(1960),
-    maxDate: DateTime.now(),
-  ),
-).result;
-```
-
-主构造器参数：`initialDate`、`minDate`、`maxDate`、`labels`、`style`、
-`behavior`、`ownership`、`barrier`、`position`、`animationConfig`、`lifecycle`。
-
-日期会被标准化为 dateOnly，initial 超出范围时自动 clamp。`min > max` 会抛出
-ArgumentError。已有 `DateRangeConfig` 时可用 `DateConfig.range(range: ...)`。
-
-`DateLabels`：`title`、`confirm`、`cancel`。
-
-`DateStyle`：`activeColor`、`inactiveColor`、`headerBackgroundColor`、`height`、
-`radius`。
-
-## 9. Sheet
-
-```dart
-final value = await Pop.sheet<String>(
-  SheetConfig<String>(
-    header: const SheetHeaderConfig(title: '选择'),
-    builder: (context, handle) => ListTile(
-      title: const Text('完成'),
-      onTap: () => handle.complete('done'),
-    ),
-  ),
-).result;
-```
-
-`SheetConfig<T>`：
-
-- `builder`：`(BuildContext, PopupHandle<T>) -> Widget`。
-- `direction`：top/bottom/left/right。
-- `header`：`SheetHeaderConfig`。
-- `size`：`SheetSizeConfig`。
-- `style`：`SheetStyle`。
-- `dock`：`SheetDockConfig`。
-- `drag`：`SheetDragConfig`。
-- `keyboard`：`SheetKeyboardConfig`。
-- `useSafeArea`：null 时按方向使用默认值。
-- `behavior/ownership/barrier/animation/lifecycle`。
-- `onBack`：返回 true 表示已消费返回。
-
-子配置字段：
-
-- `SheetHeaderConfig`：title、titleWidget、showCloseButton、padding、titleStyle、titleAlign。
-- `SheetSizeConfig`：width、height、maxWidth、maxHeight，值为 `SheetDimension`。
-- `SheetStyle`：backgroundColor、borderRadius、boxShadow、surface、padding、imagePath、imageSize、imageOffset。
-  默认 `padding` 为 `EdgeInsets.fromLTRB(16, 8, 16, 16)`。未传 `borderRadius` 时，
-  进入边的外角为 32，面板按该圆角裁切内容。`surface` 见下方「玻璃容器」。
-- `SheetDockConfig`：enabled、edgeGap。
-- `SheetDragConfig`：mode、modeListenable、showHandle、handleColor、dismissProgressThreshold、dismissVelocity。
-  底部拖拽条为 38×6，下方留 10。标题 `Text` 铺满头部宽度，`titleAlign` 生效。
-- `SheetKeyboardConfig`：adjustForKeyboard、animationDuration。
-  底部键盘避让直接使用 `viewInsets`，不播放过渡。`animationDuration` 仍保留在配置上，渲染器不读取。
-
-拖拽模式：`disabled`、`fullBody`、`contentWhenAtTop`、`handleOnly`。
-
-往关闭方向拖动一开始就失焦，退出动画开始时也会失焦，键盘与面板一起离开。
-已经拖过一段再松手关闭时，退场时长按剩余进度缩短，曲线为线性；未拖动的关闭仍走
-`reverseDuration` / `reverseCurve`。
-
-`modeListenable` 若在非 idle / post-frame 阶段变化，拖拽模式会延到下一帧再刷新。
-
-Sheet 的打开请求是 `updatable`。同一 key 且 `conflictPolicy` 为 `updateExisting`
-时可以原地更新该 Entry。为某个 Handle 构建出的业务 child 会一直缓存到 Handle
-变化，因此原地更新配置不会重新执行 `builder`。
-
-带可见蒙层的全屏弹层用 `FocusScope` 接住焦点，内部输入框可以成为主焦点。
-关闭时，只有弹层自己的焦点域仍握着焦点，才会把焦点还给打开前的节点。
-
-### 玻璃容器
+## 5. 玻璃容器
 
 Confirm、Sheet、FlowSheet、Menu、DropMenu 用同一个开关：对应 Style 的 `surface`。
 Toast、Loading、Date、Custom 没有这个字段。Custom 的 `builder` 里可以直接放
@@ -568,7 +339,236 @@ Pop.menu<void>(MenuConfig<void>(
 ));
 ```
 
-## 10. FlowSheet
+## 6. Toast
+
+文本：
+
+```dart
+Pop.toast(
+  const ToastConfig.text(
+    '保存成功',
+    type: ToastType.success,
+    position: PopupPosition.bottom,
+  ),
+);
+```
+
+Widget：
+
+```dart
+Pop.toast(const ToastConfig.content(MyToastContent()));
+```
+
+两个构造器的公共参数：
+
+- `position`：top/center/bottom/left/right。
+- `type`：success/warn/error/none。
+- `icon`：`ToastIconConfig(assetPath, size, color)`。
+- `layoutDirection`：图标与内容排列轴。
+- `style`：`ToastStyle`。
+- `toggle`：点击时替换 message/icon/type。
+- `onTap`：点击回调。
+- `behavior/ownership/barrier/animation/lifetime/lifecycle`：通用策略。
+
+`ToastStyle` 字段：`padding`、`margin`、`decoration`、`textStyle`、
+`textAlign`、`spacing`。
+
+无 Barrier Toast 每个位置最多显示 3 个，超出后 FIFO queued。
+
+## 7. Loading
+
+```dart
+Pop.loading(
+  const LoadingConfig.text(
+    '上传中',
+    lifetime: PopupLifetime.manual(),
+  ),
+);
+```
+
+载荷使用三个互斥构造器：
+
+- `LoadingConfig.indicator()`：只有默认指示器。
+- `LoadingConfig.text(message)`：指示器与文本。
+- `LoadingConfig.content(widget)`：指示器与自定义内容。
+
+默认指示器是半径 14 的 `CupertinoActivityIndicator`。`LoadingStyle.indicatorColor`
+会传给它；`indicatorStrokeWidth` 不影响该默认指示器。自定义
+`LoadingIndicatorConfig.child` 仍按 `rotationDuration` 旋转。
+
+`LoadingConfig`：
+
+- `message/content`：由命名构造器保证互斥。
+- `style`：`LoadingStyle`。
+- `indicator`：`LoadingIndicatorConfig`。
+- `position`：显示位置。
+- `behavior/ownership/barrier/animation/lifetime/lifecycle`。
+
+`LoadingStyle`：`backgroundColor`、`borderRadius`、`padding`、`textStyle`、
+`indicatorColor`、`indicatorStrokeWidth`。
+
+`LoadingIndicatorConfig`：`child`、`rotationDuration`。
+
+默认 key 为 `PopupKeys.globalLoading`，策略为 `updateExisting`，BackPolicy 为
+`block`。`Pop.hideLoading()` 关闭默认全局 Loading。
+
+## 8. Confirm
+
+默认是强交互：只能通过确认 / 取消按钮关闭。点遮罩与系统返回 / 侧滑默认不会关闭；
+右上角关闭按钮默认隐藏。默认按钮为胶囊（主 `FilledButton`、次 `OutlinedButton`）。
+
+```dart
+final confirmed = await Pop.confirm(
+  const ConfirmConfig(
+    title: '删除记录',
+    content: '删除后无法恢复。',
+    confirmText: '删除',
+    cancelText: '取消',
+  ),
+).result;
+```
+
+自定义整颗按钮时传入 builder，库不包 `InkWell`，须调用 `onTap`：
+
+```dart
+Pop.confirm(
+  ConfirmConfig(
+    content: '自定义按钮',
+    confirmButton: (onTap) => FilledButton(
+      onPressed: onTap,
+      child: const Text('确定'),
+    ),
+    cancelText: '取消',
+  ),
+);
+```
+
+若需要点遮罩、系统返回或关闭按钮关闭，显式打开对应能力：
+
+```dart
+Pop.confirm(
+  const ConfirmConfig(
+    content: '可取消的确认',
+    confirmText: '确定',
+    cancelText: '取消',
+    showCloseButton: true,
+    barrier: PopupBarrierConfig(dismissible: true),
+    behavior: PopupBehaviorConfig(
+      backPolicy: PopupBackPolicy.dismiss,
+    ),
+  ),
+);
+```
+
+`ConfirmConfig`：
+
+- `title/titleWidget`：标题。
+- `content/contentWidget`：正文，至少提供一个。
+- `bodyExtension`：正文下方扩展 Widget。
+- `confirmButton` / `cancelButton`：自定义按钮 builder；非空时忽略对应文案。
+- `confirmText` / `cancelText`：默认胶囊按钮文案；`cancelText` 与
+  `cancelButton` 都为空则不显示取消。
+- `separator`：内容带与按钮带之间的通栏分隔。
+- `buttonSeparator`：两按钮之间的分隔；非空时忽略 `buttonSpacing`。
+- `showCloseButton`：右上角关闭按钮，默认 `false`。
+- `imagePath/imageHeight/imageFit`：通栏顶图（在 `contentPadding` 之外、标题之上）。
+  宽度铺满容器，高度默认 80，`imageFit` 默认 `BoxFit.cover`，受容器圆角裁切。
+  `imageWidth` 已忽略。
+- `buttonLayout`：row（取消左确认右）/ column（确认上取消下）。
+- `style`：`ConfirmStyle`（仅容器：padding / gap / 标题正文样式）。
+- `onConfirm/onCancel`：只由对应按钮触发。
+- `behavior`：默认 `backPolicy: block`。
+- `barrier`：默认 `dismissible: false`。
+- `ownership/position/animationConfig/lifecycle`。
+
+`ConfirmStyle`：`contentPadding`、`buttonPadding`、`margin`、`decoration`、
+`borderRadius`、`surface`、`titleStyle`、`contentStyle`、`textAlign`、
+`imageGap`、`titleGap`、`bodyExtensionGap`、`contentButtonGap`、
+`buttonSpacing`。`surface` 见 §5「玻璃容器」。
+
+`title/titleWidget` 与 `content/contentWidget` 各自互斥；同时提供会触发断言。
+`confirmButton` 优先于 `confirmText`；`cancelButton` 优先于 `cancelText`。
+
+## 9. Date
+
+```dart
+final date = await Pop.date(
+  DateConfig(
+    initialDate: DateTime(2000, 1, 1),
+    minDate: DateTime(1960),
+    maxDate: DateTime.now(),
+  ),
+).result;
+```
+
+主构造器参数：`initialDate`、`minDate`、`maxDate`、`labels`、`style`、
+`behavior`、`ownership`、`barrier`、`position`、`animationConfig`、`lifecycle`。
+
+日期会被标准化为 dateOnly，initial 超出范围时自动 clamp。`min > max` 会抛出
+ArgumentError。已有 `DateRangeConfig` 时可用 `DateConfig.range(range: ...)`。
+
+`DateLabels`：`title`、`confirm`、`cancel`。
+
+`DateStyle`：`activeColor`、`inactiveColor`、`headerBackgroundColor`、`height`、
+`radius`。
+
+## 10. Sheet
+
+```dart
+final value = await Pop.sheet<String>(
+  SheetConfig<String>(
+    header: const SheetHeaderConfig(title: '选择'),
+    builder: (context, handle) => ListTile(
+      title: const Text('完成'),
+      onTap: () => handle.complete('done'),
+    ),
+  ),
+).result;
+```
+
+`SheetConfig<T>`：
+
+- `builder`：`(BuildContext, PopupHandle<T>) -> Widget`。
+- `direction`：top/bottom/left/right。
+- `header`：`SheetHeaderConfig`。
+- `size`：`SheetSizeConfig`。
+- `style`：`SheetStyle`。
+- `dock`：`SheetDockConfig`。
+- `drag`：`SheetDragConfig`。
+- `keyboard`：`SheetKeyboardConfig`。
+- `useSafeArea`：null 时按方向使用默认值。
+- `behavior/ownership/barrier/animation/lifecycle`。
+- `onBack`：返回 true 表示已消费返回。
+
+子配置字段：
+
+- `SheetHeaderConfig`：title、titleWidget、showCloseButton、padding、titleStyle、titleAlign。
+- `SheetSizeConfig`：width、height、maxWidth、maxHeight，值为 `SheetDimension`。
+- `SheetStyle`：backgroundColor、borderRadius、boxShadow、surface、padding、imagePath、imageSize、imageOffset。
+  默认 `padding` 为 `EdgeInsets.fromLTRB(16, 8, 16, 16)`。未传 `borderRadius` 时，
+  进入边的外角为 32，面板按该圆角裁切内容。`surface` 见 §5「玻璃容器」。
+- `SheetDockConfig`：enabled、edgeGap。
+- `SheetDragConfig`：mode、modeListenable、showHandle、handleColor、dismissProgressThreshold、dismissVelocity。
+  底部拖拽条为 38×6，下方留 10。标题 `Text` 铺满头部宽度，`titleAlign` 生效。
+- `SheetKeyboardConfig`：adjustForKeyboard、animationDuration。
+  底部键盘避让直接使用 `viewInsets`，不播放过渡。`animationDuration` 仍保留在配置上，渲染器不读取。
+
+拖拽模式：`disabled`、`fullBody`、`contentWhenAtTop`、`handleOnly`。
+
+往关闭方向拖动一开始就失焦，退出动画开始时也会失焦，键盘与面板一起离开。
+已经拖过一段再松手关闭时，退场时长按剩余进度缩短，曲线为线性；未拖动的关闭仍走
+`reverseDuration` / `reverseCurve`。
+
+`modeListenable` 若在非 idle / post-frame 阶段变化，拖拽模式会延到下一帧再刷新。
+
+Sheet 的打开请求是 `updatable`。同一 key 且 `conflictPolicy` 为 `updateExisting`
+时可以原地更新该 Entry。为某个 Handle 构建出的业务 child 会一直缓存到 Handle
+变化，因此原地更新配置不会重新执行 `builder`。
+
+带可见蒙层的全屏弹层用 `FocusScope` 接住焦点，内部输入框可以成为主焦点。
+关闭时，只有弹层自己的焦点域仍握着焦点，才会把焦点还给打开前的节点。
+
+## 11. FlowSheet
 
 ```dart
 final result = await Pop.flowSheet<OrderResult>(
@@ -582,7 +582,7 @@ final result = await Pop.flowSheet<OrderResult>(
 `FlowSheetConfig<R>` 必需 `controller` 和 `initialPage`；其余参数为
 `direction/header/size/style/dock/drag/keyboard/useSafeArea/pageBackgroundColor/`
 `routeBuilder/behavior/ownership/barrier/animation/lifecycle`。
-`style.surface` 见「玻璃容器」。玻璃或 builder 且未传 `pageBackgroundColor` 时，
+`style.surface` 见 §5「玻璃容器」。玻璃或 builder 且未传 `pageBackgroundColor` 时，
 内页底色为透明。
 
 `FlowSheetController` 一次实例只服务一场会话：
@@ -639,7 +639,7 @@ final result = await Pop.flowSheet<OrderResult>(
 `settleChannel` 会关掉该 channel 上仍 active 的弹层，并等待含退出动画中的全部
 `dismissed`。
 
-## 11. Menu
+## 12. Menu
 
 
 ```dart
@@ -660,13 +660,13 @@ final action = await Pop.menu<String>(
 默认 `barrier` 为透明可点击/拖动关闭（`dismissOnDrag: true`），阻止下层滚动。
 
 `PopupMenuStyle`：`padding`、`constraints`、`decoration`、`borderRadius`、
-`surface`。`surface` 见「玻璃容器」。默认实色，圆角 8。玻璃和 builder 忽略
+`surface`。`surface` 见 §5「玻璃容器」。默认实色，圆角 8。玻璃和 builder 忽略
 `decoration`。
 
 `MenuPlacement`：auto、belowStart、belowEnd、aboveStart、aboveEnd。Anchor 必须通过
 `PopupAnchor(controller: ...)` 挂载。Anchor detach 时 reason 为 `anchorDetached`。
 
-## 12. DropMenu
+## 13. DropMenu
 
 ```dart
 final value = await Pop.dropMenu<String>(
@@ -697,10 +697,10 @@ disabled、initiallyExpanded、showBottomDivider、primaryVerticalPadding。
 
 默认行为使用 `PopupKeys.globalDropMenu + replaceExisting`。
 
-`DropMenuStyle.surface` 见「玻璃容器」。默认 `PopupSurface.glass()`，圆角 18。
+`DropMenuStyle.surface` 见 §5「玻璃容器」。默认 `PopupSurface.glass()`，圆角 18。
 玻璃参数写在 `PopupSurface.glass` 上。二级分组的 `nestedPanelColor` 仍是内嵌色块。
 
-## 13. Custom
+## 14. Custom
 
 ```dart
 Pop.custom<String>(
@@ -713,7 +713,7 @@ Pop.custom<String>(
 `CustomPopupConfig<T>`：`builder`、`behavior`、`ownership`、`barrier`、`position`、
 `animationConfig`、`lifecycle`。
 
-## 14. 全局管理
+## 15. 全局管理
 
 | API | 说明 |
 | --- | --- |
@@ -733,14 +733,14 @@ Pop.custom<String>(
 | `Pop.resume(id)` | 恢复已 pause 的 Entry |
 | `Pop.shutdown()` | 关闭 Runtime |
 
-## 15. PopupDismissReason
+## 16. PopupDismissReason
 
 主要 reason：`completed`、`manual`、`barrier`、`back`、`timeout`、
 `externalEvent`、`routeChanged`、`parentDismissed`、`replaced`、`toggled`、
 `anchorDetached`、`hostDetached`、`hostUnavailable`、`runtimeDisposed`、
 `queueOverflow`、`rendererUnavailable`。
 
-## 16. 稳定公开边界
+## 17. 稳定公开边界
 
 package 入口公开业务 Config、结果/Handle、FlowSheet 页面契约、Anchor、样式和必要
 策略。以下实现类型不从 `unified_popups.dart` 导出：

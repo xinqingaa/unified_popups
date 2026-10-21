@@ -119,18 +119,9 @@ Toast, Loading, Date, and Custom do not have this field.
 | `Pop.menu` | `PopupMenuStyle.surface` | `PopupSurface.solid()` |
 | `Pop.dropMenu` | `DropMenuStyle.surface` | `PopupSurface.glass()` |
 
-- `PopupSurface.solid()`: opaque fill.
-- `PopupSurface.glass()`: liquid glass. Tune `LiquidGlassStyle`, `blurSigma`,
-  `blurDelay`, `enableShadow`, and `backdropBlendMode`.
-- `PopupSurface.builder(...)`: external container. It receives the content and
-  radius and owns clip, blur, and shadow.
-
-Radius stays on each style's `borderRadius`: Confirm 12, Sheet 32 on the
-incoming edge, Menu 8, DropMenu 18. Glass ignores the solid `decoration` /
-`backgroundColor` / `boxShadow`. Size, drag, keyboard, safe area, and menu
-placement stay with the library. Subclass `LiquidGlassEdgePainter`, or
-`import 'package:unified_popups/liquid_glass.dart'` to use the widgets outside
-a popup. The field contract is in `doc/API_REFERENCE.md` under 玻璃容器.
+`PopupSurface.solid()` is an opaque fill, `PopupSurface.glass()` is liquid
+glass, and `PopupSurface.builder(...)` swaps in an external container. Radius,
+blur, and shadow parameters are in `doc/API_REFERENCE.md` §5 玻璃容器.
 
 ## Quick start (30 seconds)
 
@@ -215,33 +206,10 @@ PopupOpenResult<bool>
    └─ switch ───────────> opened / updated / rejected / toggled
 ```
 
-Business result:
-
-```dart
-final confirmed = await Pop.confirm(
-  const ConfirmConfig(
-    title: 'Delete record',
-    content: 'This cannot be undone.',
-    confirmText: 'Delete',
-    cancelText: 'Cancel',
-  ),
-).result;
-```
-
-Imperative control:
-
-```dart
-final handle = Pop.loading(
-  const LoadingConfig.text('Uploading'),
-).requireHandle();
-
-await handle.dismiss();
-```
-
-`.result` is convenient but lossy: cancel, external dismiss, conflict reject, or
-toggle may all yield `null`. Read `handle.outcome` for the exact reason. When
-conflicts are expected, use `handleOrNull` instead of `requireHandle()` (which
-may throw `StateError`).
+`.result` may be `null` on cancel, external dismiss, conflict reject, or toggle.
+Read `handle.outcome` for the reason. When a conflict is a valid outcome, use
+`handleOrNull`. Open decisions and Handle members are in
+`doc/API_REFERENCE.md` §3.
 
 ## Prefer an app-level facade
 
@@ -286,48 +254,13 @@ final confirmed = await AppPop.confirm(
 In the Example, FitPulse uses `AppPop`; the API Lab keeps raw `Pop.xxx(Config)`
 to show product wrapping vs the full SDK contract.
 
-## Builder Handle
+## A few patterns you will need next
 
-Sheet, Menu, and Custom builders receive a Handle automatically — no
-`requireHandle()`:
+Sheet, Menu, and Custom builders receive a Handle: `handle.complete(value)`
+finishes, `handle.dismiss()` cancels.
 
-```dart
-final selected = await Pop.sheet<String>(
-  SheetConfig<String>(
-    builder: (context, handle) => Column(
-      children: [
-        ListTile(
-          title: const Text('Copy'),
-          onTap: () => handle.complete('copy'),
-        ),
-        TextButton(
-          onPressed: handle.dismiss,
-          child: const Text('Cancel'),
-        ),
-      ],
-    ),
-  ),
-).result;
-```
-
-- `complete(value)`: finish with a business result.
-- `dismiss()`: cancel / close with no result.
-- `result`: nullable value only.
-- `outcome`: value plus exact `PopupDismissReason`.
-- `dismissed`: completes after exit animation and visual removal.
-
-## Loading and `until`
-
-Loading payloads are mutually exclusive constructors:
-
-```dart
-const LoadingConfig.indicator();
-const LoadingConfig.text('Submitting');
-const LoadingConfig.content(MyLoadingContent());
-```
-
-`PopupLifetime.until` dismisses when the Future settles (success or failure).
-Business errors remain the caller’s responsibility:
+Loading can follow one request and dismiss when that Future settles. A repeat
+open updates the same global Loading:
 
 ```dart
 final request = saveData();
@@ -342,59 +275,15 @@ Pop.loading(
 await request;
 ```
 
-Default Loading uses a global key with `updateExisting`, so repeated calls
-update the same entry and handle.
+Menu’s default transparent barrier blocks scrolling underneath. Pass
+`PopupBarrierConfig.hidden()` when the page should keep scrolling and the menu
+should follow its anchor. DropMenu uses `DropMenu.single` or `DropMenu.nested`.
 
-## Menu and DropMenu
+Before a full-screen route after closing a sheet, `Pop.settleChannel` waits out
+the exit animation. `dismissChannel` closes entries that are still showing.
 
-```dart
-final anchor = PopupAnchorController();
-
-PopupAnchor(
-  controller: anchor,
-  child: IconButton(
-    icon: const Icon(Icons.more_horiz),
-    onPressed: () async {
-      final action = await Pop.menu<String>(
-        MenuConfig<String>(
-          anchor: anchor,
-          builder: (context, handle) => ListTile(
-            title: const Text('Edit'),
-            onTap: () => handle.complete('edit'),
-          ),
-        ),
-      ).result;
-    },
-  ),
-);
-```
-
-Menu defaults to a transparent tap/drag-to-dismiss barrier
-(`dismissOnDrag: true`) that also blocks underlying scroll. Pass
-`PopupBarrierConfig.hidden()` only when the page must keep scrolling while the
-menu follows its anchor.
-
-DropMenu uses `DropMenu.single` or `DropMenu.nested`. Standard DropMenu
-defaults to global `replaceExisting`.
-
-## Batch dismiss
-
-```dart
-await Pop.dismissTop();
-await Pop.dismissChannel(PopupChannel.sheet);
-await Pop.settleChannel(PopupChannel.sheet);
-await Pop.dismissTags({'network'});
-await Pop.dismissAll();
-```
-
-`dismissChannel` closes entries that are still active. `settleChannel` also
-waits until every still-mounted entry on that channel, including ones already
-exiting, has finished `dismissed`. Use it before pushing a full-screen route
-after a sheet closes.
-
-`PopupBehaviorConfig` channel is fixed per capability. Apps configure key,
-tags, conflict, route, and back policies. To clear a key on an existing
-behavior, use `copyWith(clearKey: true)`.
+Fields and the rest of the management API are in `doc/API_REFERENCE.md`:
+return model, Loading, Sheet, Menu, and global management.
 
 ## Docs
 
