@@ -67,7 +67,15 @@ cd example && flutter test
 `api` · `configs` · `controller` · `runtime` · `host` · `renderers` ·
 `navigation` · `flow_sheets` · `widgets` · `utils`
 
-Public exports: `lib/unified_popups.dart`. Usage docs: `doc/` (not `docs/`).
+Public exports: `lib/unified_popups.dart`. Glass widgets also have a focused
+entry at `lib/liquid_glass.dart` (`LiquidGlass`, style, buttons, and the
+extendable edge painter). Confirm, Sheet, FlowSheet, Menu, and DropMenu share
+`style.surface`: `PopupSurface.solid()` / `glass()` / `builder`. The first four
+default to solid; DropMenu defaults to glass. Toast, Loading, Date, and Custom
+have no surface switch. Glass tuning is `LiquidGlassStyle`, blur, shadow, and
+blend mode; radius stays on each style. `builder` owns clip, blur, and shadow.
+Usage docs: `doc/` (not `docs/`). The contract is `doc/API_REFERENCE.md`
+「玻璃容器」.
 
 ### Initialization
 

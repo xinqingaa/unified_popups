@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../configs/menu_config.dart';
+import '../configs/popup_surface.dart';
 import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_handle.dart';
 import 'popup_renderer_delegate.dart';
+import 'popup_surface_shell.dart';
 
 class MenuRenderer extends StatefulWidget {
   const MenuRenderer({
@@ -64,15 +66,33 @@ class _MenuRendererState extends State<MenuRenderer> {
       MenuPlacement.aboveEnd => (Alignment.topRight, Alignment.bottomRight),
       MenuPlacement.auto => (Alignment.bottomLeft, Alignment.topLeft),
     };
-    final decoration = config.style.decoration ??
+    final menuStyle = config.style;
+    final decoration = menuStyle.decoration ??
         BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: menuStyle.borderRadius,
           boxShadow: const <BoxShadow>[
             BoxShadow(
-                color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+              color: Colors.black26,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
           ],
         );
+    final padded = Padding(
+      padding: menuStyle.padding,
+      child: _content!,
+    );
+    // Measurement hides the panel at opacity 0 or shows it at 1. It never
+    // fades through partial opacity, so a glass BackdropFilter inside stays
+    // off an opacity layer. Entry fades are applied inside the shell.
+    final panel = menuStyle.surface is SolidPopupSurface
+        ? DecoratedBox(decoration: decoration, child: padded)
+        : PopupSurfaceShell(
+            surface: menuStyle.surface,
+            borderRadius: menuStyle.borderRadius,
+            child: padded,
+          );
     // Keep the follower's hit-test parent full-screen. A transformed child can
     // otherwise paint outside a shrink-wrapped Align while taps fall through
     // to the modal barrier behind it.
@@ -92,14 +112,8 @@ class _MenuRendererState extends State<MenuRenderer> {
                 child: Material(
                   color: Colors.transparent,
                   child: ConstrainedBox(
-                    constraints: config.style.constraints,
-                    child: DecoratedBox(
-                      decoration: decoration,
-                      child: Padding(
-                        padding: config.style.padding,
-                        child: _content!,
-                      ),
-                    ),
+                    constraints: menuStyle.constraints,
+                    child: panel,
                   ),
                 ),
               ),

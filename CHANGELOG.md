@@ -2,6 +2,46 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.2.1
+
+### Breaking
+
+- DropMenu no longer takes `glassStyle`, `blurSigma`, `blurDelay`, or
+  `enableShadow` on `DropMenuStyle`. Pass the same values through
+  `surface: PopupSurface.glass(...)`. The default shell is still glass.
+
+### Features
+
+- Confirm, Sheet, FlowSheet, Menu, and DropMenu share one shell switch,
+  `style.surface`: `PopupSurface.solid()`, `PopupSurface.glass()`, or
+  `PopupSurface.builder` for an external container. Toast, Loading, Date, and
+  Custom do not have this field. Confirm, Sheet, FlowSheet, and Menu default
+  to solid. DropMenu defaults to glass.
+- `PopupSurface.glass` accepts `LiquidGlassStyle` (`style`), `blurSigma`,
+  `blurDelay`, `enableShadow`, and `backdropBlendMode`. Panel radius stays on
+  each style: Confirm 12, Sheet the direction radius (incoming edge 32),
+  Menu 8, DropMenu 18. Glass and builder ignore the solid fill and shadow
+  (`decoration`, or Sheet `backgroundColor` / `boxShadow`). Size, drag,
+  keyboard, safe area, and menu placement stay with the library. `builder`
+  receives the content and radius and owns clip, blur, and shadow.
+- `package:unified_popups/liquid_glass.dart` exports `LiquidGlass`,
+  `LiquidGlassStyle`, the glass buttons, and `LiquidGlassEdgePainter`.
+  Subclass that painter or pass `LiquidGlass.edgePainterBuilder` to replace
+  the rim. Used alone, the widget defaults to a pill radius, shadow off, and
+  `BlendMode.srcOver`. Popup glass passes the panel radius, enables the
+  shadow, and uses `BlendMode.src`.
+- Fade animations on a glass or builder shell fade only the interior, so
+  `BackdropFilter` stays outside the opacity layer.
+- A glass or builder FlowSheet leaves the inner page background transparent
+  unless `pageBackgroundColor` is set.
+
+### Fixes
+
+- A transparent FlowSheet page no longer uses the Cupertino parallax. The
+  page underneath stayed visible through the glass and disappeared on the
+  last frame of the push. Transparent pages now slide together by a full
+  width. Opaque pages keep the Cupertino transition, including the edge swipe.
+
 ## 2.2.0
 
 ### Breaking

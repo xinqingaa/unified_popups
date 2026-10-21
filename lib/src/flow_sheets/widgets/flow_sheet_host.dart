@@ -13,7 +13,9 @@ import '../pages/flow_sheet_page.dart';
 ///   避免 `replace` 换首页时出现「从右往左」的假入场。
 ///   `resetTo(animate: true)` 先把新页当非首页推入，因此仍走下方横向转场；
 ///   动画结束后再收成单页根。
-/// - 非首页：默认 [CupertinoPageRoute] 横向滑动（含 iOS 侧滑返回）。
+/// - 非首页、页底不透明：默认 [CupertinoPageRoute] 横向滑动（含 iOS 侧滑返回）。
+/// - 非首页、页底透出玻璃：两页联动整宽滑走。视差会把上一页留在透明页下面，
+///   转场结束路由不再绘制它时，最后一帧会突然空掉。
 class _FlowPage extends Page<dynamic> {
   _FlowPage(
     this.entry,
@@ -33,12 +35,15 @@ class _FlowPage extends Page<dynamic> {
 
   @override
   Route<dynamic> createRoute(BuildContext context) {
-    final child = ColoredBox(
-      color: _resolvePageBackgroundColor(context),
-      child: FlowSheetPageScope(
-        navigator: controller.navigator,
-        lifecycleController: entry.lifecycleController,
-        child: entry.page,
+    final background = _resolvePageBackgroundColor(context);
+    final child = RepaintBoundary(
+      child: ColoredBox(
+        color: background,
+        child: FlowSheetPageScope(
+          navigator: controller.navigator,
+          lifecycleController: entry.lifecycleController,
+          child: entry.page,
+        ),
       ),
     );
     final customRouteBuilder = routeBuilder;
@@ -47,6 +52,13 @@ class _FlowPage extends Page<dynamic> {
         context,
         this,
         child,
+        maintainState: entry.page.maintainState,
+      );
+    }
+    if (!isRoot && background.a < 1) {
+      return _FlowSheetCarouselRoute<dynamic>(
+        child: child,
+        settings: this,
         maintainState: entry.page.maintainState,
       );
     }
@@ -94,7 +106,7 @@ class _FlowPage extends Page<dynamic> {
 /// FlowSheet 的展示宿主：用内嵌 [Navigator]（Pages API）承载页面栈。
 ///
 /// - 栈底首页：无水平转场（见 [_FlowPage.isRoot]）
-/// - push/pop 子页：默认 [CupertinoPageRoute] 横向滑动（含 iOS 侧滑返回）
+/// - push/pop 子页：不透明页底用 [CupertinoPageRoute]；透出玻璃的页底用整宽联动滑走
 /// - 保活页（maintainState）由路由 `maintainState` 控制
 ///
 /// 系统返回不由本宿主直接处理：由外层 route observer → popup controller →
@@ -194,5 +206,119 @@ class _FlowSheetHostState extends State<FlowSheetHost> {
         ),
       ),
     );
+  }
+}
+
+/// 透明页底的横滑：当前页向左整页离开，新页从右侧补上，两者始终拼成一整屏。
+///
+/// 转场结束时上一页已经在裁剪区域外，opaque 路由停止绘制它不会改画面。
+/// 这种页不再走 Cupertino 边缘侧滑；系统返回仍然 pop 内页。
+class _FlowSheetCarouselRoute<T> extends PageRoute<T> {
+  _FlowSheetCarouselRoute({
+    required this.child,
+    required super.settings,
+    required bool maintainState,
+  }) : _maintainState = maintainState;
+
+  final Widget child;
+  final bool _maintainState;
+
+  static const Curve _curve = Curves.easeOutCubic;
+  static const Duration _duration = Duration(milliseconds: 280);
+
+  @override
+  bool get maintainState => _maintainState;
+
+  @override
+  Duration get transitionDuration => _duration;
+
+  @override
+  Duration get reverseTransitionDuration => _duration;
+
+  @override
+  bool get opaque => true;
+
+  @override
+  bool get allowSnapshotting => false;
+
+  @override
+  Color? get barrierColor => null;
+
+  @override
+  String? get barrierLabel => null;
+
+  @override
+  bool get barrierDismissible => false;
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return child;
+  }
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FractionalTranslation(
+      translation: _offset(
+        context,
+        secondaryAnimation,
+        Offset.zero,
+        const Offset(-1, 0),
+      ),
+      transformHitTests: false,
+      child: FractionalTranslation(
+        translation: _offset(
+          context,
+          animation,
+          const Offset(1, 0),
+          Offset.zero,
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  @override
+  DelegatedTransitionBuilder? get delegatedTransition => _delegatedSlide;
+
+  static Widget _delegatedSlide(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    bool allowSnapshotting,
+    Widget? child,
+  ) {
+    return FractionalTranslation(
+      translation: _offset(
+        context,
+        secondaryAnimation,
+        Offset.zero,
+        const Offset(-1, 0),
+      ),
+      transformHitTests: false,
+      child: child,
+    );
+  }
+
+  static Offset _offset(
+    BuildContext context,
+    Animation<double> animation,
+    Offset begin,
+    Offset end,
+  ) {
+    final t = _curve.transform(animation.value.clamp(0.0, 1.0));
+    final offset = Offset.lerp(begin, end, t)!;
+    if (Directionality.of(context) == TextDirection.rtl) {
+      return Offset(-offset.dx, offset.dy);
+    }
+    return offset;
   }
 }

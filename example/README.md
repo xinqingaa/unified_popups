@@ -36,6 +36,7 @@ AppBar ⋯ 也可跳到 API 展柜。
 | Confirm / Date | 按钮 vs 遮罩/返回语义、outcome、堆叠、日期样式 |
 | Sheet | 四方向、三种拖拽（指示器仅底部）、键盘、dockToEdge、堆叠 |
 | FlowSheet | 全屏/半屏迷你栈、`popToRoot`、`contains`/`popTo`、`resetTo`、同 `id` 只留一页、返回委托、产品 Flow 入口 |
+| 玻璃容器 | Confirm / Sheet / FlowSheet / Menu / DropMenu 的 `style.surface`。前四个默认实色，DropMenu 默认玻璃。`glass` 调样式、模糊、阴影和混合模式；`builder` 换外部容器 |
 | Menu Anchor | DropMenu 全局替换、透明 Barrier（含 `dismissOnDrag`）、滚动跟随、placement、卸载关闭 |
 | Custom / Handle | CustomPopup、outcome/dismissed、tags/channel、查询 API |
 | 策略 | 返回顺序、persist/owner 路由、captureRoute、Ownership |

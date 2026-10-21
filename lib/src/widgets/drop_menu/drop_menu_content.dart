@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../configs/drop_menu_config.dart';
-import '../../renderers/popup_entry_animation.dart';
-import '../liquid_glass/liquid_glass.dart';
+import '../../configs/popup_surface.dart';
 import '../liquid_glass/liquid_glass_style.dart';
 
 class DropMenuContent<T> extends StatefulWidget {
@@ -93,9 +92,7 @@ class _DropMenuContentState<T> extends State<DropMenuContent<T>> {
   @override
   Widget build(BuildContext context) {
     final style = widget.style;
-    // Fade only labels/icons inside the glass. BackdropFilter must stay outside
-    // any OpacityLayer or blur samples the wrong buffer until opacity hits 1.
-    Widget body = Padding(
+    return Padding(
       padding: style.panelMargin,
       child: ClipRRect(
         borderRadius: style.nestedPanelRadius,
@@ -105,21 +102,6 @@ class _DropMenuContentState<T> extends State<DropMenuContent<T>> {
               : _buildNestedMenu(context),
         ),
       ),
-    );
-    final entryAnimation = PopupEntryAnimation.maybeOf(context);
-    if (entryAnimation != null &&
-        entryAnimation.fadeContentOnly &&
-        !MediaQuery.disableAnimationsOf(context)) {
-      body = FadeTransition(opacity: entryAnimation.animation, child: body);
-    }
-    return LiquidGlass(
-      borderRadius: style.borderRadius,
-      style: style.glassStyle,
-      blurSigma: style.blurSigma,
-      blurDelay: style.blurDelay,
-      backdropBlendMode: BlendMode.src,
-      enableShadow: style.enableShadow,
-      child: body,
     );
   }
 
@@ -199,7 +181,7 @@ class _Section<T> extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             _Pressable(
-              color: style.glassStyle.resolve(context).pressHighlightColor,
+              color: _pressStyle(style).resolve(context).pressHighlightColor,
               borderRadius: style.nestedPanelRadius,
               onTap: onTap,
               child: Stack(
@@ -385,7 +367,7 @@ class _OptionRow<T> extends StatelessWidget {
       child: IgnorePointer(
         ignoring: item.disabled,
         child: _Pressable(
-          color: style.glassStyle.resolve(context).pressHighlightColor,
+          color: _pressStyle(style).resolve(context).pressHighlightColor,
           borderRadius: const BorderRadius.all(Radius.circular(8)),
           onTap: onTap,
           child: DecoratedBox(
@@ -600,4 +582,10 @@ final class _ResolvedDropMenuColors {
   final Color selected;
   final Color nestedPanel;
   final Color arrow;
+}
+
+LiquidGlassStyle _pressStyle(DropMenuStyle style) {
+  final surface = style.surface;
+  if (surface is GlassPopupSurface) return surface.style;
+  return LiquidGlassStyle.standard;
 }

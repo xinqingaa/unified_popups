@@ -10,6 +10,7 @@ import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
 import 'popup_position.dart';
 import 'popup_route_policy.dart';
+import 'popup_surface.dart';
 import 'popup_visual_config.dart';
 
 /// 锚定菜单相对于锚点组件的首选摆放位置。
@@ -21,18 +22,33 @@ enum MenuPlacement {
   aboveEnd,
 }
 
-/// 锚定菜单浮层的容器约束与装饰。
+/// 锚定菜单浮层的容器约束与壳。
+///
+/// [surface] 与 Confirm、Sheet、DropMenu 相同。默认实色，圆角 8。
+/// 玻璃和 builder 忽略 [decoration]，圆角用 [borderRadius]。
 final class PopupMenuStyle {
   /// 创建菜单面板外观默认值。
   const PopupMenuStyle({
     this.padding = EdgeInsets.zero,
     this.constraints = const BoxConstraints(minWidth: 120, maxWidth: 280),
     this.decoration,
+    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.surface = const PopupSurface.solid(),
   });
 
   final EdgeInsetsGeometry padding;
   final BoxConstraints constraints;
+
+  /// 实色容器的装饰。玻璃和 builder 忽略该字段。
+  ///
+  /// 未传时使用主题表面色、[borderRadius] 和默认阴影。
   final Decoration? decoration;
+
+  /// 玻璃和 builder 的圆角。未提供 [decoration] 时，实色容器也使用它。
+  final BorderRadius borderRadius;
+
+  /// 容器壳。默认实色。
+  final PopupSurface surface;
 }
 
 /// [MenuConfig] 与 [DropMenuConfig] 共享的契约。
@@ -46,7 +62,7 @@ abstract class MenuConfigBase implements PopupVisualConfig {
   /// 摆放计算完成后附加的偏移量。
   Offset get offset;
 
-  /// 面板的内边距、约束与装饰。
+  /// 面板的内边距、约束与容器壳。
   PopupMenuStyle get style;
 
   /// 为给定的 [handle] 构建菜单内容。

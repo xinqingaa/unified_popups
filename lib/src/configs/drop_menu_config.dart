@@ -4,9 +4,9 @@ import '../controller/popup_handle.dart';
 import '../controller/popup_lifecycle_callbacks.dart';
 import '../controller/popup_ownership.dart';
 import '../widgets/drop_menu/drop_menu_content.dart';
-import '../widgets/liquid_glass/liquid_glass_style.dart';
 import '../widgets/popup_anchor.dart';
 import 'menu_config.dart';
+import 'popup_surface.dart';
 import 'popup_animation_config.dart';
 import 'popup_back_policy.dart';
 import 'popup_barrier_config.dart';
@@ -148,7 +148,10 @@ final class DropMenu<T> {
 /// 标准下拉菜单内容的视觉定制。
 @immutable
 final class DropMenuStyle {
-  /// 创建下拉菜单外观默认值（默认液态玻璃面板）。
+  /// 创建下拉菜单外观默认值。
+  ///
+  /// 默认 [PopupSurface.glass]，与 Confirm / Sheet / Menu 同一个开关。
+  /// 玻璃的样式、模糊、阴影和混合模式写在 [PopupSurface.glass] 上。
   const DropMenuStyle({
     this.constraints = const BoxConstraints(
       minWidth: 140,
@@ -156,10 +159,7 @@ final class DropMenuStyle {
       maxHeight: 420,
     ),
     this.borderRadius = const BorderRadius.all(Radius.circular(18)),
-    this.glassStyle = LiquidGlassStyle.standard,
-    this.blurSigma,
-    this.blurDelay = Duration.zero,
-    this.enableShadow = true,
+    this.surface = const PopupSurface.glass(),
     this.panelMargin = const EdgeInsets.fromLTRB(4, 2, 4, 4),
     this.itemPadding = const EdgeInsets.symmetric(
       horizontal: 16,
@@ -188,11 +188,14 @@ final class DropMenuStyle {
         assert(dividerThickness >= 0);
 
   final BoxConstraints constraints;
+
+  /// 玻璃和 builder 的圆角。实色壳未另给装饰时也使用它。
   final BorderRadius borderRadius;
-  final LiquidGlassStyle glassStyle;
-  final double? blurSigma;
-  final Duration blurDelay;
-  final bool enableShadow;
+
+  /// 容器壳。默认玻璃。实色传 [PopupSurface.solid]，外部容器传
+  /// [PopupSurface.builder]。
+  final PopupSurface surface;
+
   final EdgeInsetsGeometry panelMargin;
   final EdgeInsetsGeometry itemPadding;
   final EdgeInsetsGeometry nestedPanelMargin;
@@ -276,7 +279,8 @@ final class DropMenuConfig<T> extends MenuConfigBase {
   @override
   PopupMenuStyle get style => PopupMenuStyle(
         constraints: menuStyle.constraints,
-        decoration: const BoxDecoration(),
+        borderRadius: menuStyle.borderRadius,
+        surface: menuStyle.surface,
       );
 
   @override

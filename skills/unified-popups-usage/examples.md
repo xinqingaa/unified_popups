@@ -99,6 +99,26 @@ MaterialApp(
 );
 ```
 
+## 玻璃容器
+
+Confirm、Sheet、FlowSheet、Menu、DropMenu 都是 `style.surface`。前四个默认
+`PopupSurface.solid()`，DropMenu 默认 `PopupSurface.glass()`。Toast、Loading、
+Date、Custom 没有这个开关。
+
+```dart
+style: ConfirmStyle(
+  surface: PopupSurface.glass(
+    style: LiquidGlassStyle(blurSigma: 28),
+  ),
+)
+```
+
+`PopupSurface.glass` 还能改 `blurDelay`、`enableShadow`、`backdropBlendMode`。
+圆角用各 Style 的 `borderRadius`（Confirm 12、Sheet 进入边 32、Menu 8、
+DropMenu 18）。`PopupSurface.builder` 换整层容器，自己负责裁剪、模糊和阴影。
+单独用玻璃组件时 import `package:unified_popups/liquid_glass.dart`。字段边界见
+`doc/API_REFERENCE.md`「玻璃容器」。
+
 ## 反例（业务层不要这样）
 
 ```dart

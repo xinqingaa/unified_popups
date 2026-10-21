@@ -11,6 +11,7 @@ import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
 import 'popup_position.dart';
 import 'popup_route_policy.dart';
+import 'popup_surface.dart';
 import 'popup_visual_config.dart';
 import 'sheet_types.dart';
 
@@ -65,6 +66,7 @@ final class SheetStyle {
     this.backgroundColor,
     this.borderRadius,
     this.boxShadow,
+    this.surface = const PopupSurface.solid(),
     this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 16),
     this.imagePath,
     this.imageSize = 60,
@@ -73,7 +75,15 @@ final class SheetStyle {
 
   final Color? backgroundColor;
   final BorderRadius? borderRadius;
+
+  /// 实色容器的阴影。玻璃和 [PopupSurface.builder] 忽略该字段。
   final List<BoxShadow>? boxShadow;
+
+  /// 容器壳。默认实色。玻璃和 builder 不绘制 [backgroundColor]。
+  ///
+  /// Sheet 与 FlowSheet 共用。玻璃或 builder 且 FlowSheet 未传
+  /// `pageBackgroundColor` 时，内页底色为透明，避免挡住模糊。
+  final PopupSurface surface;
   final EdgeInsetsGeometry padding;
   final String? imagePath;
   final double imageSize;

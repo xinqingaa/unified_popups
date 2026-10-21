@@ -9,6 +9,7 @@ import 'popup_behavior_config.dart';
 import 'popup_position.dart';
 import 'popup_owner_policy.dart';
 import 'popup_route_policy.dart';
+import 'popup_surface.dart';
 import 'popup_visual_config.dart';
 
 /// 确认弹窗底部确认/取消按钮的排列方式。
@@ -31,6 +32,8 @@ final class ConfirmStyle {
     this.buttonPadding = const EdgeInsets.fromLTRB(16, 0, 16, 16),
     this.margin = const EdgeInsets.symmetric(horizontal: 32),
     this.decoration,
+    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
+    this.surface = const PopupSurface.solid(),
     this.titleStyle,
     this.contentStyle,
     this.textAlign = TextAlign.center,
@@ -47,7 +50,15 @@ final class ConfirmStyle {
   /// 按钮带的内边距。线条贴边时传 [EdgeInsets.zero]。
   final EdgeInsetsGeometry buttonPadding;
   final EdgeInsetsGeometry margin;
+
+  /// 实色容器的装饰。玻璃和 [PopupSurface.builder] 忽略该字段。
   final Decoration? decoration;
+
+  /// 玻璃和 builder 的圆角。未提供 [decoration] 时，实色容器也使用它。
+  final BorderRadius borderRadius;
+
+  /// 容器壳。默认实色。
+  final PopupSurface surface;
   final TextStyle? titleStyle;
   final TextStyle? contentStyle;
   final TextAlign textAlign;

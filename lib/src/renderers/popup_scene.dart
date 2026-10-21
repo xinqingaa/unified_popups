@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../configs/drop_menu_config.dart';
+import '../configs/confirm_config.dart';
+import '../configs/menu_config.dart';
 import '../configs/popup_animation_config.dart';
 import '../configs/popup_barrier_config.dart';
 import '../configs/popup_position.dart';
+import '../configs/popup_surface.dart';
 import '../configs/popup_visual_config.dart';
 import '../configs/sheet_config.dart';
 import '../configs/toast_config.dart';
@@ -339,8 +341,10 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     }
     content = PopupEntryAnimation(
       animation: animation,
-      fadeContentOnly: widget.entry.config is DropMenuConfig &&
-          animationConfig.type == PopupAnimationType.fade,
+      fadeContentOnly: _fadeContentOnly(
+        widget.entry.config,
+        animationConfig.type,
+      ),
       child: content,
     );
     content = _transition(
@@ -420,16 +424,27 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     );
   }
 
+  bool _fadeContentOnly(Object? config, PopupAnimationType type) {
+    if (config == null || type != PopupAnimationType.fade) return false;
+    final PopupSurface? surface = switch (config) {
+      ConfirmConfig(:final style) => style.surface,
+      SheetConfigBase(:final style) => style.surface,
+      MenuConfigBase(:final style) => style.surface,
+      _ => null,
+    };
+    return surface is GlassPopupSurface || surface is BuilderPopupSurface;
+  }
+
   Widget _transition(
     Widget child,
     Animation<double> animation,
     PopupAnimationType type, {
     Object? config,
   }) {
-    // DropMenu fades only its interior labels/icons. Wrapping BackdropFilter in
+    // Glass shells fade only their interior. Wrapping BackdropFilter in
     // FadeTransition makes blur sample an OpacityLayer buffer until opacity
     // hits 1.0, which snaps the glass on the last frame.
-    if (config is DropMenuConfig && type == PopupAnimationType.fade) {
+    if (_fadeContentOnly(config, type)) {
       return child;
     }
     return switch (type) {

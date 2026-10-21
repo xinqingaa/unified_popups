@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../configs/confirm_config.dart';
+import '../configs/popup_surface.dart';
 import '../controller/popup_dismiss_reason.dart';
 import '../runtime/popup_runtime.dart';
 import '../widgets/confirm_default_button.dart';
+import 'popup_surface_shell.dart';
 
 abstract final class ConfirmRendererKeys {
   static const headerImage =
@@ -29,61 +31,77 @@ class ConfirmRenderer extends StatelessWidget {
         BoxDecoration(
           color: Theme.of(context).dialogTheme.backgroundColor ??
               Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: style.borderRadius,
         );
     final headerImage = _headerImage();
+    final body = Stack(
+      children: <Widget>[
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            if (headerImage != null) headerImage,
+            if (headerImage != null && style.imageGap > 0)
+              SizedBox(height: style.imageGap),
+            Padding(
+              padding: style.contentPadding,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: _contentChildren(context),
+              ),
+            ),
+            if (style.contentButtonGap > 0)
+              SizedBox(height: style.contentButtonGap),
+            if (config.separator != null) config.separator!,
+            Padding(
+              padding: style.buttonPadding,
+              child: _buttons(),
+            ),
+          ],
+        ),
+        if (config.showCloseButton)
+          PositionedDirectional(
+            top: 0,
+            end: 0,
+            child: Semantics(
+              label: MaterialLocalizations.of(context).closeButtonTooltip,
+              button: true,
+              child: IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                onPressed: () => runtime.controller.dismissEntry(
+                  entryId,
+                  reason: PopupDismissReason.manual,
+                ),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+          ),
+      ],
+    );
+    if (style.surface is SolidPopupSurface) {
+      return Material(
+        color: Colors.transparent,
+        child: Container(
+          margin: style.margin,
+          decoration: decoration,
+          clipBehavior: Clip.antiAlias,
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: body,
+        ),
+      );
+    }
     return Material(
       color: Colors.transparent,
-      child: Container(
-        margin: style.margin,
-        decoration: decoration,
-        clipBehavior: Clip.antiAlias,
-        constraints: const BoxConstraints(maxWidth: 480),
-        child: Stack(
-          children: <Widget>[
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                if (headerImage != null) headerImage,
-                if (headerImage != null && style.imageGap > 0)
-                  SizedBox(height: style.imageGap),
-                Padding(
-                  padding: style.contentPadding,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: _contentChildren(context),
-                  ),
-                ),
-                if (style.contentButtonGap > 0)
-                  SizedBox(height: style.contentButtonGap),
-                if (config.separator != null) config.separator!,
-                Padding(
-                  padding: style.buttonPadding,
-                  child: _buttons(),
-                ),
-              ],
-            ),
-            if (config.showCloseButton)
-              PositionedDirectional(
-                top: 0,
-                end: 0,
-                child: Semantics(
-                  label: MaterialLocalizations.of(context).closeButtonTooltip,
-                  button: true,
-                  child: IconButton(
-                    tooltip:
-                        MaterialLocalizations.of(context).closeButtonTooltip,
-                    onPressed: () => runtime.controller.dismissEntry(
-                      entryId,
-                      reason: PopupDismissReason.manual,
-                    ),
-                    icon: const Icon(Icons.close),
-                  ),
-                ),
-              ),
-          ],
+      child: Padding(
+        padding: style.margin,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: PopupSurfaceShell(
+            surface: style.surface,
+            borderRadius: style.borderRadius,
+            child: body,
+          ),
         ),
       ),
     );

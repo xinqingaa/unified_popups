@@ -390,8 +390,9 @@ Pop.confirm(
 - `ownership/position/animationConfig/lifecycle`。
 
 `ConfirmStyle`：`contentPadding`、`buttonPadding`、`margin`、`decoration`、
-`titleStyle`、`contentStyle`、`textAlign`、`imageGap`、`titleGap`、
-`bodyExtensionGap`、`contentButtonGap`、`buttonSpacing`。
+`borderRadius`、`surface`、`titleStyle`、`contentStyle`、`textAlign`、
+`imageGap`、`titleGap`、`bodyExtensionGap`、`contentButtonGap`、
+`buttonSpacing`。`surface` 见下方「玻璃容器」。
 
 `title/titleWidget` 与 `content/contentWidget` 各自互斥；同时提供会触发断言。
 `confirmButton` 优先于 `confirmText`；`cancelButton` 优先于 `cancelText`。
@@ -451,9 +452,9 @@ final value = await Pop.sheet<String>(
 
 - `SheetHeaderConfig`：title、titleWidget、showCloseButton、padding、titleStyle、titleAlign。
 - `SheetSizeConfig`：width、height、maxWidth、maxHeight，值为 `SheetDimension`。
-- `SheetStyle`：backgroundColor、borderRadius、boxShadow、padding、imagePath、imageSize、imageOffset。
+- `SheetStyle`：backgroundColor、borderRadius、boxShadow、surface、padding、imagePath、imageSize、imageOffset。
   默认 `padding` 为 `EdgeInsets.fromLTRB(16, 8, 16, 16)`。未传 `borderRadius` 时，
-  进入边的外角为 32，面板按该圆角裁切内容。
+  进入边的外角为 32，面板按该圆角裁切内容。`surface` 见下方「玻璃容器」。
 - `SheetDockConfig`：enabled、edgeGap。
 - `SheetDragConfig`：mode、modeListenable、showHandle、handleColor、dismissProgressThreshold、dismissVelocity。
   底部拖拽条为 38×6，下方留 10。标题 `Text` 铺满头部宽度，`titleAlign` 生效。
@@ -475,6 +476,98 @@ Sheet 的打开请求是 `updatable`。同一 key 且 `conflictPolicy` 为 `upda
 带可见蒙层的全屏弹层用 `FocusScope` 接住焦点，内部输入框可以成为主焦点。
 关闭时，只有弹层自己的焦点域仍握着焦点，才会把焦点还给打开前的节点。
 
+### 玻璃容器
+
+Confirm、Sheet、FlowSheet、Menu、DropMenu 用同一个开关：对应 Style 的 `surface`。
+Toast、Loading、Date、Custom 没有这个字段。Custom 的 `builder` 里可以直接放
+`LiquidGlass`。
+
+| API | Style | 默认 |
+| --- | --- | --- |
+| `Pop.confirm` | `ConfirmStyle.surface` | `PopupSurface.solid()` |
+| `Pop.sheet` | `SheetStyle.surface` | `PopupSurface.solid()` |
+| `Pop.flowSheet` | `SheetStyle.surface` | `PopupSurface.solid()` |
+| `Pop.menu` | `PopupMenuStyle.surface` | `PopupSurface.solid()` |
+| `Pop.dropMenu` | `DropMenuStyle.surface` | `PopupSurface.glass()` |
+
+**怎么开**
+
+- `PopupSurface.solid()`：实色。Confirm 和 Menu 走 `decoration`（Menu 未传
+  `decoration` 时用主题表面色、`borderRadius` 和默认阴影）。Sheet 走
+  `backgroundColor` 与 `boxShadow`。
+- `PopupSurface.glass()`：液态玻璃。DropMenu 不传 `surface` 时就是这一档。
+- `PopupSurface.builder((context, slot) { ... })`：外部容器。`slot.child` 是
+  内容，`slot.borderRadius` 是下面那张表里的圆角。裁剪、模糊、填充和阴影由
+  builder 负责。库不检查 builder 里有没有 `BackdropFilter`。
+
+```dart
+ConfirmStyle(surface: PopupSurface.glass())
+SheetStyle(surface: PopupSurface.glass())
+PopupMenuStyle(surface: PopupSurface.glass())
+DropMenuStyle() // 默认已经是 PopupSurface.glass()
+```
+
+**能定制到哪一步**
+
+`PopupSurface.glass` 接受这些参数：
+
+- `style`：`LiquidGlassStyle`。可改填充色、描边色、顶缘高光、按压高光、阴影色、
+  模糊、描边宽度、阴影半径和按压缩放。未传的颜色按当前 `ColorScheme` 解析。
+  `copyWith` 只改其中几项。
+- `blurSigma`：覆盖 `style.blurSigma`。
+- `blurDelay`：推迟模糊，避开入场第一帧。默认 `Duration.zero`。
+- `enableShadow`：是否画 `style` 里的阴影。弹层玻璃默认 `true`。
+- `backdropBlendMode`：`BackdropFilter` 的混合模式。弹层玻璃默认 `BlendMode.src`。
+
+圆角不在 `PopupSurface` 上，沿用各 Style：
+
+| Style | 字段 | 默认 |
+| --- | --- | --- |
+| `ConfirmStyle` | `borderRadius` | 12 |
+| `SheetStyle` | `borderRadius` | 未传时按方向，进入边外角 32 |
+| `PopupMenuStyle` | `borderRadius` | 8 |
+| `DropMenuStyle` | `borderRadius` | 18 |
+
+玻璃和 builder 不画实色填充和阴影：Confirm / Menu 的 `decoration`，Sheet 的
+`backgroundColor` 与 `boxShadow`，都不参与。尺寸、拖拽、键盘、安全区、菜单摆放
+和 DropMenu 的条目布局仍由库负责。DropMenu 的 `nestedPanelColor` /
+`nestedPanelRadius` 是面板内部的色块，不是第二层玻璃壳。
+
+淡入只淡内容，不把 `BackdropFilter` 放进 `FadeTransition`。缩放和滑动仍作用在
+整个壳上。
+
+FlowSheet 在玻璃或 builder 下，若没有传 `pageBackgroundColor`，内页底色为透明。
+显式传入的颜色优先。内页自己再铺不透明底会挡住模糊。透明内页的横滑是两页一起
+滑走，不用 Cupertino 视差，也不吃边缘侧滑。系统返回仍然先 pop 内页。不透明内页
+保持 Cupertino 转场和侧滑。
+
+脱离弹层使用：`package:unified_popups/liquid_glass.dart` 导出 `LiquidGlass`、
+`LiquidGlassStyle`、`LiquidGlassButton`、`LiquidGlassActionButton` 和可继承的
+`LiquidGlassEdgePainter`。换描边用 `LiquidGlass.edgePainterBuilder`，或子类化
+painter。`LiquidGlass` 自己的默认圆角是胶囊，`enableShadow` 默认 `false`，
+`backdropBlendMode` 默认 `srcOver`。弹层壳会传入上表圆角，并默认打开阴影、使用
+`BlendMode.src`。
+
+```dart
+Pop.confirm(ConfirmConfig(
+  title: '保存',
+  content: '继续？',
+  confirmText: '确定',
+  cancelText: '取消',
+  style: ConfirmStyle(
+    surface: PopupSurface.glass(
+      style: LiquidGlassStyle(blurSigma: 28),
+    ),
+  ),
+));
+
+Pop.menu<void>(MenuConfig<void>(
+  anchor: anchor,
+  style: const PopupMenuStyle(surface: PopupSurface.glass()),
+  builder: (context, handle) => const Text('玻璃菜单'),
+));
+```
+
 ## 10. FlowSheet
 
 ```dart
@@ -489,6 +582,8 @@ final result = await Pop.flowSheet<OrderResult>(
 `FlowSheetConfig<R>` 必需 `controller` 和 `initialPage`；其余参数为
 `direction/header/size/style/dock/drag/keyboard/useSafeArea/pageBackgroundColor/`
 `routeBuilder/behavior/ownership/barrier/animation/lifecycle`。
+`style.surface` 见「玻璃容器」。玻璃或 builder 且未传 `pageBackgroundColor` 时，
+内页底色为透明。
 
 `FlowSheetController` 一次实例只服务一场会话：
 
@@ -564,7 +659,9 @@ final action = await Pop.menu<String>(
 
 默认 `barrier` 为透明可点击/拖动关闭（`dismissOnDrag: true`），阻止下层滚动。
 
-`PopupMenuStyle`：`padding`、`constraints`、`decoration`。
+`PopupMenuStyle`：`padding`、`constraints`、`decoration`、`borderRadius`、
+`surface`。`surface` 见「玻璃容器」。默认实色，圆角 8。玻璃和 builder 忽略
+`decoration`。
 
 `MenuPlacement`：auto、belowStart、belowEnd、aboveStart、aboveEnd。Anchor 必须通过
 `PopupAnchor(controller: ...)` 挂载。Anchor detach 时 reason 为 `anchorDetached`。
@@ -599,6 +696,9 @@ showUnselectedIndicator、closeOnSelect、onTap。
 disabled、initiallyExpanded、showBottomDivider、primaryVerticalPadding。
 
 默认行为使用 `PopupKeys.globalDropMenu + replaceExisting`。
+
+`DropMenuStyle.surface` 见「玻璃容器」。默认 `PopupSurface.glass()`，圆角 18。
+玻璃参数写在 `PopupSurface.glass` 上。二级分组的 `nestedPanelColor` 仍是内嵌色块。
 
 ## 13. Custom
 

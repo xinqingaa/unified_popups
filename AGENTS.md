@@ -2,7 +2,14 @@
 
 ## Project Structure & Module Organization
 
-Public exports live in `lib/unified_popups.dart`. Implementation is under
+Public exports live in `lib/unified_popups.dart`. The glass widgets also export
+from `lib/liquid_glass.dart`. Confirm, Sheet, FlowSheet, Menu, and DropMenu
+turn the shell on with `style.surface` (`PopupSurface.solid` / `glass` /
+`builder`). Confirm, Sheet, FlowSheet, and Menu default to solid; DropMenu
+defaults to glass. `glass` accepts `LiquidGlassStyle`, blur, shadow, and blend
+mode; radius stays on each style; `builder` owns clip, blur, and shadow.
+Toast, Loading, Date, and Custom have no surface switch. The contract is
+`doc/API_REFERENCE.md` 「玻璃容器」. Implementation is under
 `lib/src`:
 
 | Area | Path |

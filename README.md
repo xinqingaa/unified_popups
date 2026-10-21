@@ -68,13 +68,14 @@ Pop.xxx(Config) -> PopupOpenResult<T>
 
 ### Confirm · 强确认
 
-删除、清空、离开未保存页 —— 默认点遮罩 / 返回键都关不掉。
+删除、清空、离开未保存页 —— 默认点遮罩 / 返回键都关不掉。容器见下方「玻璃容器」。
 
 ![Confirm](doc/images/confirm.jpg)
 
 ### Sheet · 单页面板
 
 选项列表、筛选、简易表单；可与 Confirm 叠加以做「面板内二次确认」。
+容器见下方「玻璃容器」，Sheet 与 FlowSheet 共用 `SheetStyle.surface`。
 
 | Sheet | Sheet + Confirm |
 | :---: | :---: |
@@ -92,17 +93,40 @@ Confirm 盖在上面时仍可拦截返回。
 
 ### DropMenu · 锚点菜单
 
-筛选条一级选项，或设置里可展开的二级分组（含 liquid glass 样式）。
+筛选条一级选项，或设置里可展开的二级分组。默认就是玻璃容器，见下方。
 
 | 一级筛选 | 二级设置 |
 | :---: | :---: |
 | ![DropMenu 一级](doc/images/dropMenu_一级菜单.jpg) | ![DropMenu 二级](doc/images/dropMenu_二级菜单.jpg) |
 
+### 玻璃容器
+
+Confirm、Sheet、FlowSheet、Menu、DropMenu 用同一个开关：`style.surface`。
+Toast、Loading、Date、Custom 没有这个字段。
+
+| API | Style | 默认 |
+| --- | --- | --- |
+| `Pop.confirm` | `ConfirmStyle.surface` | `PopupSurface.solid()` |
+| `Pop.sheet` / `Pop.flowSheet` | `SheetStyle.surface` | `PopupSurface.solid()` |
+| `Pop.menu` | `PopupMenuStyle.surface` | `PopupSurface.solid()` |
+| `Pop.dropMenu` | `DropMenuStyle.surface` | `PopupSurface.glass()` |
+
+- `PopupSurface.solid()`：实色。
+- `PopupSurface.glass()`：液态玻璃。可调 `LiquidGlassStyle`、`blurSigma`、
+  `blurDelay`、`enableShadow`、`backdropBlendMode`。
+- `PopupSurface.builder(...)`：外部容器。拿到内容和圆角，自己负责裁剪、模糊和阴影。
+
+圆角仍用各 Style 的 `borderRadius`：Confirm 12，Sheet 进入边 32，Menu 8，
+DropMenu 18。玻璃不使用实色的 `decoration` / `backgroundColor` / `boxShadow`。
+尺寸、拖拽、键盘、安全区和菜单摆放仍由库负责。描边可以继承
+`LiquidGlassEdgePainter`，或单独 `import 'package:unified_popups/liquid_glass.dart'`。
+完整字段见 `doc/API_REFERENCE.md`「玻璃容器」。
+
 ## 30 秒上手
 
 ```yaml
 dependencies:
-  unified_popups: ^2.2.0
+  unified_popups: ^2.2.1
 ```
 
 ```dart

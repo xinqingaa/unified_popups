@@ -88,10 +88,12 @@ class _MenuLabPageState extends State<MenuLabPage> {
             maxWidth: 220,
             maxHeight: 420,
           ),
-          glassStyle: LiquidGlassStyle(
-            backgroundColor: colors.surface.withAlpha(0x88),
-            borderColor: colors.outline.withAlpha(0x45),
-            topHighlightColor: colors.primary.withAlpha(0xA0),
+          surface: PopupSurface.glass(
+            style: LiquidGlassStyle(
+              backgroundColor: colors.surface.withAlpha(0x88),
+              borderColor: colors.outline.withAlpha(0x45),
+              topHighlightColor: colors.primary.withAlpha(0xA0),
+            ),
           ),
         ),
         menu: DropMenu<String>.nested(

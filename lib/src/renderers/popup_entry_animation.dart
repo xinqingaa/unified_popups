@@ -2,9 +2,10 @@ import 'package:flutter/widgets.dart';
 
 /// Exposes the entry/exit progress used by [PopupScene] for the current popup.
 ///
-/// When [fadeContentOnly] is true (DropMenu default fade), consumers should
-/// fade interior content themselves so [BackdropFilter] stays outside any
-/// opacity save layer.
+/// When [fadeContentOnly] is true, consumers should fade interior content
+/// themselves so [BackdropFilter] stays outside any opacity save layer.
+/// Glass and builder shells (Confirm, Sheet, FlowSheet, Menu, DropMenu) use
+/// this path when their animation is a fade.
 class PopupEntryAnimation extends InheritedWidget {
   const PopupEntryAnimation({
     required this.animation,
@@ -20,6 +21,17 @@ class PopupEntryAnimation extends InheritedWidget {
 
   static PopupEntryAnimation? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<PopupEntryAnimation>();
+  }
+
+  /// Fades [child] when this entry keeps its backdrop shell outside opacity.
+  static Widget fadeContent(BuildContext context, Widget child) {
+    final entry = maybeOf(context);
+    if (entry == null ||
+        !entry.fadeContentOnly ||
+        MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
+    return FadeTransition(opacity: entry.animation, child: child);
   }
 
   @override

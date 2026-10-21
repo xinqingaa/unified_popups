@@ -10,6 +10,9 @@ import 'liquid_glass_style.dart';
 ///
 /// 使用 [LiquidGlassStyle] 提供的颜色，将 [child] 包裹在一个可裁剪、可选模糊的容器中。
 /// 如需在表面内加入按压反馈，请使用 [LiquidGlassButton] 或 [LiquidGlassActionButton]。
+///
+/// 颜色和模糊用 [LiquidGlassStyle]。描边默认是 [LiquidGlassEdgePainter]，
+/// 可继承该类，或通过 [edgePainterBuilder] 换掉。未传 [borderRadius] 时为胶囊形。
 class LiquidGlass extends StatefulWidget {
   /// 围绕 [child] 创建一个液态玻璃容器。
   const LiquidGlass({
@@ -24,6 +27,7 @@ class LiquidGlass extends StatefulWidget {
     this.blurDelay = Duration.zero,
     this.backdropBlendMode = BlendMode.srcOver,
     this.enableShadow = false,
+    this.edgePainterBuilder,
     super.key,
   });
 
@@ -49,9 +53,18 @@ class LiquidGlass extends StatefulWidget {
 
   final bool enableShadow;
 
+  /// 替换默认描边。返回的 painter 应在样式变化时自行 [CustomPainter.shouldRepaint]。
+  final LiquidGlassEdgePainterBuilder? edgePainterBuilder;
+
   @override
   State<LiquidGlass> createState() => _LiquidGlassState();
 }
+
+/// 按当前圆角和已解析样式创建玻璃描边。
+typedef LiquidGlassEdgePainterBuilder = CustomPainter Function(
+  BorderRadius borderRadius,
+  ResolvedLiquidGlassStyle style,
+);
 
 class _LiquidGlassState extends State<LiquidGlass> {
   Timer? _timer;
@@ -118,10 +131,11 @@ class _LiquidGlassState extends State<LiquidGlass> {
         Positioned.fill(
           child: IgnorePointer(
             child: CustomPaint(
-              painter: LiquidGlassEdgePainter(
-                borderRadius: radius,
-                style: resolved,
-              ),
+              painter: widget.edgePainterBuilder?.call(radius, resolved) ??
+                  LiquidGlassEdgePainter(
+                    borderRadius: radius,
+                    style: resolved,
+                  ),
             ),
           ),
         ),

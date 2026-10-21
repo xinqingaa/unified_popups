@@ -171,6 +171,17 @@ Sheet 与普通弹窗使用同一个 Entry 和外层 AnimationController。四�
 
 拖拽只更新动画进度，不重新构造业务 child。为某个 Handle 构建出的业务 child 会缓存到 Handle 变化。松手时结合 progress 和 velocity 判断关闭或回弹。`fullBody`、`contentWhenAtTop`、`handleOnly` 控制手势入口；拖拽指示器只在底部方向显示（38×6）。未指定圆角时，进入边外角为 32，面板裁切内容。
 
+Confirm、Sheet、FlowSheet、Menu、DropMenu 的壳都是 `style.surface`：
+`PopupSurface.solid()`、`PopupSurface.glass()` 或 `PopupSurface.builder`。
+前四个默认实色，DropMenu 默认玻璃。Toast、Loading、Date、Custom 没有这个字段。
+`PopupSurface.glass` 可调 `LiquidGlassStyle`、`blurSigma`、`blurDelay`、
+`enableShadow` 和 `backdropBlendMode`。圆角仍用各 Style 的 `borderRadius`
+（Confirm 12、Sheet 进入边 32、Menu 8、DropMenu 18）。builder 拿到内容和圆角，
+自己负责裁剪、模糊和阴影。玻璃和 builder 不画实色填充与阴影。尺寸、拖拽、键盘、
+安全区和菜单摆放仍由库负责。淡入只作用于内容，避免 `BackdropFilter` 被透明度层
+裁切。字段表和 FlowSheet 透明页规则见 `doc/API_REFERENCE.md`「玻璃容器」。
+FlowSheet 在非实色壳且未指定页底色时，把内页 `ColoredBox` 设为透明。
+
 往关闭方向拖动一开始就失焦；退出开始时 Sheet / FlowSheet 也会失焦。已经拖过一段再关闭时，退场时长按剩余进度缩短并使用线性曲线。底部键盘避让直接贴 `viewInsets`，`SheetKeyboardConfig.animationDuration` 不参与渲染。
 
 带可见蒙层的全屏弹层用 `FocusScope` 接住焦点，内部输入框可以成为主焦点。关闭时仅在弹层焦点域仍握着焦点时才还原先前焦点。
@@ -191,9 +202,11 @@ FlowSheet 外层仍是统一的 Sheet Entry，因此参与全局堆叠、路由�
 上面的页留下，再把新页压到顶。`identity` 只用于 `contains` / `popTo` 收窄和日志，
 不能让同一 `id` 并存。`instanceId` 是 `id` 与 `identity` 的组合字符串，不是栈约束。
 
-栈底首页是零时长路由，入场只跟随外层 Sheet。非首页默认 `CupertinoPageRoute`
-（含 iOS 侧滑）。`enableSwipePop: false` 时非首页改为水平 `SlideTransition`，
-侧滑不能绕过 `onBack`。
+栈底首页是零时长路由，入场只跟随外层 Sheet。不透明的非首页默认
+`CupertinoPageRoute`（含 iOS 侧滑）。玻璃或 builder 且页底透明时，非首页改为
+两页整宽一起滑走，不用视差，也不吃边缘侧滑；系统返回仍先 pop 内页。
+`enableSwipePop: false` 时不透明非首页改为水平 `SlideTransition`，侧滑不能绕过
+`onBack`。
 
 `resetTo(animate: true)` 先右滑推入新首页，动画期间禁止系统返回揭开旧门槛，
 动画结束后收成单页根。`popToRoot` 回到栈底根页且不关闭整张 sheet（已在根页为
@@ -223,7 +236,7 @@ Controller 分三段：结束业务会话（完成 pending future，禁止再导
 
 Menu 默认使用透明可关闭 Barrier：点外或拖动关闭（`dismissOnDrag: true`），同时阻止下层滚动。传 `PopupBarrierConfig.hidden()` 后底层可以滚动，Follower 继续跟随 Anchor。
 
-DropMenu 是建立在同一个 Menu Renderer 上的数据模型层，增加一级选择、二级 Section、选中态、禁用态和 LiquidGlass。一级项目通常完成 Handle；二级项目可以只通过 `onSelected` 通知并保持外层菜单打开。
+DropMenu 是建立在同一个 Menu Renderer 上的数据模型层，增加一级选择、二级 Section、选中态和禁用态。外层壳走 `DropMenuStyle.surface`，与 Menu / Confirm / Sheet 同一个 `PopupSurface`，默认玻璃。二级分组底色不是第二层壳。一级项目通常完成 Handle；二级项目可以只通过 `onSelected` 通知并保持外层菜单打开。
 
 ## 10. 应用 builder 组合
 

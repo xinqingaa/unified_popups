@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:unified_popups/unified_popups.dart';
 import 'package:unified_popups/src/widgets/drop_menu/drop_menu_content.dart';
-import 'package:unified_popups/src/widgets/liquid_glass/liquid_glass_edge_painter.dart';
+import 'package:unified_popups/unified_popups.dart';
 
 void main() {
   setUp(Pop.resetForTest);
@@ -35,20 +34,38 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 70));
     final menuFinder = find.byType(DropMenuContent<String>);
+    final glass = find.ancestor(
+      of: menuFinder,
+      matching: find.byType(LiquidGlass),
+    );
+    expect(glass, findsOneWidget);
+    final glassWidget = tester.widget<LiquidGlass>(glass);
+    expect(
+      glassWidget.borderRadius,
+      const BorderRadius.all(Radius.circular(18)),
+    );
+    expect(glassWidget.enableShadow, isTrue);
     final backdrop = tester.widget<BackdropFilter>(
       find.descendant(
-        of: menuFinder,
+        of: glass,
         matching: find.byType(BackdropFilter),
       ),
     );
     expect(backdrop.blendMode, BlendMode.src);
     // Glass/BackdropFilter must not sit under the entry FadeTransition.
-    final entryFades = tester.widgetList<FadeTransition>(
-      find.ancestor(of: menuFinder, matching: find.byType(FadeTransition)),
+    // The fade wraps only the interior, inside the filter.
+    expect(
+      find.ancestor(
+        of: find.byType(BackdropFilter),
+        matching: find.byType(FadeTransition),
+      ),
+      findsNothing,
     );
-    expect(entryFades, isEmpty);
     final contentFades = tester.widgetList<FadeTransition>(
-      find.descendant(of: menuFinder, matching: find.byType(FadeTransition)),
+      find.descendant(
+        of: find.byType(BackdropFilter),
+        matching: find.byType(FadeTransition),
+      ),
     );
     expect(
       contentFades.any(
@@ -56,14 +73,6 @@ void main() {
       ),
       isTrue,
     );
-    final backdropAncestors = find.ancestor(
-      of: find.descendant(
-        of: menuFinder,
-        matching: find.byType(BackdropFilter),
-      ),
-      matching: find.byType(FadeTransition),
-    );
-    expect(backdropAncestors, findsNothing);
     await tester.pumpAndSettle();
     expect(find.text('处理中'), findsOneWidget);
     expect(find.byIcon(Icons.check_rounded), findsOneWidget);
@@ -232,6 +241,46 @@ void main() {
       tester.widget<BackdropFilter>(find.byType(BackdropFilter)).blendMode,
       BlendMode.srcOver,
     );
+  });
+
+  test('drop menu defaults to glass and forwards surface onto menu style', () {
+    final surface = const DropMenuStyle().surface;
+    expect(surface, isA<GlassPopupSurface>());
+    final glass = surface as GlassPopupSurface;
+    expect(glass.enableShadow, isTrue);
+    expect(glass.backdropBlendMode, BlendMode.src);
+    expect(glass.blurDelay, Duration.zero);
+    expect(glass.style, LiquidGlassStyle.standard);
+
+    final anchor = PopupAnchorController();
+    const solid = PopupSurface.solid();
+    final config = DropMenuConfig<int>(
+      anchor: anchor,
+      menuStyle: const DropMenuStyle(
+        surface: solid,
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+      menu: const DropMenu<int>.single(
+        items: <DropMenuItem<int>>[],
+      ),
+    );
+    expect(config.style.surface, same(solid));
+    expect(
+      config.style.borderRadius,
+      const BorderRadius.all(Radius.circular(10)),
+    );
+    const custom = LiquidGlassStyle(pressHighlightColor: Color(0xFF112233));
+    expect(
+      const DropMenuStyle(
+        surface: PopupSurface.glass(style: custom, blurSigma: 8),
+      ).surface,
+      isA<GlassPopupSurface>(),
+    );
+    final customSurface = const DropMenuStyle(
+      surface: PopupSurface.glass(style: custom, blurSigma: 8),
+    ).surface as GlassPopupSurface;
+    expect(customSurface.style.pressHighlightColor, const Color(0xFF112233));
+    expect(customSurface.blurSigma, 8);
   });
 
   test('drop menu uses compact default width constraints', () {

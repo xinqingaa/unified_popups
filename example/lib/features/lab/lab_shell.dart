@@ -4,6 +4,7 @@ import 'async_lab.dart';
 import 'confirm_date_lab.dart';
 import 'custom_handle_lab.dart';
 import 'flow_sheet_lab.dart';
+import 'glass_lab.dart';
 import 'lab_page.dart';
 import 'lab_section.dart';
 import 'loading_lab.dart';
@@ -124,6 +125,12 @@ final labEntries = <LabNavEntry>[
     title: 'FlowSheet',
     subtitle: '全屏 / 半屏 · 返回委托 · 产品 Flow',
     builder: (_) => const FlowSheetLabPage(),
+  ),
+  LabNavEntry(
+    icon: Icons.blur_on,
+    title: '玻璃容器',
+    subtitle: 'Confirm / Sheet / FlowSheet / Menu / DropMenu',
+    builder: (_) => const GlassLabPage(),
   ),
   LabNavEntry(
     icon: Icons.more_vert,

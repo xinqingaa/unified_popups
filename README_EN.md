@@ -72,14 +72,15 @@ Future settles.
 ### Confirm · strong confirmation
 
 Delete, clear, leave unsaved work — barrier tap and system back do not dismiss
-by default.
+by default. The shell is described under Glass container below.
 
 ![Confirm](doc/images/confirm.jpg)
 
 ### Sheet · single panel
 
 Option lists, filters, simple forms. Stack Confirm on top for in-panel
-confirmation.
+confirmation. The shell is under Glass container below. Sheet and FlowSheet
+share `SheetStyle.surface`.
 
 | Sheet | Sheet + Confirm |
 | :---: | :---: |
@@ -99,18 +100,43 @@ next step is a full-screen route. A Confirm on top can still block back.
 
 ### DropMenu · anchored menu
 
-One-level filter menus, or nestable settings sections (including liquid-glass
-style).
+One-level filter menus, or nestable settings sections. DropMenu is glass by
+default; see Glass container below.
 
 | Single level | Nested sections |
 | :---: | :---: |
 | ![DropMenu single](doc/images/dropMenu_一级菜单.jpg) | ![DropMenu nested](doc/images/dropMenu_二级菜单.jpg) |
 
+### Glass container
+
+Confirm, Sheet, FlowSheet, Menu, and DropMenu share one switch: `style.surface`.
+Toast, Loading, Date, and Custom do not have this field.
+
+| API | Style | Default |
+| --- | --- | --- |
+| `Pop.confirm` | `ConfirmStyle.surface` | `PopupSurface.solid()` |
+| `Pop.sheet` / `Pop.flowSheet` | `SheetStyle.surface` | `PopupSurface.solid()` |
+| `Pop.menu` | `PopupMenuStyle.surface` | `PopupSurface.solid()` |
+| `Pop.dropMenu` | `DropMenuStyle.surface` | `PopupSurface.glass()` |
+
+- `PopupSurface.solid()`: opaque fill.
+- `PopupSurface.glass()`: liquid glass. Tune `LiquidGlassStyle`, `blurSigma`,
+  `blurDelay`, `enableShadow`, and `backdropBlendMode`.
+- `PopupSurface.builder(...)`: external container. It receives the content and
+  radius and owns clip, blur, and shadow.
+
+Radius stays on each style's `borderRadius`: Confirm 12, Sheet 32 on the
+incoming edge, Menu 8, DropMenu 18. Glass ignores the solid `decoration` /
+`backgroundColor` / `boxShadow`. Size, drag, keyboard, safe area, and menu
+placement stay with the library. Subclass `LiquidGlassEdgePainter`, or
+`import 'package:unified_popups/liquid_glass.dart'` to use the widgets outside
+a popup. The field contract is in `doc/API_REFERENCE.md` under 玻璃容器.
+
 ## Quick start (30 seconds)
 
 ```yaml
 dependencies:
-  unified_popups: ^2.2.0
+  unified_popups: ^2.2.1
 ```
 
 ```dart

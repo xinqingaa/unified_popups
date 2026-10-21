@@ -11,6 +11,7 @@ import 'popup_barrier_config.dart';
 import 'popup_behavior_config.dart';
 import 'popup_position.dart';
 import 'popup_route_policy.dart';
+import 'popup_surface.dart';
 import 'sheet_config.dart';
 import 'sheet_types.dart';
 
@@ -98,7 +99,8 @@ final class FlowSheetConfig<R> extends SheetConfigBase {
     return FlowSheetHost(
       controller: controller,
       initialPage: initialPage,
-      pageBackgroundColor: pageBackgroundColor,
+      pageBackgroundColor: pageBackgroundColor ??
+          (style.surface is SolidPopupSurface ? null : const Color(0x00000000)),
       routeBuilder: routeBuilder,
     );
   }

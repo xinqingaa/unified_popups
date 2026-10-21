@@ -5,7 +5,11 @@ import 'package:flutter/material.dart';
 
 import 'liquid_glass_style.dart';
 
-final class LiquidGlassEdgePainter extends CustomPainter {
+/// 玻璃顶缘高光和细描边。
+///
+/// 继承后可覆盖 [paint]。新增字段时同时覆盖 [shouldRepaint]。
+class LiquidGlassEdgePainter extends CustomPainter {
+  /// 创建一个描边 painter。
   const LiquidGlassEdgePainter({
     required this.borderRadius,
     required this.style,

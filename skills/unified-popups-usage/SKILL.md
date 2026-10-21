@@ -115,7 +115,15 @@ MaterialApp(
 - FlowSheet 收尾、`onBack`、`popToRoot`、`contains`/`popTo`/`onPoppedTo`、
   `resetTo`、`completeAndCloseAll`、`settleChannel`、`enableSwipePop` 见 §10 与 §14。
   `push` 按 `id` 只留一页。关 Sheet 后再跳全屏路由要先 `settleChannel`。
-- 只 import `package:unified_popups/unified_popups.dart`。
+- 弹层只 import `package:unified_popups/unified_popups.dart`。单独复用玻璃组件时可
+  import `package:unified_popups/liquid_glass.dart`。
+- 玻璃容器只有 Confirm、Sheet、FlowSheet、Menu、DropMenu，开关都是
+  `style.surface`。前四个默认 `PopupSurface.solid()`，DropMenu 默认
+  `PopupSurface.glass()`。Toast、Loading、Date、Custom 没有这个字段。
+  `glass` 可调 `LiquidGlassStyle`、`blurSigma`、`blurDelay`、`enableShadow`、
+  `backdropBlendMode`；圆角用各 Style 的 `borderRadius`。`builder` 拿到内容和
+  圆角，自己负责裁剪、模糊和阴影。见 §9「玻璃容器」。玻璃 FlowSheet 内页不要再铺
+  不透明底。
 
 ## 检查清单
 

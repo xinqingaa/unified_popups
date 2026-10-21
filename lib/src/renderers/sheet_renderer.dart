@@ -4,12 +4,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../configs/popup_surface.dart';
 import '../configs/sheet_config.dart';
 import '../configs/sheet_types.dart';
 import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_handle.dart';
 import '../utils/sheet_dimension.dart';
 import 'popup_renderer_delegate.dart';
+import 'popup_surface_shell.dart';
 
 abstract final class SheetRendererKeys {
   static const panel = ValueKey<String>('unified_popups.sheet.panel');
@@ -236,35 +238,21 @@ class _SheetRendererState extends State<SheetRenderer> {
     }
 
     final borderRadius = config.style.borderRadius ?? _defaultRadius();
+    // Always inset content (v1 SheetWidget). For bottom sheets the outer
+    // PopupScene SafeArea consumes status-bar padding first, so this does not
+    // push the drag handle down on short panels. Top/left/right default
+    // useSafeArea=false (no outer layer) and still need this inner SafeArea
+    // to clear the notch / home indicator.
+    final interior = Material(
+      color: Colors.transparent,
+      child: SafeArea(child: body),
+    );
     Widget panel = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
       child: SizedBox(
         width: width,
         height: height,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: config.style.backgroundColor ??
-                Theme.of(context).colorScheme.surface,
-            borderRadius: borderRadius,
-            boxShadow: config.style.boxShadow ??
-                const <BoxShadow>[
-                  BoxShadow(
-                      blurRadius: 10, color: Colors.black12, spreadRadius: 2),
-                ],
-          ),
-          child: ClipRRect(
-            borderRadius: borderRadius,
-            child: Material(
-              color: Colors.transparent,
-              // Always inset content (v1 SheetWidget). For bottom sheets the
-              // outer PopupScene SafeArea consumes status-bar padding first, so
-              // this does not push the drag handle down on short panels.
-              // Top/left/right default useSafeArea=false (no outer layer) and
-              // still need this inner SafeArea to clear the notch / home indicator.
-              child: SafeArea(child: body),
-            ),
-          ),
-        ),
+        child: _panelShell(context, borderRadius, interior),
       ),
     );
 
@@ -299,6 +287,36 @@ class _SheetRendererState extends State<SheetRenderer> {
       );
     }
     return RepaintBoundary(key: SheetRendererKeys.panel, child: panel);
+  }
+
+  Widget _panelShell(
+    BuildContext context,
+    BorderRadius borderRadius,
+    Widget child,
+  ) {
+    final style = widget.config.style;
+    if (style.surface is SolidPopupSurface) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: style.backgroundColor ?? Theme.of(context).colorScheme.surface,
+          borderRadius: borderRadius,
+          boxShadow: style.boxShadow ??
+              const <BoxShadow>[
+                BoxShadow(
+                    blurRadius: 10, color: Colors.black12, spreadRadius: 2),
+              ],
+        ),
+        child: ClipRRect(
+          borderRadius: borderRadius,
+          child: child,
+        ),
+      );
+    }
+    return PopupSurfaceShell(
+      surface: style.surface,
+      borderRadius: borderRadius,
+      child: child,
+    );
   }
 
   Widget _buildChrome(BuildContext context, Widget child) {
