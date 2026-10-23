@@ -35,7 +35,7 @@ description: >-
 
 | 任务 | 必须先读 |
 | --- | --- |
-| 首次接入 / 初始化 | `README.md`「30 秒上手」+ `doc/API_REFERENCE.md` §1 初始化 |
+| 首次接入 / 初始化 | `README_zh.md`「30 秒上手」（英文在 `README.md`「Quick start (30 seconds)」）+ `doc/API_REFERENCE.md` §1 初始化 |
 | 扩展或新建 `AppPop` 封装 | `doc/API_REFERENCE.md` §3（含 §3.7 App 级二次封装）+ `example/lib/app/app_pop.dart` + 本目录 [examples.md](examples.md) |
 | 业务页只调已有门面 | 读项目内 `AppPop`（或等价）；**不必**读完整 API，除非门面缺失要补封装 |
 | Toast / Loading / Confirm / Date / Sheet / FlowSheet / Menu / DropMenu / Custom | `doc/API_REFERENCE.md` 对应 §6–§14 **仅一节** |
@@ -77,7 +77,7 @@ MaterialApp(
 );
 ```
 
-细节以 README「30 秒上手」与 API §1 为准，不要只靠本段。
+细节以 `README_zh.md`「30 秒上手」与 API §1 为准，不要只靠本段。
 
 ## 必做：应用内再包一层
 
@@ -127,7 +127,7 @@ MaterialApp(
 ## 检查清单
 
 - [ ] 已按「Agent 必读流程」打开过本任务所需文档章节
-- [ ] 初始化依据 README / §1，而非猜测
+- [ ] 初始化依据 `README_zh.md` / §1，而非猜测
 - [ ] 产品代码走门面；Handle 未泄漏到业务
 - [ ] Config 字段来自 API 参考，无臆造参数
 - [ ] 未把整份 API 参考塞进上下文

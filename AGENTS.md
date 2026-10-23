@@ -115,7 +115,8 @@ MaterialApp(
 
 Product apps should wrap `Pop` in an `AppPop` (or equivalent) facade — see
 `example/lib/app/app_pop.dart` and `skills/unified-popups-usage/`. Happy-path
-call shapes are in `README.md` 「30 秒上手」.
+call shapes are in `README.md` "Quick start (30 seconds)". The Chinese
+README is `README_zh.md`.
 
 ### Constraints
 
@@ -156,9 +157,10 @@ Update as needed:
    in 「玻璃容器」.
 2. `CHANGELOG.md` — under the **new** semver section (do not backfill into an
    already-published version)
-3. `pubspec.yaml` version + `README.md` / `README_EN.md` — dependency example
-   and user-facing behavior. Keep the two READMEs in sync. Field tables stay
-   in the API reference.
+3. `pubspec.yaml` version + `README.md` / `README_zh.md` — dependency example
+   and user-facing behavior. Keep the two READMEs in sync. `README.md` stays
+   primarily English so pub.dev can score it. Field tables stay in the API
+   reference.
 4. `AGENTS.md` — this file (`CLAUDE.md` is a symlink) when layout, modules,
    init, or agent guidance changes
 5. `doc/ARCHITECTURE.md` — why the design works. Observable behavior stays in

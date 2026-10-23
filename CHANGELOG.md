@@ -2,6 +2,13 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.2.2
+
+### Docs
+
+- `README.md` is the English package README, so pub.dev can score it. The
+  Chinese README is `README_zh.md`. `README_EN.md` points at `README.md`.
+
 ## 2.2.1
 
 ### Breaking
