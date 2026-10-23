@@ -17,6 +17,7 @@ final class PopupEntrySnapshot {
     required this.routePolicy,
     required this.ownership,
     this.paused = false,
+    this.replaceExit = false,
   });
 
   final String id;
@@ -31,4 +32,10 @@ final class PopupEntrySnapshot {
 
   /// When true, Host keeps the entry mounted but Offstage / non-interactive.
   final bool paused;
+
+  /// Whether this exit is a toast-lane handoff.
+  ///
+  /// The scene fades and shifts the toast instead of playing its own reverse
+  /// animation. Timeout and manual dismiss leave this false.
+  final bool replaceExit;
 }

@@ -45,38 +45,45 @@ void main() {
     expect(find.byType(LoadingRenderer), findsNothing);
   });
 
-  testWidgets('toast scene renders at most three items per lane',
+  testWidgets(
+      'toast lane keeps one visible toast and reveals the next on dismiss',
       (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final api = PopupTypeApi(runtime);
     final handles = <PopupHandle<void>>[];
-    for (var index = 0; index < 4; index++) {
+    for (var index = 0; index < 3; index++) {
       handles.add(
-        (api.toast(
-          ToastConfig.text(
-            'toast-$index',
-            position: PopupPosition.top,
-            lifetime: const PopupLifetime.manual(),
-            animation: const PopupAnimationConfig(duration: Duration.zero),
-          ),
-        ) as PopupOpened<void>)
-            .handle,
+        api
+            .toast(
+              ToastConfig.text(
+                'toast-$index',
+                position: PopupPosition.top,
+                lifetime: const PopupLifetime.manual(),
+                animation: const PopupAnimationConfig(
+                  duration: Duration.zero,
+                ),
+              ),
+            )
+            .requireHandle(),
       );
     }
 
     await tester.pumpWidget(_TestApp(runtime: runtime));
     await tester.pump();
-    expect(find.byType(ToastRenderer), findsNWidgets(3));
-    expect(find.text('toast-3'), findsNothing);
+    expect(find.text('toast-0'), findsOneWidget);
+    expect(find.text('toast-1'), findsNothing);
+    expect(find.byType(ToastRenderer), findsOneWidget);
 
     final dismissed = handles.first.dismiss();
     await tester.pump();
     await tester.pump();
     await dismissed;
     await tester.pump();
-    expect(find.byType(ToastRenderer), findsNWidgets(3));
-    expect(find.text('toast-3'), findsOneWidget);
+    expect(find.text('toast-0'), findsNothing);
+    expect(find.text('toast-1'), findsOneWidget);
+    expect(find.text('toast-2'), findsNothing);
+    expect(find.byType(ToastRenderer), findsOneWidget);
   });
 
   testWidgets('missing renderer reports and completes instead of hanging',

@@ -190,19 +190,23 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       expect(find.text('toast-a'), findsOneWidget);
-      expect(find.text('toast-b'), findsOneWidget);
+      expect(find.text('toast-b'), findsNothing);
 
+      final stateFuture = first.dismiss();
+      await tester.pump();
+      expect(find.text('toast-b'), findsOneWidget);
       final stateBefore = tester.state<_IdentityProbeState>(
         find.byType(_IdentityProbe),
       );
 
-      await pumpOut(tester, first.dismiss());
+      await tester.pump(const Duration(milliseconds: 250));
+      await stateFuture.timeout(const Duration(seconds: 2));
       expect(find.text('toast-a'), findsNothing);
-
       expect(
         tester.state<_IdentityProbeState>(find.byType(_IdentityProbe)),
         same(stateBefore),
-        reason: 'later toast remounted when earlier lane sibling was removed',
+        reason:
+            'later toast remounted when the outgoing lane toast was removed',
       );
       expect(find.text('toast-b'), findsOneWidget);
 

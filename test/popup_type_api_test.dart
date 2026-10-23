@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unified_popups/src/api/popup_type_api.dart';
+import 'package:unified_popups/src/api/toast_lane_scheduler.dart';
+import 'package:unified_popups/src/configs/toast_lane_motion.dart';
 import 'package:unified_popups/src/configs/loading_config.dart';
 import 'package:unified_popups/src/configs/popup_barrier_config.dart';
 import 'package:unified_popups/src/configs/popup_behavior_config.dart';
@@ -16,44 +18,197 @@ import 'package:unified_popups/src/controller/popup_open_result.dart';
 import 'package:unified_popups/src/runtime/popup_runtime.dart';
 
 void main() {
-  test('toast lanes admit three and release queued entries in FIFO order',
-      () async {
+  testWidgets('toast lane keeps one visible toast and hands off FIFO',
+      (tester) async {
     final runtime = PopupRuntime();
     addTearDown(runtime.shutdown);
     final api = PopupTypeApi(runtime);
     final handles = <PopupHandle<void>>[];
-    for (var index = 0; index < 5; index++) {
-      final result = api.toast(
-        ToastConfig.text(
-          'toast-$index',
-          position: PopupPosition.top,
-          lifetime: const PopupLifetime.manual(),
-        ),
-      ) as PopupOpened<void>;
-      handles.add(result.handle);
+    for (var index = 0; index < 4; index++) {
+      handles.add(
+        api
+            .toast(
+              ToastConfig.text(
+                'toast-$index',
+                position: PopupPosition.top,
+                lifetime: const PopupLifetime.manual(),
+              ),
+            )
+            .requireHandle(),
+      );
     }
 
     runtime.attachHost(Object());
-    expect(
-      handles.map((handle) => handle.state),
-      <PopupEntryState>[
-        PopupEntryState.entering,
-        PopupEntryState.entering,
-        PopupEntryState.entering,
-        PopupEntryState.queued,
-        PopupEntryState.queued,
-      ],
-    );
-    for (final handle in handles.take(3)) {
-      runtime.controller.markPresented(handle.id);
+    expect(handles[0].state, PopupEntryState.entering);
+    expect(handles[1].state, PopupEntryState.queued);
+    expect(handles[2].state, PopupEntryState.queued);
+    expect(handles[3].state, PopupEntryState.queued);
+
+    runtime.controller.markPresented(handles[0].id);
+    await tester.pump(const Duration(milliseconds: 499));
+    expect(handles[0].state, PopupEntryState.visible);
+    expect(handles[1].state, PopupEntryState.queued);
+
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(handles[0].state, PopupEntryState.exiting);
+    expect(_replaceExit(runtime, handles[0].id), isTrue);
+    expect(handles[1].state, PopupEntryState.queued);
+    await tester.pump(const Duration(milliseconds: 49));
+    expect(handles[1].state, PopupEntryState.queued);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(handles[1].state, PopupEntryState.entering);
+    expect(handles[2].state, PopupEntryState.queued);
+
+    runtime.controller.markPresented(handles[1].id);
+    await tester.pump(ToastLaneMotion.dwell);
+    await tester.pump(ToastLaneMotion.enterDelay);
+    expect(handles[1].state, PopupEntryState.exiting);
+    expect(handles[2].state, PopupEntryState.entering);
+    expect(handles[3].state, PopupEntryState.queued);
+    ToastLaneScheduler.detach(runtime.controller);
+  });
+
+  testWidgets('a queued toast waits out a short lifetime before replacing',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final api = PopupTypeApi(runtime);
+    final first = api
+        .toast(
+          const ToastConfig.text(
+            'first',
+            lifetime: PopupLifetime.after(Duration(milliseconds: 200)),
+          ),
+        )
+        .requireHandle();
+    final second = api
+        .toast(
+          const ToastConfig.text(
+            'second',
+            lifetime: PopupLifetime.manual(),
+          ),
+        )
+        .requireHandle();
+    runtime.attachHost(Object());
+    runtime.controller.markPresented(first.id);
+
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(first.state, PopupEntryState.visible);
+    expect(second.state, PopupEntryState.queued);
+
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(first.state, PopupEntryState.exiting);
+    expect(_replaceExit(runtime, first.id), isTrue);
+    expect((await first.outcome).reason, PopupDismissReason.replaced);
+    ToastLaneScheduler.detach(runtime.controller);
+  });
+
+  testWidgets('a toast already past the dwell is replaced immediately',
+      (tester) async {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final api = PopupTypeApi(runtime);
+    final first = api
+        .toast(
+          const ToastConfig.text(
+            'first',
+            lifetime: PopupLifetime.manual(),
+          ),
+        )
+        .requireHandle();
+    runtime.attachHost(Object());
+    runtime.controller.markPresented(first.id);
+    await tester.pump(ToastLaneMotion.dwell);
+    expect(first.state, PopupEntryState.visible);
+
+    final second = api
+        .toast(
+          const ToastConfig.text(
+            'second',
+            lifetime: PopupLifetime.manual(),
+          ),
+        )
+        .requireHandle();
+    expect(first.state, PopupEntryState.exiting);
+    expect(_replaceExit(runtime, first.id), isTrue);
+    expect(second.state, PopupEntryState.queued);
+    await tester.pump(ToastLaneMotion.enterDelay);
+    expect(second.state, PopupEntryState.entering);
+    ToastLaneScheduler.detach(runtime.controller);
+  });
+
+  test('toast positions and barrier toasts do not share the lane slot', () {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    runtime.attachHost(Object());
+    final api = PopupTypeApi(runtime);
+    final top = api
+        .toast(
+          const ToastConfig.text('top', position: PopupPosition.top),
+        )
+        .requireHandle();
+    final bottom = api
+        .toast(
+          const ToastConfig.text('bottom', position: PopupPosition.bottom),
+        )
+        .requireHandle();
+    final modal = api
+        .toast(
+          const ToastConfig.text(
+            'modal',
+            barrier: PopupBarrierConfig(),
+          ),
+        )
+        .requireHandle();
+
+    expect(top.state, PopupEntryState.entering);
+    expect(bottom.state, PopupEntryState.entering);
+    expect(modal.state, PopupEntryState.entering);
+    ToastLaneScheduler.detach(runtime.controller);
+  });
+
+  test('toasts opened before the host still keep a single slot', () {
+    final runtime = PopupRuntime();
+    addTearDown(runtime.shutdown);
+    final api = PopupTypeApi(runtime);
+    final handles = <PopupHandle<void>>[];
+    for (var index = 0; index < 3; index++) {
+      handles.add(
+        api
+            .toast(
+              ToastConfig.text(
+                'toast-$index',
+                position: PopupPosition.bottom,
+                lifetime: const PopupLifetime.manual(),
+              ),
+            )
+            .requireHandle(),
+      );
     }
 
-    handles.first.dismiss();
-    runtime.controller.markDisposed(handles.first.id);
-    await handles.first.dismissed;
+    runtime.attachHost(Object());
+    expect(handles[0].state, PopupEntryState.entering);
+    expect(handles[1].state, PopupEntryState.queued);
+    expect(handles[2].state, PopupEntryState.queued);
+  });
 
-    expect(handles[3].state, PopupEntryState.entering);
-    expect(handles[4].state, PopupEntryState.queued);
+  test('toast lane motion constants stay at the acceptance values', () {
+    expect(ToastLaneMotion.dwell, const Duration(milliseconds: 500));
+    expect(ToastLaneMotion.enterDelay, const Duration(milliseconds: 50));
+    expect(ToastLaneMotion.exitDuration, const Duration(milliseconds: 180));
+    expect(ToastLaneMotion.shift, 20);
+    expect(
+      ToastLaneMotion.outgoingShift(PopupPosition.left),
+      const Offset(-20, 0),
+    );
+    expect(
+      ToastLaneMotion.outgoingShift(PopupPosition.right),
+      const Offset(20, 0),
+    );
+    expect(
+      ToastLaneMotion.outgoingShift(PopupPosition.bottom),
+      const Offset(-20, 0),
+    );
   });
 
   test('loading updates one stable handle and replaces external lifetime',
@@ -236,5 +391,14 @@ void main() {
       (runtime.controller.entries.single.config! as ToastConfig).message,
       'second',
     );
+    expect(runtime.controller.entries.single.state, PopupEntryState.visible);
+    expect(runtime.controller.entries.single.replaceExit, isFalse);
+    ToastLaneScheduler.detach(runtime.controller);
   });
+}
+
+bool _replaceExit(PopupRuntime runtime, String id) {
+  return runtime.controller.entries
+      .singleWhere((entry) => entry.id == id)
+      .replaceExit;
 }

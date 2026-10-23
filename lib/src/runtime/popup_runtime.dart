@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../api/toast_lane_scheduler.dart';
 import '../controller/popup_controller.dart';
 import '../navigation/popup_route_observer_v2.dart';
 import '../navigation/popup_route_token.dart';
@@ -75,6 +76,7 @@ final class PopupRuntime {
     if (_state == PopupRuntimeState.shutdown) return;
     _state = PopupRuntimeState.shutdown;
     _hostBinding = null;
+    ToastLaneScheduler.detach(controller);
     routeObserver.dispose();
     await controller.shutdown();
     // `ready` is a gate, not an error channel. Completing it on shutdown

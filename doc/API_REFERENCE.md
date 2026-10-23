@@ -373,7 +373,20 @@ Pop.toast(const ToastConfig.content(MyToastContent()));
 `ToastStyle` 字段：`padding`、`margin`、`decoration`、`textStyle`、
 `textAlign`、`spacing`。
 
-无 Barrier Toast 每个位置最多显示 3 个，超出后 FIFO queued。
+无遮罩 Toast 按 `position` 各占一个槽，可与其它位置同时出现。同一位置同时只显示
+1 条，多出来的按打开顺序排队。
+
+- 停留从入场结束、进入 visible 开始算，不是从调用 `Pop.toast` 开始。
+- 队列里还有下一条，且当前条已完整展示 500ms：当前条用 180ms 淡出并平移 20px。
+  `left` 继续向左，`right` 继续向右，其余向左。下一条延迟 50ms，在同一槽里开始
+  自己的入场（居中淡入，底部上滑，顶部下滑，左右沿原方向）。两条重叠。
+- 当前条还没满 500ms 时，下一条只排队，不立刻换。
+- 已经满 500ms 再来一条：马上开始上面的换场，不再额外等 500ms。
+- 队列为空时，到时、手动关闭或 `until` 结束，走这条 Toast 自己的反向动画，
+  不平移。
+- 被队列换掉的那条，`outcome.reason` 是 `replaced`。
+- 同 key 且 `updateExisting` 原地改内容，不占新槽，也不播放这次换场。
+- 带 Barrier 的 Toast 不进槽。
 
 ## 7. Loading
 

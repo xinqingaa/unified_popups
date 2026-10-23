@@ -42,6 +42,7 @@ final class PopupEntryRecord<T, C> {
         initiallyQueued = request.initiallyQueued,
         onBack = request.onBack,
         resolveUpdate = request.resolveUpdate,
+        absorbLifetime = request.absorbLifetime,
         resultType = T,
         configType = C,
         _invokeCallback = invokeCallback;
@@ -52,6 +53,7 @@ final class PopupEntryRecord<T, C> {
   final bool updatable;
   final bool initiallyQueued;
   final Future<bool> Function()? onBack;
+  final bool Function(PopupDismissReason reason)? absorbLifetime;
   final Type resultType;
   final Type configType;
   final PopupCallbackInvoker _invokeCallback;
@@ -76,6 +78,9 @@ final class PopupEntryRecord<T, C> {
   /// Orthogonal to [state]: keep entry mounted but hide interaction/paint.
   bool paused = false;
 
+  /// Toast lane sets this before the handoff exit so the scene can shift it.
+  bool replaceExit = false;
+
   int get generation => lifetimeBinding.generation;
   set generation(int value) => lifetimeBinding.generation = value;
 
@@ -94,6 +99,7 @@ final class PopupEntryRecord<T, C> {
         routePolicy: routePolicy,
         ownership: ownership,
         paused: paused,
+        replaceExit: replaceExit,
       );
 
   void commitOutcome(PopupOutcome<T> outcome) {

@@ -63,7 +63,8 @@ Tests: `test/` (e.g. `test/flow_sheet_v2_test.dart`, `test/drop_menu_test.dart`)
 
 **PopupHost + PopupScene** (`lib/src/host/`, `lib/src/renderers/popup_scene.dart`)
 - Private Overlay above app child; Scene rebuild keeps Entry Keys stable
-  (keys on outer Offstage Stack/Column children, not only inner animated entry)
+  (keys on the outer Offstage children of each Stack, including the toast slot,
+  not only the inner animated entry)
 - Barrier: `PopupBarrierConfig` (`dismissible`, `dismissOnDrag`, color, insets)
 
 **Configs / Renderers** (`lib/src/configs/`, `lib/src/renderers/`)
@@ -121,6 +122,9 @@ README is `README_zh.md`.
 ### Constraints
 
 - Loading needs a clear dismiss path (`PopupLifetime` or `dismissChannel`)
+- Barrier-less toasts keep one slot per position. A queued toast replaces the
+  visible one after it has been fully shown for 500ms. Field contract:
+  `doc/API_REFERENCE.md` §6
 - Sheet / Menu / Custom complete via injected Handle
 - FlowSheet: `popToRoot` returns to root without closing the sheet; use
   `closeAll` or `completeAndCloseAll` to finish the session. `push` keeps one

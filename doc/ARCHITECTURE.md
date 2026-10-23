@@ -84,7 +84,7 @@ Controller 是唯一状态权威。Entry 注册表、key 索引、状态迁移�
 
 Controller 变化会重新生成 PopupScene 的声明式 Widget 描述，但 Entry 使用稳定 id 作为 Key，所以 Renderer State、AnimationController、Sheet 缓存的重内容和 Menu 缓存的 content 都会保留。这是轻量的 Widget rebuild，不是销毁并重新创建弹窗。
 
-Key 必须挂在 Scene 里 Stack / toast lane Column 的**直接子节点**（外层 `Offstage`）上，与 `PopupHost` fallback 路径一致。仅给内层 `_AnimatedPopupEntry` 设 Key 不够：缺少外层 Key 时，Flutter 按 index 复用子 Element，移除更早的 sibling 会 remount 后续 Entry，表现为入场动画重播或退场瞬间消失。
+Key 必须挂在 Scene 里 Stack（含 toast 槽）的**直接子节点**（外层 `Offstage`）上，与 `PopupHost` fallback 路径一致。仅给内层 `_AnimatedPopupEntry` 设 Key 不够：缺少外层 Key 时，Flutter 按 index 复用子 Element，移除更早的 sibling 会 remount 后续 Entry，表现为入场动画重播或退场瞬间消失。
 
 当前没有引入 Entry 级 Listenable。正常同时显示的 Entry 数量很小，Entry 级通知会增加队列、replace、detach 和资源销毁复杂度；只有真实 profile 证明 Scene rebuild 成为瓶颈时才值得引入。
 
@@ -93,7 +93,7 @@ Key 必须挂在 Scene 里 Stack / toast lane Column 的**直接子节点**（�
 ```text
 created
   ├─ Host 未挂载 ──> pendingHost
-  ├─ Toast lane 满 ─> queued
+  ├─ 同位置 Toast 槽已占用 ─> queued
   └────────────────> entering ─> visible
                                       │
 完成 / 手动 / 返回 / 遮罩 / 路由 / lifetime
@@ -124,7 +124,7 @@ Loading 和带 key 的 Toast 更新时保留同一个 Entry 和 Handle，递增 
 
 ## 5. 多弹窗顺序与冲突
 
-所有弹窗共享同一个创建顺序列表。普通模态 Entry 按创建顺序叠放；无 Barrier Toast 从主列表中提取到最上方的 Toast lane，因此可显示在 Loading、Sheet 或 Confirm 上方。
+所有弹窗共享同一个创建顺序列表。普通模态 Entry 按创建顺序叠放；无 Barrier Toast 从主列表中提取到最上方的 Toast 槽，因此可显示在 Loading、Sheet 或 Confirm 上方。每个位置同时只显示一条，其余按 FIFO 排队。当前条进入 visible 后停留 500ms，队列非空时用 180ms 淡出并平移 20px（左右边缘向外，其余向左），下一条延迟 50ms 进入同一槽。队列为空时的关闭仍走该条自己的反向动画。同 key 更新不换槽。带 Barrier 的 Toast 不进槽。
 
 ### key、channel、tags
 

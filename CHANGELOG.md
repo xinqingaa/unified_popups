@@ -2,6 +2,18 @@
 
 Notable changes to `unified_popups`. Versions follow [Semantic Versioning](https://semver.org/).
 
+## 2.2.3
+
+### Changes
+
+- A barrier-less toast keeps one slot per position. Further toasts at that
+  position queue FIFO. After the visible toast has been fully shown for
+  500ms, a queued successor replaces it: the current toast fades and shifts
+  20px over 180ms (outward on the left and right, otherwise to the left), and
+  the next toast starts its own entrance 50ms later in the same slot. When the
+  queue is empty, a timeout or manual dismiss still uses that toast's own exit.
+  Same-key updates stay on the same toast and do not play this handoff.
+
 ## 2.2.2
 
 ### Docs

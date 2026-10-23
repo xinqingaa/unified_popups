@@ -9,6 +9,7 @@ import '../configs/popup_surface.dart';
 import '../configs/popup_visual_config.dart';
 import '../configs/sheet_config.dart';
 import '../configs/toast_config.dart';
+import '../configs/toast_lane_motion.dart';
 import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_entry_snapshot.dart';
 import '../controller/popup_entry_state.dart';
@@ -18,8 +19,9 @@ import 'popup_renderer_delegate.dart';
 
 /// Default declaration scene used by the global host.
 ///
-/// Non-modal toasts share positional lanes. Modal entries keep their global
-/// order below the transient toast layer.
+/// Non-modal toasts share one slot per position. A queued toast replaces the
+/// visible one in that slot. Modal entries keep their global order below the
+/// transient toast layer.
 class PopupScene extends StatelessWidget {
   const PopupScene({
     required this.runtime,
@@ -119,14 +121,22 @@ class _ToastLanes extends StatelessWidget {
             (entry) => (entry.config! as ToastConfig).position == position,
           ))
             Align(
+              key: ValueKey<PopupPosition>(position),
               alignment: _alignment(position),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  for (final entry in entries)
-                    if ((entry.config! as ToastConfig).position == position)
-                      _buildEntry(entry),
-                ],
+              child: AnimatedSize(
+                duration: ToastLaneMotion.exitDuration,
+                curve: Curves.easeOutCubic,
+                alignment: _alignment(position),
+                clipBehavior: Clip.none,
+                child: Stack(
+                  alignment: _alignment(position),
+                  clipBehavior: Clip.none,
+                  children: <Widget>[
+                    for (final entry in entries)
+                      if ((entry.config! as ToastConfig).position == position)
+                        _buildEntry(entry),
+                  ],
+                ),
               ),
             ),
       ],
@@ -152,8 +162,8 @@ class _ToastLanes extends StatelessWidget {
         fullScreen: false,
       );
     }
-    // Same as PopupScene._buildEntry: Column children need a stable key so
-    // dismissing an earlier toast does not remount later lane items.
+    // Same as PopupScene._buildEntry: Stack children need a stable key so
+    // removing the outgoing toast does not remount the one entering the slot.
     return Offstage(
       key: ValueKey<String>(entry.id),
       offstage: entry.paused,
@@ -188,6 +198,7 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
   late final AnimationController _controller;
   FocusScopeNode? _entryFocus;
   FocusNode? _previousFocus;
+  var _handoffStarted = false;
 
   PopupVisualConfig get _visual =>
       widget.renderer.visualConfig(widget.entry.config!);
@@ -224,6 +235,22 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
   }
 
   void _syncState({bool initial = false}) {
+    if (_toastHandoff) {
+      if (_handoffStarted) return;
+      _handoffStarted = true;
+      _controller
+          .animateBack(
+        0,
+        duration: ToastLaneMotion.exitDuration,
+        curve: Curves.easeInCubic,
+      )
+          .whenCompleteOrCancel(() {
+        if (mounted) {
+          widget.runtime.controller.markDisposed(widget.entry.id);
+        }
+      });
+      return;
+    }
     if (_visual.animationConfig.type == PopupAnimationType.none) {
       final entering = widget.entry.state == PopupEntryState.entering;
       final visible = widget.entry.state == PopupEntryState.visible;
@@ -435,12 +462,33 @@ class _AnimatedPopupEntryState extends State<_AnimatedPopupEntry>
     return surface is GlassPopupSurface || surface is BuilderPopupSurface;
   }
 
+  bool get _toastHandoff =>
+      widget.entry.replaceExit &&
+      (widget.entry.state == PopupEntryState.exiting ||
+          widget.entry.state == PopupEntryState.dismissRequested);
+
   Widget _transition(
     Widget child,
     Animation<double> animation,
     PopupAnimationType type, {
     Object? config,
   }) {
+    if (_toastHandoff) {
+      final shift = ToastLaneMotion.outgoingShift(_visual.position);
+      return FadeTransition(
+        opacity: animation,
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: shift * (1 - animation.value),
+              child: child,
+            );
+          },
+          child: child,
+        ),
+      );
+    }
     // Glass shells fade only their interior. Wrapping BackdropFilter in
     // FadeTransition makes blur sample an OpacityLayer buffer until opacity
     // hits 1.0, which snaps the glass on the last frame.

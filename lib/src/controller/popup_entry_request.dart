@@ -2,6 +2,7 @@ import '../configs/popup_back_policy.dart';
 import '../configs/popup_channel.dart';
 import '../configs/popup_conflict_policy.dart';
 import '../configs/popup_route_policy.dart';
+import 'popup_dismiss_reason.dart';
 import 'popup_lifecycle_callbacks.dart';
 import 'popup_lifetime.dart';
 import 'popup_ownership.dart';
@@ -25,6 +26,7 @@ final class PopupEntryRequest<T, C> {
     this.initiallyQueued = false,
     this.onBack,
     this.resolveUpdate,
+    this.absorbLifetime,
   });
 
   final PopupChannel channel;
@@ -46,6 +48,11 @@ final class PopupEntryRequest<T, C> {
   /// Extracts lifecycle behavior when [UpdatablePopupHandle.update] receives a
   /// new type-specific config. Key and channel remain immutable.
   final PopupEntryUpdate<T>? Function(C previous, C next)? resolveUpdate;
+
+  /// Called when a lifetime condition fires, before the entry closes.
+  ///
+  /// Return true to consume the event. The controller leaves the entry open.
+  final bool Function(PopupDismissReason reason)? absorbLifetime;
 }
 
 final class PopupEntryUpdate<T> {

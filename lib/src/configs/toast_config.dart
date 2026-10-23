@@ -67,6 +67,8 @@ final class ToastToggleConfig {
 }
 
 /// [Pop.toast] 的配置：短暂展示、不阻塞交互的提示反馈。
+///
+/// 无遮罩时同一 [position] 只占一个槽。排队、换场和自然退场见 API 参考 §6。
 final class ToastConfig implements PopupVisualConfig {
   /// 使用纯文本 [message] 的 toast。
   const ToastConfig.text(

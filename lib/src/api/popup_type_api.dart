@@ -8,16 +8,15 @@ import '../configs/menu_config.dart';
 import '../configs/popup_back_policy.dart';
 import '../configs/popup_barrier_config.dart';
 import '../configs/popup_channel.dart';
-import '../configs/popup_position.dart';
 import '../configs/sheet_config.dart';
 import '../configs/popup_owner_policy.dart';
 import '../configs/popup_keys.dart';
 import '../configs/toast_config.dart';
+import 'toast_lane_scheduler.dart';
 import '../controller/popup_dismiss_reason.dart';
 import '../controller/popup_entry_request.dart';
 import '../controller/popup_entry_state.dart';
 import '../controller/popup_handle.dart';
-import '../controller/popup_lifecycle_callbacks.dart';
 import '../controller/popup_open_result.dart';
 import '../controller/popup_ownership.dart';
 import '../runtime/popup_runtime.dart';
@@ -33,20 +32,11 @@ final class PopupTypeApi {
 
   PopupOpenResult<void> toast(ToastConfig config) {
     final behavior = config.behavior;
-    final initiallyQueued = _visibleToastCount(config.position) >= 3;
+    final lane = ToastLaneScheduler.forController(runtime.controller);
+    final initiallyQueued = lane.shouldQueue(config);
     final ownership = _captureOwnership(config.ownership);
-    final lifecycle = PopupLifecycleCallbacks<void>(
-      onPresented: config.lifecycle.onPresented,
-      onOutcome: config.lifecycle.onOutcome,
-      onDismissed: (outcome) {
-        try {
-          config.lifecycle.onDismissed?.call(outcome);
-        } finally {
-          _releaseToastLane(config.position);
-        }
-      },
-    );
-    return runtime.controller.open<void, ToastConfig>(
+    String? openedId;
+    final result = runtime.controller.open<void, ToastConfig>(
       PopupEntryRequest<void, ToastConfig>(
         channel: PopupChannel.toast,
         config: config,
@@ -57,12 +47,19 @@ final class PopupTypeApi {
         backPolicy: behavior.backPolicy,
         ownership: ownership,
         lifetime: config.lifetime,
-        lifecycle: lifecycle,
+        lifecycle: config.lifecycle,
         updatable: behavior.key != null,
         initiallyQueued: initiallyQueued,
+        absorbLifetime: (reason) {
+          final id = openedId;
+          if (id == null) return false;
+          return lane.absorbLifetime(id, reason);
+        },
         resolveUpdate: (previous, next) => _toastUpdate(previous, next),
       ),
     );
+    openedId = result.handleOrNull?.id;
+    return result;
   }
 
   PopupOpenResult<void> loading(LoadingConfig config) {
@@ -263,28 +260,6 @@ final class PopupTypeApi {
     return runtime.controller.dismissKey(key);
   }
 
-  int _visibleToastCount(PopupPosition position) {
-    return runtime.controller.entries.where((entry) {
-      return entry.channel == PopupChannel.toast &&
-          entry.state != PopupEntryState.queued &&
-          (entry.state.isActive || entry.state.isMounted) &&
-          (entry.config! as ToastConfig).position == position;
-    }).length;
-  }
-
-  void _releaseToastLane(PopupPosition position) {
-    final available = 3 - _visibleToastCount(position);
-    if (available <= 0) return;
-    final queued = runtime.controller.entries.where((entry) {
-      return entry.channel == PopupChannel.toast &&
-          entry.state == PopupEntryState.queued &&
-          (entry.config! as ToastConfig).position == position;
-    }).take(available);
-    for (final entry in queued.toList(growable: false)) {
-      runtime.controller.releaseQueued(entry.id);
-    }
-  }
-
   PopupOwnership _captureOwnership(PopupOwnership ownership) {
     if (ownership.routeToken != null) return ownership;
     return PopupOwnership(
@@ -333,17 +308,7 @@ final class PopupTypeApi {
       backPolicy: behavior.backPolicy,
       ownership: _captureOwnership(config.ownership),
       lifetime: config.lifetime,
-      lifecycle: PopupLifecycleCallbacks<void>(
-        onPresented: config.lifecycle.onPresented,
-        onOutcome: config.lifecycle.onOutcome,
-        onDismissed: (outcome) {
-          try {
-            config.lifecycle.onDismissed?.call(outcome);
-          } finally {
-            _releaseToastLane(config.position);
-          }
-        },
-      ),
+      lifecycle: config.lifecycle,
     );
   }
 

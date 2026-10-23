@@ -127,7 +127,7 @@ blur, and shadow parameters are in `doc/API_REFERENCE.md` §5 玻璃容器.
 
 ```yaml
 dependencies:
-  unified_popups: ^2.2.2
+  unified_popups: ^2.2.3
 ```
 
 ```dart

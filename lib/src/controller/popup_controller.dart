@@ -356,9 +356,9 @@ class PopupController extends ChangeNotifier {
 
   void _startLifetime(_PopupRecord<dynamic, dynamic> entry) {
     entry.lifetimeBinding.start(entry.lifetime, (generation, reason) {
-      if (_acceptLifetimeEvent(entry, generation)) {
-        _requestClose(entry, reason);
-      }
+      if (!_acceptLifetimeEvent(entry, generation)) return;
+      if (entry.absorbLifetime?.call(reason) ?? false) return;
+      _requestClose(entry, reason);
     });
   }
 
@@ -381,9 +381,11 @@ class PopupController extends ChangeNotifier {
   Future<void> dismissEntry(
     String id, {
     PopupDismissReason reason = PopupDismissReason.manual,
+    bool replaceExit = false,
   }) {
     final entry = _find(id);
     if (entry == null) return Future<void>.value();
+    if (replaceExit && entry.isActive) entry.replaceExit = true;
     _requestClose(entry, reason);
     return entry.dismissed;
   }
@@ -613,6 +615,12 @@ class PopupController extends ChangeNotifier {
       }
       _notifySafely();
     });
+    // Completer 在创建 Entry 的 Zone 里异步通知监听者。Widget 测试的
+    // tearDown 已经离开那个 Zone，再 await 会停在刷不掉的 microtask 上。
+    // 回调在 complete 之前已经同步执行，这里只跳过已经完成的等待。
+    if (records.every((entry) => entry.dismissedCompleter.isCompleted)) {
+      return;
+    }
     await Future.wait(records.map((entry) => entry.dismissed));
   }
 

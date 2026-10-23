@@ -119,7 +119,7 @@ Toast、Loading、Date、Custom 没有这个字段。
 
 ```yaml
 dependencies:
-  unified_popups: ^2.2.2
+  unified_popups: ^2.2.3
 ```
 
 ```dart
